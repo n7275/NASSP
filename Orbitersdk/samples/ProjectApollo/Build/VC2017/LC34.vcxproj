@@ -123,6 +123,8 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -140,6 +142,7 @@
       </DataExecutionPrevention>
       <ImportLibrary>.\Release\LC34/LC34.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
