@@ -26,6 +26,10 @@
 #pragma once
 #include "math.h"
 #include "OrbiterAPI.h"
+
+const double kB = 1.380649E-23; //Boltzmann constant
+
+
 /// \brief Calcluate Received Power
 ///
 /// This function is a simple inplimentation of Friis transmission equation.
@@ -35,7 +39,7 @@
 /// \param xmitrGain The gain or directivity of the transmitter in dBi
 /// \param frequency The frequency of the signal being transmitted in Hz
 /// \param distance  The distance between the transmitter and the receiver in meters
-/// \return The power recieved by the receiver in watts RMS
+/// \return The power recieved by the receiver in dBm
 inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrGain, double frequency, double distance)
 {
 	double rcvdPower = 0;
@@ -49,4 +53,19 @@ inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrG
 	rcvdPower = xmitrPower * xmitrGain * rcvrGain * pow((wavelength / (4 * PI * distance)), 2);
 
 	return (10.0 * log10(1000.0 * rcvdPower));
+}
+
+
+/// \brief Calcluate Noise Floor
+///
+/// This function calculates the noise floor
+///		More info: https://en.wikipedia.org/wiki/Minimum_detectable_signal
+///
+/// \param rcvrBW The receiver band width in Hz
+/// \param rcvrT0 The temperature of the receiver in K
+/// \param rcvrNF The receiver noise factor in dB
+/// \return Noise floor in the received signal in dBm
+inline double RFCALC_noiseFloor(double rcvrBW, double rcvrT0, double rcvrNF)
+{
+	return (10 * log10(kB*rcvrT0*1000.0) + rcvrNF + 10 * log10(rcvrBW));
 }
