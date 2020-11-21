@@ -593,8 +593,7 @@ void HGA::Init(Saturn *vessel){
 	RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 
-	HGAFrequency = 2119.0E6; //MHz. Should eventually get set in mission file
-	//HGAWavelength = C0 / (HGAFrequency * 1000000); //meters
+	HGAFrequency = 2119.0E6; //Hz. Should eventually get set in mission file
 	Gain85ft = 50; //this is the gain, dB of the 85ft antennas on earth
 	Power85ft = 20000; //watts
 }
@@ -1224,16 +1223,15 @@ void OMNI::Init(Saturn *vessel) {
 	SignalStrength = 0;
 
 	double beamwidth = 45*RAD;
-	OMNI_Gain = pow(10, (-3 / 10));
+	OMNI_Gain = -3.0;
 
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth
 
 	hMoon = oapiGetObjectByName("Moon");
 	hEarth = oapiGetObjectByName("Earth");
 
-	OMNIFrequency = 2119; //MHz. Should this get set somewhere else?
-	OMNIWavelength = C0 / (OMNIFrequency * 1000000); //meters
-	Gain30ft = pow(10, (43 / 10)); //this is the gain, dB converted to ratio of the 30ft antennas on earth
+	OMNIFrequency = 2119.0E6; //Hz. 
+	Gain30ft = 43; //this is the gain in dB of the 30ft antennas on earth
 	Power30ft = 20000; //watts
 
 	
@@ -1264,8 +1262,8 @@ void OMNI::TimeStep()
 
 	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
-	RecvdOMNIPower = Power30ft * Gain30ft * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
-	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
+	RecvdOMNIPower_dBm = RFCALC_rcvdPower(Power30ft, Gain30ft, OMNI_Gain, OMNIFrequency, EarthSignalDist);//maximum recieved power to the Omni antenna on axis in watts
+
 	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 
 	if (relang < 160*RAD)
