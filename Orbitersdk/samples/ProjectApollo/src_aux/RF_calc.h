@@ -40,7 +40,7 @@ const double kB = 1.380649E-23; //Boltzmann constant
 /// \param frequency The frequency of the signal being transmitted in Hz
 /// \param distance  The distance between the transmitter and the receiver in meters
 /// \return The power recieved by the receiver in dBm
-inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrGain, double frequency, double distance)
+static inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrGain, double frequency, double distance)
 {
 	double rcvdPower = 0;
 	double wavelength = 0;
@@ -65,7 +65,7 @@ inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrG
 /// \param rcvrT0 The temperature of the receiver in K
 /// \param rcvrNF The receiver noise factor in dB
 /// \return Noise floor in the received signal in dBm
-inline double RFCALC_noiseFloor(double rcvrBW, double rcvrT0, double rcvrNF)
+static inline double RFCALC_noiseFloor(double rcvrBW, double rcvrT0, double rcvrNF)
 {
 	return (10 * log10(kB*rcvrT0*1000.0) + rcvrNF + 10 * log10(rcvrBW));
 }

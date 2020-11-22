@@ -588,7 +588,7 @@ public:
 	unsigned char GetScaledFreqLock(); //frequency lock, output 4.5V when locked (use lockTimer as input to simulate freq locking)
 
 protected:
-	double GetCSMGain(double theta, double phi); //returns the gain of the csm RRT system for returned power calculations
+	inline double GetCSMGain(double theta, double phi); //returns the gain of the csm RRT system for returned power calculations
 	void SendRF();
 
 	Saturn *sat;

@@ -978,7 +978,7 @@ void HGA::TimeStep(double simt, double simdt)
 	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
 	
-	double RecvdHGAPower, RecvdHGAPower_dBm, SignalStrengthScaleFactor;
+	double RecvdHGAPower_dBm, SignalStrengthScaleFactor;
 	//gain values from NASA Technical Note TN D-6723
 	
 	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
@@ -1242,7 +1242,7 @@ void OMNI::TimeStep()
 	VECTOR3 U_RP, pos, R_E, R_M, U_R;
 	MATRIX3 Rot;
 	double relang, Moonrelang;
-	double RecvdOMNIPower, RecvdOMNIPower_dBm, SignalStrengthScaleFactor;
+	double RecvdOMNIPower_dBm, SignalStrengthScaleFactor;
 
 	double EarthSignalDist;
 
@@ -5412,7 +5412,7 @@ unsigned char RNDZXPDRSystem::GetScaledFreqLock()
 	}
 }
 
-double RNDZXPDRSystem::GetCSMGain(double theta, double phi)
+inline double RNDZXPDRSystem::GetCSMGain(double theta, double phi)
 {
 
 	//values from AOH LM volume 2
@@ -5562,12 +5562,9 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		RNDZXPDRGain = RNDZXPDRSystem::GetCSMGain(theta, phi);
 		//sprintf(oapiDebugString(), "RNDZXPDRGain = %lf dBi", RNDZXPDRGain);
 
-		RNDZXPDRGain = pow(10, (RNDZXPDRGain / 10)); //convert to ratio from dB
-
 		if (RadarDist > 80.0*0.3048)
 		{
-			RCVDPowerdB = RCVDgain * RNDZXPDRGain * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2); //watts
-			RCVDPowerdB = 10.0 * log10(1000.0 * RCVDPowerdB); //convert to dBm
+			RCVDPowerdB = RFCALC_rcvdPower(RCVDpow, RCVDgain, RNDZXPDRGain, RCVDfreq, RadarDist);
 		}
 		else
 		{

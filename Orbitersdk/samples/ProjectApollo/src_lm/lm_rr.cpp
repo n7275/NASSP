@@ -31,6 +31,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LEM.h"
 #include "lm_rr.h"
 #include "LM_AscentStageResource.h"
+#include "RF_calc.h"
 
 #define RR_SHAFT_STEP 0.000191747598876953125 
 #define RR_TRUNNION_STEP 0.00004793689959716796875
@@ -117,9 +118,9 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 		U_RRL[i] = _V(0.0, 0.0, 0.0);
 	}
 
-	AntennaGain = pow(10.0, (32.0 / 10.0)); //dB
+	AntennaGain = 32.0; //dB
 	AntennaPower = 0.240; //W
-	AntennaFrequency = 9832.8; //MHz
+	AntennaFrequency = 9832.8E6; //Hz
 	AntennaPhase = 0.0;
 	AntennaPolarValue = 1.0;
 
@@ -404,10 +405,8 @@ void LEM_RR::Timestep(double simdt) {
 			U_RRL[2] = unit(_V(sin(shaftAngle)*cos(trunnionAngle + anginc), -sin(trunnionAngle + anginc), cos(shaftAngle)*cos(trunnionAngle + anginc)));
 			U_RRL[3] = unit(_V(sin(shaftAngle)*cos(trunnionAngle - anginc), -sin(trunnionAngle - anginc), cos(shaftAngle)*cos(trunnionAngle - anginc)));
 
-			RCVDgain = pow(10.0, (RCVDgain / 10.0)); //convert to ratio from dB
+			RecvdRRPower_dBm = RFCALC_rcvdPower(RCVDpow, RCVDgain, AntennaGain, RCVDfreq, length(R));
 
-			RecvdRRPower = RCVDpow*AntennaGain*RCVDgain*pow((C0 / (RCVDfreq * 1000000)) / (4.0 * PI*length(R)), 2.0);
-			RecvdRRPower_dBm = 10 * log10(1000 * RecvdRRPower);
 			//sprintf(oapiDebugString(), "RecvdRRPower_dBm = %lf dBm", RecvdRRPower_dBm);
 			SignalStrengthScaleFactor = LEM_RR::dBm2SignalStrength(RecvdRRPower_dBm);
 
