@@ -402,7 +402,7 @@ class Cooling: public e_object {
 public:
 	Cooling(char *i_name,int i_pump,e_object *i_SRC,double thermal_prop,double min_t,double max_t);
 	~Cooling();
-	h_pump*	CoolingPump;		//the cooling system's pump
+	Pump* CoolingPump;		//the cooling system's pump
 	therm_obj* list[16];		//the list of radiators (first one [0] is the thing we're cooling
 	h_tank* coolingTubes[16];	//list of cooling volumes, [0] is the interface with the object being cooled
 	double length[16];		//and their pipe length
