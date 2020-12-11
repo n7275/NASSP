@@ -904,7 +904,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		}
 	}
 
-	sprintf(oapiDebugString(), "%lf", *(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE1:TEMP"));
+	sprintf(oapiDebugString(), "%lf %lf %lf", *(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE1:PRESS"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR2TUBE1:PRESS"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR3TUBE1:PRESS"));
 
 	//sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; EPS-R1 %0.1fK, EPS-R2 %0.1fK, EPS-R3 %0.1fK, EPS-R4 %0.1fK",
 	//	FuelCells[0]->Temp, FuelCells[1]->Temp, FuelCells[2]->Temp,

@@ -229,6 +229,12 @@ public:
 	h_Valve *H2_SRC;	//source for H2
 	h_Valve *H20_waste;	//pointer to a waste tank
 
+	h_HeatExchanger *Condenser;
+	h_HeatExchanger *O2Preheater;
+	h_HeatExchanger *H2Preheater;
+	h_Tank *N2_Blanket;
+	h_WaterSeparator *H20_Separator;
+
 	unsigned int numCells = 31;
 
 	double H2_flow, O2_flow, H2_flowPerSecond, O2_flowPerSecond;
@@ -404,11 +410,11 @@ public:
 	Cooling(char *i_name,int i_pump,e_object *i_SRC,double thermal_prop,double min_t,double max_t);
 	~Cooling();
 
-	//Pump* CoolingPump;		//the cooling system's pump
-	therm_obj* list[16];		//the list of radiators (first one [0] is the thing we're cooling
-	//h_Tank* coolingTubes[16];	//list of cooling volumes, [0] is the interface with the object being cooled
-	double length[16];		//and their pipe length
-	bool bypassed[16];		//and are they bypassed 
+	therm_obj* list[16];			//the list of radiators (first one [0] is the thing we're cooling
+	therm_obj* coolingObjects[16];	//list of cooling volumes, is the interface with the object being cooled
+	double length[16];				//and their pipe length
+	double heattransfercoeff[16];	//heat transfer coefficients for each object, W/(m^2K)
+	bool bypassed[16];				//and are they bypassed 
 	int nr_list;
 	double coolant_temp[16];
 	double isolation;

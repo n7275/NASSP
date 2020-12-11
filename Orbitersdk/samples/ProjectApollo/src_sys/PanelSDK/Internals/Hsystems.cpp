@@ -830,7 +830,7 @@ void h_Pipe::refresh(double dt) {
 		double in_p = in->GetPress();
 		double out_p = out->GetPress();
 
-		if (type == 1) {	  //PREG
+		if (type == 1) {	  //Pressure Regulator
 			in_p = (in_p > P_max ? P_max : in_p);
 
 		} else if (type == 2) { //BURST
