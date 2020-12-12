@@ -79,29 +79,46 @@ void E_system::Create_Pump(char *line) {
 	AddSystem(new Pump(name, pump, SRC, size, power, in, out));
 }
 
-void E_system::Create_Cooling(char *line)
+void E_system::Create_Cooling(char *line)//gets called when the parser finds "<COOLING>"
 {
-char name[100];
+char name[100]; //name of the cooling system
 char source[100];
-double lngt;
+char source_c[100];
+double lngt; //cooling tube length
+double h; //heat transfer coefficient
 //int num;
 int pump;
 double term,max,min;
-therm_obj *TR1;
-e_object *P_SRC;
-ship_object* NON_t;
-sscanf(line+9,"%s %i %s %lf %lf %lf",name,&pump,source,&term,&min,&max);
-P_SRC=(e_object*)GetPointerByString(source);
-Cooling *new_c=(Cooling*)AddSystem(new Cooling(name,pump,P_SRC,term,min,max));
+therm_obj *TR1; //pointer to thermal object--hot thing (by design, in practice it can be colder or hotter)
+therm_obj *TRC; //pointer to thermal object--colder thing (by design, in practice it can be colder or hotter)
+e_object *P_SRC; //temporary pointer to the electrical source for the cooling system
+ship_object* NON_t;	//a ship object, radiator or hot item that needs to be cooled
+ship_object* NON_t_c; //another ship object, that corresponds with the above, contains cooling fluid
+
+sscanf(line+9,"%s %i %s %lf %lf %lf",name,&pump,source,&term,&min,&max); //read the first line
+P_SRC=(e_object*)GetPointerByString(source); //get a pointer to the electrical source 
+
+Cooling *new_c = (Cooling*)AddSystem(new Cooling(name,pump,P_SRC,term,min,max));
 line=ReadConfigLine();
-while (!Compare(line,"</COOLING>")){
-		sscanf(line,"%s %lf",source,&lngt);
+	while (!Compare(line,"</COOLING>"))
+	{
+		sscanf(line,"%s %lf %s %lf",source, &lngt, source_c, &h);
 		NON_t=(ship_object*)GetPointerByString(source);
-		if (NON_t) TR1=NON_t->GetThermalInterface();
-		if (TR1)
-			new_c->AddObject(TR1,lngt);
-		line=ReadConfigLine();
+		NON_t_c = (ship_object*)GetPointerByString(source_c);
+
+		if (NON_t && NON_t_c) //make sure these aren't NULL
+		{
+			TR1 = NON_t->GetThermalInterface(); //get therm_obj pointers
+			TRC = NON_t_c->GetThermalInterface();
 		}
+
+		if (TR1 && TRC)
+		{
+			new_c->AddObject(TR1, lngt, TRC, h); //add the pair of objects to new_c
+		}
+
+		line=ReadConfigLine();
+	}
 
 }
 void E_system::Create_Socket(char *line)

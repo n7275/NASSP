@@ -403,7 +403,7 @@ protected:
 /// \ingroup PanelSDK
 /// The cooling system simulation class.
 ///
-
+/// \brief Cooling: Provides an interface between a two lists of thermal objects
 class Pump;
 class Cooling: public e_object {
 public:
@@ -413,12 +413,12 @@ public:
 	therm_obj* list[16];			//the list of radiators (first one [0] is the thing we're cooling
 	therm_obj* coolingObjects[16];	//list of cooling volumes, is the interface with the object being cooled
 	double length[16];				//and their pipe length
-	double heattransfercoeff[16];	//heat transfer coefficients for each object, W/(m^2K)
+	double heattransfercoeff[16];	//heat transfer coefficients for each object, W/(mK) (not m^2 because we don't have area)
 	bool bypassed[16];				//and are they bypassed 
 	int nr_list;
 	double coolant_temp[16];
 	double isolation;
-	void AddObject(therm_obj* new_t,double lght);
+	void AddObject(therm_obj* new_t, double lght, therm_obj* new_cool_obj, double h);
 	virtual void refresh(double dt);
 	int h_pump;
 	int handle_min;

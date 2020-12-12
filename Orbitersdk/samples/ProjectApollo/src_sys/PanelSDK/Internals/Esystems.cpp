@@ -1202,12 +1202,13 @@ Cooling::Cooling(char *i_name,int i_pump,e_object *i_SRC,double thermal_prop,dou
 	loaded=0; //ie. not PLOADed
 };
 
-void Cooling::AddObject(therm_obj *new_t, double lght) 
-
+void Cooling::AddObject(therm_obj* new_t, double lght, therm_obj* new_cool_obj, double h)
 {
 	if (nr_list < 16) {
 		list[nr_list] = new_t;
+		coolingObjects[nr_list] = new_cool_obj;
 		length[nr_list] = lght;
+		heattransfercoeff[nr_list] = h;
 		bypassed[nr_list] = false;
 		nr_list++;
 	}
