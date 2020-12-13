@@ -1215,11 +1215,15 @@ void Cooling::AddObject(therm_obj* new_t, double lght, therm_obj* new_cool_obj, 
 }
 
 void Cooling::refresh(double dt) 
-
 {
-	double throttle, heat_ex;
-	therm_obj* activelist[16];	//the list of not bypassed objects
+	double throttle;
+	double heat_ex; //heat, to be exchanged, Joules
+
+	therm_obj* activelist[16];		//the list of objects in this instance Cooling 
 	double activelength[16];		//and their pipe length
+
+	therm_obj* activelist_c[16];	//list of cooling objects (radiator tubes)
+	double active_h[16];			//list of heat transfer coefficients in this instance
 	int nr_activelist = 0;
 
 	if (handle_min)
@@ -1227,66 +1231,98 @@ void Cooling::refresh(double dt)
 	if (handle_max)
 		max += handle_max / 10.0 * dt;
 	
-	int i;
+	//int i;
 
-	// build active list
-	for (i = 0; i < nr_list; i++) {
-		if (!bypassed[i]) {
+	// build active list of objects we actually have pointers too
+	//if there are less than the max that Cooling allows, this loop finds the ones that aren't nullptr
+	for (int i = 0; i < nr_list; i++)
+	{
+		if (!bypassed[i])
+		{
 			activelist[nr_activelist] = list[i];
 			activelength[nr_activelist] = length[i];
+			activelist_c[nr_activelist] = coolingObjects[i];
+			active_h[nr_activelist] = heattransfercoeff[i];
 			nr_activelist++;
 		}
 	}
 
 	// everthing is bypassed
-	if (nr_activelist == 0)	{
+	if (nr_activelist == 0)
+	{
 		pumping = 0;
-	} else {
-		if (h_pump == 0) pumping = 0; //off
-		if (h_pump == 1) {
+	}
+	else
+	{
+		if (h_pump == 0)
+		{
+			pumping = 0; //off
+		}
+
+		if (h_pump == 1)
+		{
 			if (activelist[0]->Temp < min) //turn the cooling off
-					pumping = 0;
-			if (activelist[0]->Temp > max) { //turn the cooling on
+			{
+				pumping = 0;
+			}
+
+			if (activelist[0]->Temp > max) //turn the cooling on
+			{	
+				pumping = 1;
+				throttle = 1.0;
+			} 
+			else if (activelist[0]->Temp > min)
+			{
 					pumping = 1;
-					throttle = 1.0;
-			} else if (activelist[0]->Temp > min) {
-					pumping = 1;
-					throttle = (activelist[0]->Temp - min) / (max - min);
+					throttle = (activelist[0]->Temp - min) / (max - min); // typicially on of off; leaving for now. may kill later.
 			}
 		}
-		if (h_pump == -1) {
+
+		if (h_pump == -1)
+		{
 			pumping = 1;	//manual on
 			throttle = 1.0;
 		}
 	}
 
-	if (pumping) //time to do the rumba
-	{ 
-		if (SRC && SRC->Voltage() > SP_MIN_DCVOLTAGE)
-		{
-		  SRC->DrawPower(65.0);
-
-		}
-		else //no power
-		{ 
-		  pumping = 0;
-		  return;
-		} 
-
-		for (i = 0; i < nr_activelist - 1; i++)
-		{
-			heat_ex = (activelist[i+1]->Temp - activelist[i]->Temp) * activelength[i] * dt * isolation * throttle;
-			activelist[i]->thermic(heat_ex);
-			activelist[i+1]->thermic(-heat_ex);
-		}
-
-		heat_ex = (activelist[0]->Temp - activelist[nr_activelist-1]->Temp) * activelength[0] * dt * isolation * throttle;
-		activelist[0]->thermic(-heat_ex);
+	for (int i = 0; i < nr_activelist - 1; i++)
+	{
+		heat_ex = (activelist[i]->Temp - activelist_c[i]->Temp) * activelength[i] * active_h[i] * isolation * throttle * dt; //power would be: heat_ex/dt
+		
+		activelist[i]->thermic(-heat_ex);
+		activelist_c[i]->thermic(heat_ex);
 	}
+
+	//heat_ex = (activelist[0]->Temp - activelist[nr_activelist-1]->Temp) * activelength[0] * dt * isolation * throttle;
+	//activelist[0]->thermic(-heat_ex);
+
+	//if (pumping) //time to do the rumba
+	//{ 
+	//	if (SRC && SRC->Voltage() > SP_MIN_DCVOLTAGE)
+	//	{
+	//	  SRC->DrawPower(65.0);
+
+	//	}
+	//	else //no power
+	//	{ 
+	//	  pumping = 0;
+	//	  return;
+	//	} 
+
+	//	for (i = 0; i < nr_activelist - 1; i++)
+	//	{
+	//		heat_ex = (activelist[i+1]->Temp - activelist[i]->Temp) * activelength[i] * dt * isolation * throttle;
+	//		activelist[i]->thermic(heat_ex);
+	//		activelist[i+1]->thermic(-heat_ex);
+	//	}
+
+	//	heat_ex = (activelist[0]->Temp - activelist[nr_activelist-1]->Temp) * activelength[0] * dt * isolation * throttle;
+	//	activelist[0]->thermic(-heat_ex);
+	//}
 
 	// average temp except the first
 	coolant_temp[0] = 0.0;
-	for (i = 1; i < nr_activelist; i++) {
+	for (int i = 1; i < nr_activelist; i++) {
 		coolant_temp[0] += activelist[i]->Temp;
 	}
 	coolant_temp[0] = coolant_temp[0] / (nr_activelist - 1.0);

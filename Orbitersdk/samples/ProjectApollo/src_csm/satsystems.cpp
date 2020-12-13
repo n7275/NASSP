@@ -904,7 +904,35 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		}
 	}
 
-	sprintf(oapiDebugString(), "%lf %lf %lf", *(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE1:PRESS"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR2TUBE1:PRESS"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR3TUBE1:PRESS"));
+	sprintf(oapiDebugString(), "FC1 LOOP: EPS_RAD1 %0.1fK EPS_RAD2 %0.1fK EPS_RAD3 %0.1fK EPS_RAD4 %0.1fK EPS_RAD5 %0.1fK EPS_RAD6 %0.1fK EPS_RAD7 %0.1fK EPS_RAD8 %0.1fK",
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE1:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR2TUBE1:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR3TUBE1:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR4TUBE1:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5TUBE1:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TUBE1:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR7TUBE1:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE1:TEMP"));
+
+	//sprintf(oapiDebugString(), "FC2 LOOP: EPS_RAD1 %0.1fK EPS_RAD2 %0.1fK EPS_RAD3 %0.1fK EPS_RAD4 %0.1fK EPS_RAD5 %0.1fK EPS_RAD6 %0.1fK EPS_RAD7 %0.1fK EPS_RAD8 %0.1fK",
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR2TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR3TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR4TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR7TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE2:TEMP"));
+
+	//sprintf(oapiDebugString(), "FC3 LOOP: EPS_RAD1 %0.1fK EPS_RAD2 %0.1fK EPS_RAD3 %0.1fK EPS_RAD4 %0.1fK EPS_RAD5 %0.1fK EPS_RAD6 %0.1fK EPS_RAD7 %0.1fK EPS_RAD8 %0.1fK",
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR2TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR3TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR4TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR7TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE2:TEMP"));
 
 	//sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; EPS-R1 %0.1fK, EPS-R2 %0.1fK, EPS-R3 %0.1fK, EPS-R4 %0.1fK",
 	//	FuelCells[0]->Temp, FuelCells[1]->Temp, FuelCells[2]->Temp,
