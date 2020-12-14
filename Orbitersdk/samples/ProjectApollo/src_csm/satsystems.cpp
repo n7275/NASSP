@@ -904,7 +904,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		}
 	}
 
-	sprintf(oapiDebugString(), "FC1 LOOP: EPS_RAD1 %0.1fK EPS_RAD2 %0.1fK EPS_RAD3 %0.1fK EPS_RAD4 %0.1fK EPS_RAD5 %0.1fK EPS_RAD6 %0.1fK EPS_RAD7 %0.1fK EPS_RAD8 %0.1fK",
+	sprintf(oapiDebugString(), "FC1 LOOP: EPS_RAD1 %0.3fK EPS_RAD2 %0.3fK EPS_RAD3 %0.3fK EPS_RAD4 %0.3fK EPS_RAD5 %0.3fK EPS_RAD6 %0.3fK EPS_RAD7 %0.3fK EPS_RAD8 %0.3fK",
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE1:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR2TUBE1:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR3TUBE1:TEMP"),
