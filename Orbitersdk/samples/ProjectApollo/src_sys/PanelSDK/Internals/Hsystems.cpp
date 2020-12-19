@@ -491,21 +491,31 @@ void h_volume::ThermalComps(double dt) {
 
 		// temperature dependency of the density is assumed 1 to 2 g/l
 		double density = L_DENSITY[composition[i].subst_type];
-		if (composition[i].subst_type == SUBSTANCE_O2) {
+
+		if (composition[i].subst_type == SUBSTANCE_O2)
+		{
 			// Liquid density is temperature dependent because of cryo tank pressurization with a heater
 			// Correction term is 0 at O2 initial tank temperature (75K), the other factors are "empirical"
 			density += 0.56 * Temp * Temp - 134.0 * Temp + 6900.0;
 
-		} else if (composition[i].subst_type == SUBSTANCE_H2) {
+		} 
+		else if (composition[i].subst_type == SUBSTANCE_H2)
+		{
 			// Liquid density is temperature dependent because of cryo tank pressurization with a heater
 			// Correction term is 0 at H2 boiling point (20K), the other factors are "empirical"
 			density += 0.03333 * Temp * Temp - 4.3333 * Temp + 73.3333;
 		}
+
 		tNV = (composition[i].mass - composition[i].vapor_mass) / density;	//Units of L
 		NV += tNV;	//Units of L
 
 		PNV += tNV / BULK_MOD[composition[i].subst_type];;	//Units of L/Pa
 	}
+
+	//if (Press > CRITICAL_P[composition[i].subst_type] && Temp > CRITICAL_T[composition[i].subst_type])
+	//{
+	//	//do something to deal with supercritical fluids.
+	//}
 
 	m_i = -m_i * R_CONST * Temp;	//Units of L*Pa
 	NV = Volume - NV;	//Units of L
@@ -523,12 +533,18 @@ void h_volume::ThermalComps(double dt) {
 		//recompute the vapor press
 		vap_press = VAPPRESS[composition[i].subst_type] - (273.0 - Temp) * VAPGRAD[composition[i].subst_type];  //this is vapor pressure of current substance
 		//need to boil material if vapor pressure > pressure, otherwise condense
-		if (vap_press > Press)	
+		if (vap_press > Press)
+		{
 			Q += composition[i].Boil(dt);
+		}
 		else
+		{
 			Q += composition[i].Condense(dt);
+		}
 
 		composition[i].p_press = R_CONST * Temp * (composition[i].vapor_mass / MMASS[composition[i].subst_type]) / air_volume;
+
+
 	}
 }
 

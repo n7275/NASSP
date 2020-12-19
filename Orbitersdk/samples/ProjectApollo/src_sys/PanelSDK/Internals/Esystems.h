@@ -265,7 +265,7 @@ public:
 	const double hydrogenHHV = 1.482; //volts (per cell), 286kJ/mol /(2 mols * Faraday's constant)
 	const double hydrogenLHV = 1.254; //volts (per cell), 241kJ/mol /(2 mols * Faraday's constant)
 
-	FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2, h_Valve* waste, float r_watts);
+	FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2, h_Valve* waste, float r_watts, h_Tank *N2tank, h_Tank *N2Atm);
 	void DrawPower(double watts);
 	void PUNLOAD(double watts);
 	void refresh(double dt);
@@ -417,7 +417,7 @@ public:
 	double heattransfercoeff[16];	//heat transfer coefficients for each object, W/(mK) (not m^2 because we don't have area)
 	bool bypassed[16];				//and are they bypassed 
 	int nr_list;
-	double coolant_temp[16];
+	double coolant_temp[16];			
 	double isolation;
 	void AddObject(therm_obj* new_t, double lght, therm_obj* new_cool_obj, double h);
 	virtual void refresh(double dt);

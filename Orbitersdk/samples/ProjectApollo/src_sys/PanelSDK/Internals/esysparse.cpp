@@ -184,17 +184,21 @@ void E_system::Create_FCell(char *line) {
 	char source1[100];
 	char source2[100];
 	char source3[100];
+	char N2Tank[100];
+	char N2Atmosphere[100];
 	vector3 pos;
 	int status;
 
-	sscanf(line+7, "%s %i <%lf %lf %lf> %lf %s %s %s", name, &status, &pos.x, &pos.y, &pos.z,
-		&power, source1, source2, source3);
+	sscanf(line+7, "%s %i <%lf %lf %lf> %lf %s %s %s %s %s", name, &status, &pos.x, &pos.y, &pos.z,
+		&power, source1, source2, source3, N2Tank, N2Atmosphere);
 
 	h_Valve* O_SRC = (h_Valve*)P_hydraulics->GetPointerByString(source1);
 	h_Valve* H_SRC = (h_Valve*)P_hydraulics->GetPointerByString(source2);
 	h_Valve* WATER = (h_Valve*)P_hydraulics->GetPointerByString(source3);
+	h_Tank* N2TANK = (h_Tank*)P_hydraulics->GetPointerByString(N2Tank);
+	h_Tank* N2ATM = (h_Tank*)P_hydraulics->GetPointerByString(N2Atmosphere);
 
-	FCell *new_fc = (FCell*)AddSystem(new FCell(name, status, pos, O_SRC, H_SRC, WATER, (float)power));
+	FCell *new_fc = (FCell*)AddSystem(new FCell(name, status, pos, O_SRC, H_SRC, WATER, (float)power, N2TANK, N2ATM));
 }
 
 void E_system::Build() {

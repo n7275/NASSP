@@ -302,7 +302,7 @@ void H_system::Create_h_Pipe(char *line) {
 
 	line = ReadConfigLine();
 	while (!Compare(line,"</PIPE>")) {type[0]=0;is_two[0]=0;
-		sscanf (line, "%s %s %s %lf %lf %s %lf %lf",in_valve,out_valve,type,&max,&min,is_two,in_isolation,out_isolation);
+		sscanf (line, "%s %s %s %lf %lf %s %lf %lf",in_valve,out_valve,type,&max,&min,is_two,&in_isolation,&out_isolation);
 
 		int two_way=1;
 		if (Compare(type,"ONEWAY")) two_way=0;

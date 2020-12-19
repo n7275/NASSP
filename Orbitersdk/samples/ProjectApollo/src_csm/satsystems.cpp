@@ -904,13 +904,21 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		}
 	}
 
-	sprintf(oapiDebugString(), "FC1 N2 Tank %0.1fkPa FC1 N2 Atm %0.1fkPa FC2 N2 Tank %0.1fkPa FC2 N2 Atm %0.1fkPa FC3 N2 Tank %0.1fkPa FC3 N2 Atm %0.1fkPa",
+	//sprintf(oapiDebugString(), "FC1 N2 Tank %0.2fK FC1 N2 Atm %0.2fK FC2 N2 Tank %0.2fK FC2 N2 Atm %0.2fK FC3 N2 Tank %0.2fK FC3 N2 Atm %0.2fK",
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1HEADERTANK:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1BLANKET:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2HEADERTANK:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2BLANKET:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3HEADERTANK:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET:TEMP"));
+
+	/*sprintf(oapiDebugString(), "FC1 N2 Tank %0.1fkPa FC1 N2 Atm %0.1fkPa FC2 N2 Tank %0.1fkPa FC2 N2 Atm %0.1fkPa FC3 N2 Tank %0.1fkPa FC3 N2 Atm %0.1fkPa",
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1HEADERTANK:PRESS") / 1000,
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1BLANKET:PRESS") / 1000,
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2HEADERTANK:PRESS") / 1000,
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2BLANKET:PRESS") / 1000,
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3HEADERTANK:PRESS") / 1000,
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET:PRESS") / 1000);
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET:PRESS") / 1000);*/
 
 	//sprintf(oapiDebugString(), "FC1 LOOP: EPS_RAD1 %0.3fK EPS_RAD2 %0.3fK EPS_RAD3 %0.3fK EPS_RAD4 %0.3fK EPS_RAD5 %0.3fK EPS_RAD6 %0.3fK EPS_RAD7 %0.3fK EPS_RAD8 %0.3fK",
 	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE1:TEMP"),
