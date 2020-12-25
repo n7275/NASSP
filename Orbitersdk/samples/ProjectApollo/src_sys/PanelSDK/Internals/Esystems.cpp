@@ -328,11 +328,9 @@ void FCell::Reaction(double dt, double thrust)
 	// results of reaction
 	double H2O_flow = O2_flow + H2_flow;
 
-	//efficiency and heat generation
-	double efficiency = Volts / (hydrogenLHV*numCells);
-	double heat = ((power_load / efficiency) - power_load)*dt;
-
-	//heat *= 1.5; ///TODO: FIX WHAT EVER IS COOLING TOO MUCH AND REMOVE THIS LINE
+	//heat generation
+	double heat = H2O_flow * H2RATIO * 141584; //H2 heat of combustion = 141584 J/g
+	heat -= power_load * dt;
 
 	// purging
 	if (status == 3)
@@ -383,7 +381,7 @@ void FCell::Reaction(double dt, double thrust)
 	h2o_volume.Void();
 	h2o_volume.composition[SUBSTANCE_H2O].mass += H2O_flow;
 	h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
-	h2o_volume.GetQ(); 
+	h2o_volume.GetQ();
 	
 	thermic(heat); //heat from the reaction
 	H20_waste->Flow(h2o_volume);
@@ -1202,10 +1200,10 @@ Cooling::Cooling(char *i_name,int i_pump,e_object *i_SRC,double thermal_prop,dou
 	pumping=h_pump=i_pump;
 	max=max_t;
 	min=min_t;
-	handle_min=0;
-	handle_max=0;
+	/*handle_min=0;
+	handle_max=0;*/
 	nr_list=0;
-	coolant_temp[0]=300.0; // reasonable ambient temperature
+	coolant_temp = 300.0; // reasonable ambient temperature
 	isolation=thermal_prop;
 	SRC=i_SRC;
 	loaded=0; //ie. not PLOADed
@@ -1235,13 +1233,6 @@ void Cooling::refresh(double dt)
 	double active_h[16];			//list of heat transfer coefficients in this instance
 	int nr_activelist = 0;
 
-	if (handle_min)
-		min += handle_min / 10.0 * dt;
-	if (handle_max)
-		max += handle_max / 10.0 * dt;
-	
-	//int i;
-
 	// build active list of objects we actually have pointers too
 	//if there are less than the max that Cooling allows, this loop finds the ones that aren't nullptr
 	for (int i = 0; i < nr_list; i++)
@@ -1256,85 +1247,37 @@ void Cooling::refresh(double dt)
 		}
 	}
 
-	// everthing is bypassed
-	if (nr_activelist == 0)
-	{
-		pumping = 0;
-	}
-	else
-	{
-		if (h_pump == 0)
-		{
-			pumping = 0; //off
-		}
-
-		if (h_pump == 1)
-		{
-			if (activelist[0]->Temp < min) //turn the cooling off
-			{
-				pumping = 0;
-			}
-
-			if (activelist[0]->Temp > max) //turn the cooling on
-			{	
-				pumping = 1;
-				throttle = 1.0;
-			} 
-			else if (activelist[0]->Temp > min)
-			{
-					pumping = 1;
-					throttle = (activelist[0]->Temp - min) / (max - min); // typicially on of off; leaving for now. may kill later.
-			}
-		}
-
-		if (h_pump == -1)
-		{
-			pumping = 1;	//manual on
-			throttle = 1.0;
-		}
-	}
 
 	for (int i = 0; i < nr_activelist - 1; i++)
 	{
-		heat_ex = (activelist[i]->Temp - activelist_c[i]->Temp) * activelength[i] * active_h[i] * isolation * throttle * dt; //power would be: heat_ex/dt
+		heat_ex = (activelist[i]->Temp - activelist_c[i]->Temp) * activelength[i] * active_h[i] * isolation * dt; //power is = heat_ex/dt
 		
 		activelist[i]->thermic(-heat_ex);
 		activelist_c[i]->thermic(heat_ex);
 	}
 
-	//heat_ex = (activelist[0]->Temp - activelist[nr_activelist-1]->Temp) * activelength[0] * dt * isolation * throttle;
-	//activelist[0]->thermic(-heat_ex);
+	coolant_temp = activelist_c[nr_activelist - 2]->Temp; //radiator outlet temperature, typicially used by C/W systems
 
-	//if (pumping) //time to do the rumba
-	//{ 
-	//	if (SRC && SRC->Voltage() > SP_MIN_DCVOLTAGE)
-	//	{
-	//	  SRC->DrawPower(65.0);
-
-	//	}
-	//	else //no power
-	//	{ 
-	//	  pumping = 0;
-	//	  return;
-	//	} 
-
-	//	for (i = 0; i < nr_activelist - 1; i++)
-	//	{
-	//		heat_ex = (activelist[i+1]->Temp - activelist[i]->Temp) * activelength[i] * dt * isolation * throttle;
-	//		activelist[i]->thermic(heat_ex);
-	//		activelist[i+1]->thermic(-heat_ex);
-	//	}
-
-	//	heat_ex = (activelist[0]->Temp - activelist[nr_activelist-1]->Temp) * activelength[0] * dt * isolation * throttle;
-	//	activelist[0]->thermic(-heat_ex);
-	//}
-
-	// average temp except the first
-	coolant_temp[0] = 0.0;
-	for (int i = 1; i < nr_activelist; i++) {
-		coolant_temp[0] += activelist[i]->Temp;
+	const double maxRegenHeatXferCoeff = 25.0;
+	double regen_heatTransferCoeff, regenHeatEx;
+	
+	if(coolant_temp < min) //if ther radiator outlet temperature is below the minimum speficied
+	{ 
+		regen_heatTransferCoeff = maxRegenHeatXferCoeff;
 	}
-	coolant_temp[0] = coolant_temp[0] / (nr_activelist - 1.0);
+	else if (coolant_temp > max)
+	{
+		regen_heatTransferCoeff = 0.0;
+	}
+	else
+	{
+		regen_heatTransferCoeff = (coolant_temp / (max - min))*maxRegenHeatXferCoeff;
+	}
+
+	regenHeatEx = (activelist_c[0]->Temp - activelist_c[nr_activelist - 1]->Temp)*regen_heatTransferCoeff;
+	
+	activelist_c[0]->thermic(regenHeatEx);
+	activelist_c[1]->thermic(-regenHeatEx);
 }
 
 void Cooling::Load(char *line, FILEHANDLE scn) {

@@ -303,10 +303,6 @@ void* Cooling::GetComponent(char *component_name) {
 
 	if (Compare(component_name,"PUMP"))
 		return (void*)&h_pump;
-	if (Compare(component_name,"HMAX"))
-		return (void*)&handle_max;
-	if (Compare(component_name,"HMIN"))
-		return (void*)&handle_min;
 	if (Compare(component_name,"ISON"))
 		return (void*)&pumping;
 	if (Compare(component_name,"MAXT"))
