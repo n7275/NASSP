@@ -451,6 +451,9 @@ void FCell::UpdateFlow(double dt)
 		}
 	}
 
+	//pressure regulators
+
+
 	switch (status) {
 
 	case 2: //stopped, not much to do
