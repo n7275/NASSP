@@ -329,7 +329,7 @@ void FCell::Reaction(double dt, double thrust)
 	double H2O_flow = O2_flow + H2_flow;
 
 	//heat generation
-	double heat = H2O_flow * H2RATIO * 141584; //H2 heat of combustion = 141584 J/g
+	double heat = H2O_flow * H2RATIO * 141528.150134; //H2 heat of combustion = 141584* H2RATIO  =  15837J/g
 	heat -= power_load * dt;
 
 	// purging

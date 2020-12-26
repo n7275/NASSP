@@ -229,9 +229,9 @@ public:
 	h_Valve *H2_SRC;	//source for H2
 	h_Valve *H20_waste;	//pointer to a waste tank
 
-	h_HeatExchanger *Condenser;
-	h_HeatExchanger *O2Preheater;
-	h_HeatExchanger *H2Preheater;
+	//h_HeatExchanger *Condenser;
+	//h_HeatExchanger *O2Preheater;
+	//h_HeatExchanger *H2Preheater;
 	h_Tank *N2_Blanket;
 	h_Tank *N2_storageTank;
 	h_WaterSeparator *H20_Separator;
