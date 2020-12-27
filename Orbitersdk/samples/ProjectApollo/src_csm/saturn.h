@@ -3602,6 +3602,10 @@ protected:
 	Cooling *FuelCellCooling[3];
 	h_Tank *FuelCellO2Manifold[3];
 	h_Tank *FuelCellH2Manifold[3];
+	h_Tank *FuelCellO2Chamber[3];
+	h_Tank *FuelCellH2Chamber[3];
+	double *FuelCellO2FlowRate[3];
+	double *FuelCellH2FlowRate[3];
 
 	// O2 tanks.
 	h_Tank *O2Tanks[2];

@@ -538,6 +538,9 @@ void FCell::UpdateFlow(double dt)
 	N2_storageTank->thermic((Temp - N2_storageTank->Temp)* 0.8 * dt);
 	thermic((N2_storageTank->Temp - Temp)* 0.8 * dt);
 
+	O2_SRC->parent->thermic((Temp - O2_SRC->parent->Temp) * 0.05 * dt);
+	H2_SRC->parent->thermic((Temp - H2_SRC->parent->Temp) * 0.05 * dt);
+
 	//*********************
 
 	e_object::UpdateFlow(dt);
