@@ -126,7 +126,8 @@ void Saturn::SystemsInit() {
 	FuelCellHeaters[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2HEATER");
 	FuelCellHeaters[2] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3HEATER");
 
-	FuelCellO2Manifold[0] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD");
+	//not used at the moment. may be useful for debugging
+	/*FuelCellO2Manifold[0] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD");
 	FuelCellO2Manifold[1] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD");
 	FuelCellO2Manifold[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD");
 
@@ -140,7 +141,7 @@ void Saturn::SystemsInit() {
 
 	FuelCellH2Chamber[0] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1CHAMBER");
 	FuelCellH2Chamber[1] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2CHAMBER");
-	FuelCellH2Chamber[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CHAMBER");
+	FuelCellH2Chamber[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CHAMBER");*/
 
 	FuelCellO2FlowRate[0] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1SUPPLYREGULATOR:FLOW");
 	FuelCellO2FlowRate[1] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2SUPPLYREGULATOR:FLOW");
@@ -3162,16 +3163,19 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	}
 
 	FCell *f = FuelCells[index - 1];
-	h_Tank *ptr_fc_o2_chamber = FuelCellO2Chamber[index - 1];
-	h_Tank *ptr_fc_h2_chamber = FuelCellH2Chamber[index - 1];
 
-	h_Valve* ptr_fc_o2_inlet = &ptr_fc_o2_chamber->IN_valve;
-	h_Valve* ptr_fc_h2_inlet = &ptr_fc_h2_chamber->IN_valve;
+	//not used at the moment. may be useful for debugging
+	//h_Tank *ptr_fc_o2_chamber = FuelCellO2Chamber[index - 1];
+	//h_Tank *ptr_fc_h2_chamber = FuelCellH2Chamber[index - 1];
 
-	h_Pipe* ptr_fc_o2_regulator = (h_Pipe*)ptr_fc_o2_inlet->parent;
-	h_Pipe* ptr_fc_h2_regulator = (h_Pipe*)ptr_fc_h2_inlet->parent;
+	//h_Valve* ptr_fc_o2_inlet = &ptr_fc_o2_chamber->IN_valve;
+	//h_Valve* ptr_fc_h2_inlet = &ptr_fc_h2_chamber->IN_valve;
 
-	sprintf(oapiDebugString(), "%lf", *FuelCellO2FlowRate[index - 1]);
+	//h_Pipe* ptr_fc_o2_regulator = (h_Pipe*)ptr_fc_o2_inlet->parent;
+	//h_Pipe* ptr_fc_h2_regulator = (h_Pipe*)ptr_fc_h2_inlet->parent;
+
+	//for debuging
+	//sprintf(oapiDebugString(), "%lf", *FuelCellO2FlowRate[index - 1]);
 
 	//
 	// Fuel cell.
