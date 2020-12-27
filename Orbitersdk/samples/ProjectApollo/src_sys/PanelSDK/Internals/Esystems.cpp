@@ -329,7 +329,7 @@ void FCell::Reaction(double dt, double thrust)
 	double H2O_flow = O2_flow + H2_flow;
 
 	//heat generation
-	double heat = H2O_flow * H2RATIO * 141528.150134; //H2 heat of combustion = 141584* H2RATIO  =  15837J/g
+	double heat = H2O_flow * 141528.150134; //H20 Heat of Formation
 	heat -= power_load * dt;
 
 	// purging
@@ -538,8 +538,8 @@ void FCell::UpdateFlow(double dt)
 	N2_storageTank->thermic((Temp - N2_storageTank->Temp)* 0.8 * dt);
 	thermic((N2_storageTank->Temp - Temp)* 0.8 * dt);
 
-	O2_SRC->parent->thermic((Temp - O2_SRC->parent->Temp) * 0.05 * dt);
-	H2_SRC->parent->thermic((Temp - H2_SRC->parent->Temp) * 0.05 * dt);
+	O2_SRC->parent->thermic((Temp - O2_SRC->parent->Temp) * 0.5 * dt);
+	H2_SRC->parent->thermic((Temp - H2_SRC->parent->Temp) * 0.5 * dt);
 
 	//*********************
 
@@ -1264,7 +1264,7 @@ void Cooling::refresh(double dt)
 
 	coolant_temp = activelist_c[nr_activelist - 2]->Temp; //radiator outlet temperature, typicially used by C/W systems
 
-	const double maxRegenHeatXferCoeff = 25.0;
+	const double maxRegenHeatXferCoeff = 2.5;
 	double regen_heatTransferCoeff, regenHeatEx;
 	
 	if(coolant_temp < min) //if ther radiator outlet temperature is below the minimum speficied

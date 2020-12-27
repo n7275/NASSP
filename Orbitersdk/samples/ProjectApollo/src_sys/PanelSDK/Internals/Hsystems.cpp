@@ -1000,8 +1000,8 @@ void h_Radiator::refresh(double dt)
 	// if (!strcmp(name, "LEM-LR-Antenna")) 
 		//sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
 
-	//if (!strcmp(name, "FUELCELLRADIATOR1")) 
-	//	sprintf(oapiDebugString(), "Temp=%lf K, Qc=%lf, Qr=%lf",Temp, Qc/dt, Qr/dt);
+	/*if (!strcmp(name, "FUELCELLRADIATOR1")) 
+		sprintf(oapiDebugString(), "Temp=%lf K, Qc=%lf, Qr=%lf",Temp, Qc/dt, Qr/dt);*/
 
 	thermic( - ( Qc + Qr));
 }
