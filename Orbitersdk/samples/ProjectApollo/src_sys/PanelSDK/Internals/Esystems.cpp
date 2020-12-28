@@ -251,7 +251,7 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	max_stage = 99;
 	pos = i_pos;
 	Area = 0.35; //size of fuel cell
-	mass = 4000; 
+	mass = 111100; 
 	c = 0.5;
 	isolation = 0.0; 
 
@@ -538,8 +538,13 @@ void FCell::UpdateFlow(double dt)
 	N2_storageTank->thermic((Temp - N2_storageTank->Temp)* 0.8 * dt);
 	thermic((N2_storageTank->Temp - Temp)* 0.8 * dt);
 
-	O2_SRC->parent->thermic((Temp - O2_SRC->parent->Temp) * 0.5 * dt);
-	H2_SRC->parent->thermic((Temp - H2_SRC->parent->Temp) * 0.5 * dt);
+	const double preheaterHeatTransferCoeff = 5.0;
+
+	O2_SRC->parent->thermic((Temp - O2_SRC->parent->Temp) * preheaterHeatTransferCoeff * dt);
+	thermic((O2_SRC->parent->Temp - Temp) * preheaterHeatTransferCoeff * dt);
+
+	H2_SRC->parent->thermic((Temp - H2_SRC->parent->Temp) * preheaterHeatTransferCoeff * dt);
+	thermic((H2_SRC->parent->Temp - Temp) * preheaterHeatTransferCoeff * dt);
 
 	//*********************
 
