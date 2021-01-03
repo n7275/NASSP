@@ -921,7 +921,24 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		}
 	}
 
-	
+	//Fuel Cell Reactant Chamber Pressures
+	//sprintf(oapiDebugString(), "FC1 O2 PRESS %0.2f, FC2 O2 PRESS %0.2f, FC3 O2 PRESS %0.2f, FC1 H2 PRESS %0.2f, FC2 H2 PRESS %0.2f, FC3 H2 PRESS %0.2f",
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1CHAMBER:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2CHAMBER:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3CHAMBER:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1CHAMBER:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2CHAMBER:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CHAMBER:PRESS"));
+
+	//Fuel Cell Manifold Pressures
+	//sprintf(oapiDebugString(), "FC1 O2 PRESS %0.2f, FC2 O2 PRESS %0.2f, FC3 O2 PRESS %0.2f, FC1 H2 PRESS %0.2f, FC2 H2 PRESS %0.2f, FC3 H2 PRESS %0.2f",
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:PRESS"));
+		
 
 	//sprintf(oapiDebugString(), "FC1 N2 Tank %0.2fK FC1 N2 Atm %0.2fK FC2 N2 Tank %0.2fK FC2 N2 Atm %0.2fK FC3 N2 Tank %0.2fK FC3 N2 Atm %0.2fK",
 	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1HEADERTANK:TEMP"),

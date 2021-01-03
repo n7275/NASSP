@@ -329,7 +329,7 @@ void FCell::Reaction(double dt, double thrust)
 	double H2O_flow = O2_flow + H2_flow;
 
 	//heat generation
-	double heat = H2O_flow * 141528.150134; //H20 Heat of Formation
+	double heat = H2_flow * 141528.150134; //H20 Heat of Formation
 	heat -= power_load * dt;
 
 	// purging
@@ -538,7 +538,7 @@ void FCell::UpdateFlow(double dt)
 	N2_storageTank->thermic((Temp - N2_storageTank->Temp)* 0.8 * dt);
 	thermic((N2_storageTank->Temp - Temp)* 0.8 * dt);
 
-	const double preheaterHeatTransferCoeff = 5.0;
+	const double preheaterHeatTransferCoeff = 125.0;
 
 	O2_SRC->parent->thermic((Temp - O2_SRC->parent->Temp) * preheaterHeatTransferCoeff * dt);
 	thermic((O2_SRC->parent->Temp - Temp) * preheaterHeatTransferCoeff * dt);
