@@ -329,8 +329,9 @@ void FCell::Reaction(double dt, double thrust)
 	double H2O_flow = O2_flow + H2_flow;
 
 	//heat generation
-	double heat = H2_flow * 141528.150134; //H20 Heat of Formation
-	heat -= power_load * dt;
+	//double heat = H2_flow * 141528.150134; //H20 Heat of Formation
+	double heat = (hydrogenLHV*numCells - Volts)*Amperes*dt;
+	//heat -= power_load * dt;
 
 	// purging
 	if (status == 3)
