@@ -1287,8 +1287,9 @@ void Cooling::refresh(double dt)
 
 	regenHeatEx = (activelist_c[0]->Temp - activelist_c[nr_activelist - 1]->Temp)*regen_heatTransferCoeff;
 	
-	activelist_c[0]->thermic(regenHeatEx);
-	activelist_c[1]->thermic(-regenHeatEx);
+	//disable temporarily
+	//activelist_c[0]->thermic(regenHeatEx);
+	//activelist_c[1]->thermic(-regenHeatEx);
 }
 
 void Cooling::Load(char *line, FILEHANDLE scn) {
