@@ -317,6 +317,8 @@ void H_system::Create_h_Pipe(char *line) {
 			AddSystem(new h_Pipe(name,in,out,2,max,min,two_way, in_isolation, out_isolation));
 		else if (Compare(type,"PVALVE"))
 			AddSystem(new h_Pipe(name,in,out,3,max,min,two_way, in_isolation, out_isolation));
+		else if (Compare(type, "VPREG"))
+			AddSystem(new h_Pipe(name, in, out, 4, max, min, two_way, in_isolation, out_isolation));
 		else
 			AddSystem(new h_Pipe(name,in,out,0,0,0,two_way, in_isolation, out_isolation));
 		

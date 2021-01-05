@@ -922,13 +922,31 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	}
 
 	//Fuel Cell Reactant Chamber Pressures
+	sprintf(oapiDebugString(), "FC1 O2 PRESS %0.2f, FC2 O2 PRESS %0.2f, FC3 O2 PRESS %0.2f, FC1 H2 PRESS %0.2f, FC2 H2 PRESS %0.2f, FC3 H2 PRESS %0.2f",
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1CHAMBER:PRESS"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2CHAMBER:PRESS"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3CHAMBER:PRESS"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1CHAMBER:PRESS"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2CHAMBER:PRESS"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CHAMBER:PRESS"));
+
+	//Fuel Cell Preheat Pressures
 	//sprintf(oapiDebugString(), "FC1 O2 PRESS %0.2f, FC2 O2 PRESS %0.2f, FC3 O2 PRESS %0.2f, FC1 H2 PRESS %0.2f, FC2 H2 PRESS %0.2f, FC3 H2 PRESS %0.2f",
-	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1CHAMBER:PRESS"),
-	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2CHAMBER:PRESS"),
-	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3CHAMBER:PRESS"),
-	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1CHAMBER:PRESS"),
-	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2CHAMBER:PRESS"),
-	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CHAMBER:PRESS"));
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1PREHEAT:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2PREHEAT:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3PREHEAT:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1PREHEAT:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2PREHEAT:PRESS"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3PREHEAT:PRESS"));
+
+	////Fuel Cell Preheat Temperatures
+	//sprintf(oapiDebugString(), "PREHEATERS: FC1 O2 TEMP %0.2fK, FC2 O2 TEMP %0.2fK, FC3 O2 TEMP %0.2f, FC1 H2 TEMP %0.2f, FC2 H2 TEMP %0.2f, FC3 H2 TEMP %0.2f",
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1PREHEAT:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2PREHEAT:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3PREHEAT:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1PREHEAT:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2PREHEAT:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3PREHEAT:TEMP"));
 
 	//Fuel Cell Manifold Pressures
 	//sprintf(oapiDebugString(), "FC1 O2 PRESS %0.2f, FC2 O2 PRESS %0.2f, FC3 O2 PRESS %0.2f, FC1 H2 PRESS %0.2f, FC2 H2 PRESS %0.2f, FC3 H2 PRESS %0.2f",
@@ -957,7 +975,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET:PRESS") / 1000);*/
 
 	//FUELCELL1 GLYCOL LOOP
-	sprintf(oapiDebugString(), "FC1 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1 %0.3fK RAD2 %0.3fK RAD3 %0.3fK RAD4 %0.3fK RAD5 %0.3fK RAD6 %0.3fK RAD7 %0.3fK RAD8 %0.3fK",
+	/*sprintf(oapiDebugString(), "FC1 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1 %0.3fK RAD2 %0.3fK RAD3 %0.3fK RAD4 %0.3fK RAD5 %0.3fK RAD6 %0.3fK RAD7 %0.3fK RAD8 %0.3fK",
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL1CONDENSER:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL1O2PREHEATGLYCOL:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL1H2PREHEATGLYCOL:TEMP"),
@@ -968,7 +986,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5TUBE1:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TUBE1:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR7TUBE1:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE1:TEMP"));
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE1:TEMP"));*/
 
 	//FUELCELL2 GLYCOL LOOP
 	/*sprintf(oapiDebugString(), "FC2 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1 %0.3fK RAD2 %0.3fK RAD3 %0.3fK RAD4 %0.3fK RAD5 %0.3fK RAD6 %0.3fK RAD7 %0.3fK RAD8 %0.3fK",

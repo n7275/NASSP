@@ -843,41 +843,74 @@ void h_Pipe::refresh(double dt) {
 	}
 	*/
 
+	
+
 	//volume flow bases on press difference
 	flow = 0;
 	if ((!in) || (!out)) return;
 
+	double in_p = in->GetPress();
+	double out_p = out->GetPress();
+
+	/*if (!strcmp(name, "O2FUELCELL1SUPPLYREGULATOR"))
+	{
+		sprintf(oapiDebugString(), "%0.10f, %0.10f", out_p, in_p);
+	}*/
+
+	if (type == 4) //VPREG
+	{
+		h_Tank* outTank = static_cast <h_Tank*> (out->parent);
+
+		/*if (!strcmp(name, "O2FUELCELL1SUPPLYREGULATOR"))
+		{
+			sprintf(oapiDebugString(), "%0.10f", outTank->space.Press);
+		}*/
+
+		if (outTank->space.Press < P_min)
+		{
+			out->open = 1;
+		}
+		else if (outTank->space.Press > P_max)
+		{
+			out->open = 0;
+		}
+	}
+
 	if (out->open && in->open) {
 
-		double in_p = in->GetPress();
-		double out_p = out->GetPress();
-
-		if (type == 1) {	  //Pressure Regulator
+		if (type == 1) //PREG
+		{	  
 			in_p = (in_p > P_max ? P_max : in_p);
-
-		} else if (type == 2) { //BURST
+		}
+		else if (type == 2) //BURST
+		{ 
 			if (in_p - out_p > P_max) open = 1;
 			if (in_p - out_p < P_min) open = 0;
 			if (open == 0) return;
-
-		} else if (type == 3) {	//PVALVE
-			if (in_p - P_max > out_p) { //one way flow;
+		}
+		else if (type == 3) //PVALVE
+		{	
+			if (in_p - P_max > out_p) //one way flow;
+			{ 
 				double vol = (in_p - P_max - out_p) * dt * in->size / 1000.0;		//size= Liters/Pa/second
-				if (out->parent->space.Volume > vol) {
+				if (out->parent->space.Volume > vol)
+				{
 					out->parent->space.Volume -= vol;
 					in->parent->space.Volume += vol;
 				}
 			}
-			if ((two_ways) && (out_p - P_max > in_p) &&
-				(out->parent->space.Volume > out->parent->Original_volume)) {
+			if ((two_ways) && (out_p - P_max > in_p) && (out->parent->space.Volume > out->parent->Original_volume))
+			{
 				double vol = (out_p - P_max - in_p) * dt * in->size / 1000.0;		//size= Liters/Pa/second
-				if (in->parent->space.Volume > vol) {
+				if (in->parent->space.Volume > vol)
+				{
 					out->parent->space.Volume += vol;
 					in->parent->space.Volume -= vol;
 				}
 			}
 			return;
 		}
+
 		if (in_p > out_p) {
 			h_volume v = in->GetFlow(dt * (in_p - out_p), flowMax * dt);
 			flow = v.GetMass() / dt; 

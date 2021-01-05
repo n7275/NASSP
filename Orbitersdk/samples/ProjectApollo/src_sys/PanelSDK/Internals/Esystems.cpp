@@ -539,7 +539,7 @@ void FCell::UpdateFlow(double dt)
 	N2_storageTank->thermic((Temp - N2_storageTank->Temp)* 0.8 * dt);
 	thermic((N2_storageTank->Temp - Temp)* 0.8 * dt);
 
-	const double preheaterHeatTransferCoeff = 125.0;
+	const double preheaterHeatTransferCoeff = 250.0;
 
 	O2_SRC->parent->thermic((Temp - O2_SRC->parent->Temp) * preheaterHeatTransferCoeff * dt);
 	thermic((O2_SRC->parent->Temp - Temp) * preheaterHeatTransferCoeff * dt);
