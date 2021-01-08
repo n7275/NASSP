@@ -204,10 +204,13 @@ public:
 	h_Valve *out;
 	double flow;	// in g/s
 	double flowMax;
+	double flowAgv; //agerage flow rate, useful for gauges
+	double flowAvgFilter;
+	double flowFiltCoeff;
 	double inIsolation; //override for conductive heat transfer through the in-valve, default to 1.0 so only determined by minimum valve size
 	double outIsolation; //override for conductive heat transfer through the out-valve default to 1.0 so only determined by minimum valve size
 
-	h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two, double inIsol, double outIsol);
+	h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two, double inIsol, double outIsol, double flowFiltCoefficient);
 	virtual	void refresh(double dt);	//this called at each timestep
 	virtual void* GetComponent(char *component_name);
 	void BroadcastDemision(ship_object * gonner);

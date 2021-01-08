@@ -143,13 +143,13 @@ void Saturn::SystemsInit() {
 	FuelCellH2Chamber[1] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2CHAMBER");
 	FuelCellH2Chamber[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CHAMBER");*/
 
-	FuelCellO2FlowRate[0] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1SUPPLYREGULATOR:FLOW");
-	FuelCellO2FlowRate[1] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2SUPPLYREGULATOR:FLOW");
-	FuelCellO2FlowRate[2] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3SUPPLYREGULATOR:FLOW");
+	FuelCellO2FlowRate[0] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1SUPPLYREGULATOR:AGVFLOW");
+	FuelCellO2FlowRate[1] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2SUPPLYREGULATOR:AGVFLOW");
+	FuelCellO2FlowRate[2] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3SUPPLYREGULATOR:AGVFLOW");
 
-	FuelCellH2FlowRate[0] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1SUPPLYREGULATOR:FLOW");
-	FuelCellH2FlowRate[1] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2SUPPLYREGULATOR:FLOW");
-	FuelCellH2FlowRate[2] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3SUPPLYREGULATOR:FLOW");
+	FuelCellH2FlowRate[0] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1SUPPLYREGULATOR:AGVFLOW");
+	FuelCellH2FlowRate[1] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2SUPPLYREGULATOR:AGVFLOW");
+	FuelCellH2FlowRate[2] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3SUPPLYREGULATOR:AGVFLOW");
 
 	//
 	// O2 tanks.
@@ -922,13 +922,13 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	}
 
 	//Fuel Cell Reactant Chamber Pressures
-	sprintf(oapiDebugString(), "FC1 O2 PRESS %0.2f, FC2 O2 PRESS %0.2f, FC3 O2 PRESS %0.2f, FC1 H2 PRESS %0.2f, FC2 H2 PRESS %0.2f, FC3 H2 PRESS %0.2f",
+	/*sprintf(oapiDebugString(), "FC1 O2 PRESS %0.2f, FC2 O2 PRESS %0.2f, FC3 O2 PRESS %0.2f, FC1 H2 PRESS %0.2f, FC2 H2 PRESS %0.2f, FC3 H2 PRESS %0.2f",
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1CHAMBER:PRESS"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2CHAMBER:PRESS"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3CHAMBER:PRESS"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1CHAMBER:PRESS"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2CHAMBER:PRESS"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CHAMBER:PRESS"));
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CHAMBER:PRESS"));*/
 
 	//Fuel Cell Preheat Pressures
 	//sprintf(oapiDebugString(), "FC1 O2 PRESS %0.2f, FC2 O2 PRESS %0.2f, FC3 O2 PRESS %0.2f, FC1 H2 PRESS %0.2f, FC2 H2 PRESS %0.2f, FC3 H2 PRESS %0.2f",

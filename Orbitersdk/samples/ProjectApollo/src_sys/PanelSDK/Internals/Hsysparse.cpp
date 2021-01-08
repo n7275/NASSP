@@ -296,13 +296,14 @@ void H_system::Create_h_Pipe(char *line) {
 	char is_two[100];
 	double in_isolation = 1.0;
 	double out_isolation = 1.0;
+	double flowFiltCoefficient = 0.0;
 
 	if (sscanf(line + 6, " %s", name) <= 0)
 		name[0] = '\0';
 
 	line = ReadConfigLine();
 	while (!Compare(line,"</PIPE>")) {type[0]=0;is_two[0]=0;
-		sscanf (line, "%s %s %s %lf %lf %s %lf %lf",in_valve,out_valve,type,&max,&min,is_two,&in_isolation,&out_isolation);
+		sscanf (line, "%s %s %s %lf %lf %s %lf %lf %lf",in_valve,out_valve,type,&max,&min,is_two,&in_isolation,&out_isolation, &flowFiltCoefficient);
 
 		int two_way=1;
 		if (Compare(type,"ONEWAY")) two_way=0;
@@ -312,15 +313,15 @@ void H_system::Create_h_Pipe(char *line) {
 		out=(h_Valve*)GetPointerByString(out_valve);
 
 		if (Compare(type,"PREG"))
-			AddSystem(new h_Pipe(name,in,out,1,max,min,two_way, in_isolation, out_isolation));
+			AddSystem(new h_Pipe(name,in,out,1,max,min,two_way, in_isolation, out_isolation, flowFiltCoefficient));
 		else if (Compare(type,"BURST"))
-			AddSystem(new h_Pipe(name,in,out,2,max,min,two_way, in_isolation, out_isolation));
+			AddSystem(new h_Pipe(name,in,out,2,max,min,two_way, in_isolation, out_isolation, flowFiltCoefficient));
 		else if (Compare(type,"PVALVE"))
-			AddSystem(new h_Pipe(name,in,out,3,max,min,two_way, in_isolation, out_isolation));
+			AddSystem(new h_Pipe(name,in,out,3,max,min,two_way, in_isolation, out_isolation, flowFiltCoefficient));
 		else if (Compare(type, "VPREG"))
-			AddSystem(new h_Pipe(name, in, out, 4, max, min, two_way, in_isolation, out_isolation));
+			AddSystem(new h_Pipe(name, in, out, 4, max, min, two_way, in_isolation, out_isolation, flowFiltCoefficient));
 		else
-			AddSystem(new h_Pipe(name,in,out,0,0,0,two_way, in_isolation, out_isolation));
+			AddSystem(new h_Pipe(name,in,out,0,0,0,two_way, in_isolation, out_isolation, flowFiltCoefficient));
 		
 		line=ReadConfigLine();
 	}
@@ -432,6 +433,8 @@ void* h_Pipe::GetComponent(char *component_name) {
 		return (void*)&flowMax;
 	if (!strnicmp (component_name, "FLOW", 4))
 		return (void*)&flow;
+	if (!strnicmp(component_name, "AGVFLOW", 7))
+		return (void*)&flowAgv;
 	if (!strnicmp (component_name, "PRESSMAX", 8))
 		return (void*)&P_max;
 	if (!strnicmp (component_name, "PRESSMIN", 8))

@@ -809,7 +809,7 @@ void h_Tank::BoilAllAndSetTemp(double _t) {
 
 //------------------------------- PIPE CLASS ------------------------------------
 
-h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two, double inIsol, double outIsol)
+h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two, double inIsol, double outIsol, double flowFiltCoefficient)
 {
 	strcpy(name, i_name);
 	max_stage = 99;
@@ -821,7 +821,11 @@ h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double m
 	out = i_OUT;
 	open = 0;
 	flow = 0;
+	flowAgv = 0;
 	flowMax = 0;
+
+	flowAvgFilter = 0;
+	flowFiltCoeff = flowFiltCoefficient;
 
 	//if Hsysparse doesn't read a value for these is send a 1.0
 	//so we don't break older systems that only use minimum valve size
@@ -843,7 +847,15 @@ void h_Pipe::refresh(double dt) {
 	}
 	*/
 
-	
+	//do this before anyting below makes us return due to a closed valve
+
+	flowAvgFilter += (flow - flowAvgFilter)*flowFiltCoeff;
+	flowAgv += (flowAvgFilter - flowAgv)*flowFiltCoeff;
+
+	/*if (!strcmp(name, "O2FUELCELL1SUPPLYREGULATOR"))
+	{
+		sprintf(oapiDebugString(), "%0.10f, %0.10f, %0.10f", flow, flowAvgFilter, flowAgv);
+	}*/
 
 	//volume flow bases on press difference
 	flow = 0;
@@ -852,10 +864,7 @@ void h_Pipe::refresh(double dt) {
 	double in_p = in->GetPress();
 	double out_p = out->GetPress();
 
-	/*if (!strcmp(name, "O2FUELCELL1SUPPLYREGULATOR"))
-	{
-		sprintf(oapiDebugString(), "%0.10f, %0.10f", out_p, in_p);
-	}*/
+	
 
 	if (type == 4) //VPREG
 	{
@@ -866,13 +875,15 @@ void h_Pipe::refresh(double dt) {
 			sprintf(oapiDebugString(), "%0.10f", outTank->space.Press);
 		}*/
 
-		if (outTank->space.Press < P_min)
-		{
-			out->open = 1;
-		}
-		else if (outTank->space.Press > P_max)
+		if (outTank->space.Press > P_max)
 		{
 			out->open = 0;
+			flow = 0.0;
+			return;
+		}
+		else if (outTank->space.Press < P_min)
+		{
+			out->open = 1;
 		}
 	}
 
@@ -913,7 +924,7 @@ void h_Pipe::refresh(double dt) {
 
 		if (in_p > out_p) {
 			h_volume v = in->GetFlow(dt * (in_p - out_p), flowMax * dt);
-			flow = v.GetMass() / dt; 
+			flow = v.GetMass() / dt;
 			out->Flow(v);
 		}
 

@@ -377,6 +377,11 @@ void FCell::Reaction(double dt, double thrust)
 	//take reactants from source
 	H2_SRC->parent->space.composition[SUBSTANCE_H2].mass -= H2_flow;
 	O2_SRC->parent->space.composition[SUBSTANCE_O2].mass -= O2_flow;
+	
+	//prevent oscilation due to boiling. fuelcells won't have been calling the Reaction() function
+	//	for a while when they've cooled to the point where there can be LH2 or LOX in the reactant chambers
+	H2_SRC->parent->space.composition->BoilAll();
+	O2_SRC->parent->space.composition->BoilAll();
 
 	// flow to output
 	h2o_volume.Void();
