@@ -155,6 +155,10 @@ void Saturn::SystemsInit() {
 	FuelCellCoolantInletTemp[1] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE2:TEMP");
 	FuelCellCoolantInletTemp[2] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE3:TEMP");
 
+	FuelCellNitrogenPressure[0] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1BLANKET:PRESS");
+	FuelCellNitrogenPressure[1] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2BLANKET:PRESS");
+	FuelCellNitrogenPressure[2] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET:PRESS");
+
 	EPScoolantPump[0] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1GLYCOLPUMP");
 	EPScoolantPump[1] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2GLYCOLPUMP");
 	EPScoolantPump[2] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3GLYCOLPUMP");
@@ -3256,6 +3260,8 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	{
 		fc.O2PressurePSI = f->O2_SRC->parent->space.Press * PSI;
 	}
+
+	fc.NitrogenAtmPressure = *FuelCellNitrogenPressure[index - 1] * PSI;
 
 	fc.TempF = KelvinToFahrenheit(f->Temp);
 	fc.CondenserTempF = KelvinToFahrenheit(f->condenserTemp);

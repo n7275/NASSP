@@ -44,6 +44,7 @@ typedef struct {
 	double CoolingTempF;		///< Cooling temperature in fahrenheit.
 	double RadiatorTempInF;		///< Radiator input temperature in fahrenheit.
 	double RadiatorTempOutF;	///< Radiator output temperature in fahrenheit.
+	double NitrogenAtmPressure;	///< Nitrogen Atmosphere Pressure in PSI, not used in later missions.
 	double Voltage;				///< Output voltage.
 	double Current;				///< Output current.
 	double PowerOutput;			///< Output power.

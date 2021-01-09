@@ -3610,6 +3610,7 @@ protected:
 	double *FuelCellH2FlowRate[3];
 	double *FuelCellCoolantInletTemp[3];
 	double *FuelCellCoolantOutletTemp[3];
+	double *FuelCellNitrogenPressure[3];
 
 	// O2 tanks.
 	h_Tank *O2Tanks[2];
