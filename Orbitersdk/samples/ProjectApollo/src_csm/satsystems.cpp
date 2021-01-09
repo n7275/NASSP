@@ -151,6 +151,23 @@ void Saturn::SystemsInit() {
 	FuelCellH2FlowRate[1] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2SUPPLYREGULATOR:AGVFLOW");
 	FuelCellH2FlowRate[2] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3SUPPLYREGULATOR:AGVFLOW");
 
+	FuelCellCoolantInletTemp[0] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE1:TEMP");
+	FuelCellCoolantInletTemp[1] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE2:TEMP");
+	FuelCellCoolantInletTemp[2] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE3:TEMP");
+
+	EPScoolantPump[0] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1GLYCOLPUMP");
+	EPScoolantPump[1] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2GLYCOLPUMP");
+	EPScoolantPump[2] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3GLYCOLPUMP");
+
+	CondensorCoolant[0] = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL1CONDENSER");
+	CondensorCoolant[1] = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL1CONDENSER");
+	CondensorCoolant[2] = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL1CONDENSER");
+
+	FuelCellCoolantOutletTemp[0] = &(CondensorCoolant[0]->IN_valve.parent->Temp);
+	FuelCellCoolantOutletTemp[1] = &(CondensorCoolant[1]->IN_valve.parent->Temp);
+	FuelCellCoolantOutletTemp[2] = &(CondensorCoolant[2]->IN_valve.parent->Temp);
+
+
 	//
 	// O2 tanks.
 	//
@@ -3228,8 +3245,6 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	// Fuel cell.
 	//
 
-	char buffer[1000];
-
 	fc.H2FlowLBH = *FuelCellH2FlowRate[index - 1] * LBH;
 	if ( f->H2_SRC )
 	{
@@ -3240,24 +3255,16 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	{
 		fc.O2PressurePSI = f->O2_SRC->GetPress() * PSI;
 	}
+
 	fc.TempF = KelvinToFahrenheit(f->Temp);
 	fc.CondenserTempF = KelvinToFahrenheit(f->condenserTemp);
-
-	if (!pFCCoolingTemp[index]) {
-		sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:TEMP", index);
-		pFCCoolingTemp[index] = (double*) Panelsdk.GetPointerByString(buffer);
-	}
-	if (pFCCoolingTemp[index]) {
-		fc.CoolingTempF = KelvinToFahrenheit(*pFCCoolingTemp[index]);
-	}
 
 	fc.Voltage = FuelCells[index - 1]->Voltage();
 	fc.Current = FuelCells[index - 1]->Current();
 	fc.PowerOutput = FuelCells[index - 1]->PowerLoad();
 
-	// For now.
-	fc.RadiatorTempInF = fc.CoolingTempF;
-	fc.RadiatorTempOutF = fc.CoolingTempF;
+	fc.RadiatorTempInF = KelvinToFahrenheit(*FuelCellCoolantInletTemp[index - 1]);
+	fc.RadiatorTempOutF = KelvinToFahrenheit(*FuelCellCoolantOutletTemp[index - 1]);
 }
 
 
