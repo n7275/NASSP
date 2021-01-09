@@ -3250,6 +3250,7 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	{
 		fc.H2PressurePSI = f->H2_SRC->GetPress() * PSI;
 	}
+
 	fc.O2FlowLBH = *FuelCellO2FlowRate[index - 1] * LBH;
 	if ( f->O2_SRC )
 	{
