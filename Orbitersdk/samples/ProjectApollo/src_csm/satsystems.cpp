@@ -163,13 +163,13 @@ void Saturn::SystemsInit() {
 	EPScoolantPump[1] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2GLYCOLPUMP");
 	EPScoolantPump[2] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3GLYCOLPUMP");
 
-	CondensorCoolant[0] = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL1CONDENSER");
-	CondensorCoolant[1] = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL1CONDENSER");
-	CondensorCoolant[2] = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL1CONDENSER");
+	CoolantReturn[0] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSER1");
+	CoolantReturn[1] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSER2");
+	CoolantReturn[2] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSER3");
 
-	FuelCellCoolantOutletTemp[0] = &(CondensorCoolant[0]->IN_valve.parent->Temp);
-	FuelCellCoolantOutletTemp[1] = &(CondensorCoolant[1]->IN_valve.parent->Temp);
-	FuelCellCoolantOutletTemp[2] = &(CondensorCoolant[2]->IN_valve.parent->Temp);
+	FuelCellCoolantOutletTemp[0] = &(CoolantReturn[0]->in->parent->space.Temp);
+	FuelCellCoolantOutletTemp[1] = &(CoolantReturn[1]->in->parent->space.Temp);
+	FuelCellCoolantOutletTemp[2] = &(CoolantReturn[2]->in->parent->space.Temp);
 
 
 	//
@@ -996,7 +996,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET:PRESS") / 1000);*/
 
 	//FUELCELL1 GLYCOL LOOP
-	/*sprintf(oapiDebugString(), "FC1 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1 %0.3fK RAD2 %0.3fK RAD3 %0.3fK RAD4 %0.3fK RAD5 %0.3fK RAD6 %0.3fK RAD7 %0.3fK RAD8 %0.3fK",
+	sprintf(oapiDebugString(), "FC1 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1 %0.3fK RAD2 %0.3fK RAD3 %0.3fK RAD4 %0.3fK RAD5 %0.3fK RAD6 %0.3fK RAD7 %0.3fK RAD8 %0.3fK",
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL1CONDENSER:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL1O2PREHEATGLYCOL:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL1H2PREHEATGLYCOL:TEMP"),
@@ -1007,7 +1007,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5TUBE1:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TUBE1:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR7TUBE1:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE1:TEMP"));*/
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE1:TEMP"));
 
 	//FUELCELL2 GLYCOL LOOP
 	/*sprintf(oapiDebugString(), "FC2 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1 %0.3fK RAD2 %0.3fK RAD3 %0.3fK RAD4 %0.3fK RAD5 %0.3fK RAD6 %0.3fK RAD7 %0.3fK RAD8 %0.3fK",

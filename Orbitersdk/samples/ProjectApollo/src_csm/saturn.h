@@ -3604,7 +3604,7 @@ protected:
 	h_Tank *FuelCellH2Manifold[3];
 	h_Tank *FuelCellO2Chamber[3];
 	h_Tank *FuelCellH2Chamber[3];
-	h_Tank *CondensorCoolant[3];
+	h_Pipe *CoolantReturn[3];
 	Pump *EPScoolantPump[3];
 	double *FuelCellO2FlowRate[3];
 	double *FuelCellH2FlowRate[3];
