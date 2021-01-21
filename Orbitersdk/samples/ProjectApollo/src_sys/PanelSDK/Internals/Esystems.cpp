@@ -1264,11 +1264,12 @@ void Cooling::refresh(double dt)
 		}
 	}
 
-
 	for (int i = 0; i < nr_activelist - 1; i++)
 	{
-		heat_ex = (activelist[i]->Temp - activelist_c[i]->Temp) * activelength[i] * active_h[i] * isolation * dt; //power is = heat_ex/dt
-		
+		heat_ex = (activelist[i]->mass*activelist[i]->c)*
+			(activelist[i]->Temp - activelist_c[i]->Temp)*
+			(1-exp(-(activelength[i] * active_h[i] * isolation * dt)/(activelist[i]->mass*activelist[i]->c))); //analytical heat transfer model, replaces old Eüler's method model
+
 		activelist[i]->thermic(-heat_ex);
 		activelist_c[i]->thermic(heat_ex);
 	}
@@ -1278,20 +1279,20 @@ void Cooling::refresh(double dt)
 	const double maxRegenHeatXferCoeff = 2.5;
 	double regen_heatTransferCoeff, regenHeatEx;
 	
-	if(coolant_temp < min) //if ther radiator outlet temperature is below the minimum speficied
-	{ 
-		regen_heatTransferCoeff = maxRegenHeatXferCoeff;
-	}
-	else if (coolant_temp > max)
-	{
-		regen_heatTransferCoeff = 0.0;
-	}
-	else
-	{
-		regen_heatTransferCoeff = (coolant_temp / (max - min))*maxRegenHeatXferCoeff;
-	}
+	//if(coolant_temp < min) //if ther radiator outlet temperature is below the minimum speficied
+	//{ 
+	//	regen_heatTransferCoeff = maxRegenHeatXferCoeff;
+	//}
+	//else if (coolant_temp > max)
+	//{
+	//	regen_heatTransferCoeff = 0.0;
+	//}
+	//else
+	//{
+	//	regen_heatTransferCoeff = (coolant_temp / (max - min))*maxRegenHeatXferCoeff;
+	//}
 
-	regenHeatEx = (activelist_c[0]->Temp - activelist_c[nr_activelist - 1]->Temp)*regen_heatTransferCoeff;
+	//regenHeatEx = (activelist_c[0]->Temp - activelist_c[nr_activelist - 1]->Temp)*regen_heatTransferCoeff;
 	
 	//disable temporarily
 	//activelist_c[0]->thermic(regenHeatEx);
