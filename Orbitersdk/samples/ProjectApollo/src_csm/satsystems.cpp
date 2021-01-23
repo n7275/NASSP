@@ -167,9 +167,25 @@ void Saturn::SystemsInit() {
 	CoolantReturn[1] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSER2");
 	CoolantReturn[2] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSER3");
 
+	CoolantPipeRad_5_6[0] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5-6TUBE1");
+	CoolantPipeRad_5_6[1] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5-6TUBE1");
+	CoolantPipeRad_5_6[2] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5-6TUBE1");
+
 	FuelCellCoolantOutletTemp[0] = &(CoolantReturn[0]->in->parent->space.Temp);
 	FuelCellCoolantOutletTemp[1] = &(CoolantReturn[1]->in->parent->space.Temp);
 	FuelCellCoolantOutletTemp[2] = &(CoolantReturn[2]->in->parent->space.Temp);
+
+	EPSRadiator5OutletValve[0] = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5TUBE1:OUT");
+	EPSRadiator5OutletValve[1] = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5TUBE2:OUT");
+	EPSRadiator5OutletValve[2] = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5TUBE3:OUT");
+
+	EPSRadiator6InletValve[0] = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TUBE1:IN");
+	EPSRadiator6InletValve[1] = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TUBE2:IN");
+	EPSRadiator6InletValve[2] = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TUBE3:IN");
+
+	EPSRadiator8OutletValve[0] = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE1:OUT");
+	EPSRadiator8OutletValve[1] = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE2:OUT");
+	EPSRadiator8OutletValve[2] = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE3:OUT");
 
 
 	//
@@ -2689,28 +2705,45 @@ void Saturn::ClearEngineIndicator(int i)
 	ENGIND[i - 1] = false;
 }
 
-void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed) {
+void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed) // Bypass Radiator 6 through 8
+{
+	if (bypassed)
+	{
+		//close radiator 8 outlet valve
+		EPSRadiator8OutletValve[fuelcell - 1]->Close();
 
-	// Bypass Radiator 2 and 4
-	char buffer[100];
+		//repoint the return pipe to radiator 5
+		CoolantPipeRad_5_6[fuelcell - 1]->in = NULL;
+		CoolantReturn[fuelcell - 1]->in = EPSRadiator5OutletValve[fuelcell - 1];
 
-	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:2:BYPASSED", fuelcell);
-	bool *bp = (bool *) Panelsdk.GetPointerByString(buffer);
-	*bp = bypassed;
+		//close the radiator 6 inlet valve
+		EPSRadiator6InletValve[fuelcell - 1]->Close();
+	}
+	else
+	{
+		//close radiator 5 outlet valve
+		EPSRadiator6InletValve[fuelcell - 1]->Close();
 
-	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:4:BYPASSED", fuelcell);
-	bp = (bool *) Panelsdk.GetPointerByString(buffer);
-	*bp = bypassed;
+		//repoint the return pipe to radiator 8
+		CoolantReturn[fuelcell - 1]->in = EPSRadiator8OutletValve[fuelcell - 1];
+		CoolantPipeRad_5_6[fuelcell - 1]->in = EPSRadiator5OutletValve[fuelcell - 1];
+
+		//open the radiator 8 outlet valve
+		EPSRadiator8OutletValve[fuelcell - 1]->Open();
+	}
 }
 
-bool Saturn::FuelCellCoolingBypassed(int fuelcell) {
-
-	// It's bypassed when Radiator 2 is bypassed
-	char buffer[100];
-
-	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:2:BYPASSED", fuelcell);
-	bool *bypassed = (bool *) Panelsdk.GetPointerByString(buffer);
-	return *bypassed;
+bool Saturn::FuelCellCoolingBypassed(int fuelcell)
+{
+	//check to see where the return pipe is geting coolant from
+	if (CoolantReturn[fuelcell - 1]->in == EPSRadiator5OutletValve[fuelcell - 1])
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 //
