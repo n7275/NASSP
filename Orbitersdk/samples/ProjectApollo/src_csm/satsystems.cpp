@@ -116,11 +116,8 @@ void Saturn::SystemsInit() {
 	FuelCells[2] = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3");
 
 	FuelCellCooling[0] = (Cooling *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1COOLING");
-	FuelCellCooling[0]->WireTo(&FuelCell1PumpsACCB);
 	FuelCellCooling[1] = (Cooling *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2COOLING");
-	FuelCellCooling[1]->WireTo(&FuelCell2PumpsACCB);
 	FuelCellCooling[2] = (Cooling *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3COOLING");
-	FuelCellCooling[2]->WireTo(&FuelCell3PumpsACCB);
 
 	FuelCellHeaters[0] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1HEATER");
 	FuelCellHeaters[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2HEATER");
@@ -162,6 +159,10 @@ void Saturn::SystemsInit() {
 	EPScoolantPump[0] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1GLYCOLPUMP");
 	EPScoolantPump[1] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2GLYCOLPUMP");
 	EPScoolantPump[2] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3GLYCOLPUMP");
+
+	EPScoolantPump[0]->WireTo(&FuelCell1PumpsACCB);
+	EPScoolantPump[1]->WireTo(&FuelCell2PumpsACCB);
+	EPScoolantPump[2]->WireTo(&FuelCell3PumpsACCB);
 
 	CoolantReturn[0] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSER1");
 	CoolantReturn[1] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSER2");
@@ -2462,6 +2463,10 @@ void Saturn::CheckSMSystemsState()
 		FuelCellCooling[0]->WireTo(NULL);
 		FuelCellCooling[1]->WireTo(NULL);
 		FuelCellCooling[2]->WireTo(NULL);
+
+		EPScoolantPump[0]->WireTo(NULL);
+		EPScoolantPump[1]->WireTo(NULL);
+		EPScoolantPump[2]->WireTo(NULL);
 
 		FuelCellHeaters[0]->WireTo(NULL);
 		FuelCellHeaters[1]->WireTo(NULL);
