@@ -2717,20 +2717,22 @@ void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed) // Bypass Radiat
 		//close radiator 8 outlet valve
 		EPSRadiator8OutletValve[fuelcell - 1]->Close();
 
-		//repoint the return pipe to radiator 5
+		//disconnect the pipe between rad 5 and 6
 		CoolantPipeRad_5_6[fuelcell - 1]->in = NULL;
-		CoolantReturn[fuelcell - 1]->in = EPSRadiator5OutletValve[fuelcell - 1];
+		//connect the return to rad 5
+		CoolantReturn[fuelcell - 1]->in = EPSRadiator5OutletValve[fuelcell - 1]; 
 
 		//close the radiator 6 inlet valve
 		EPSRadiator6InletValve[fuelcell - 1]->Close();
 	}
 	else
 	{
-		//close radiator 5 outlet valve
-		EPSRadiator6InletValve[fuelcell - 1]->Close();
+		//open radiator 6 inlet valve
+		EPSRadiator6InletValve[fuelcell - 1]->Open();
 
 		//repoint the return pipe to radiator 8
 		CoolantReturn[fuelcell - 1]->in = EPSRadiator8OutletValve[fuelcell - 1];
+		//reconnect the pipe between rad 5 and 6
 		CoolantPipeRad_5_6[fuelcell - 1]->in = EPSRadiator5OutletValve[fuelcell - 1];
 
 		//open the radiator 8 outlet valve
