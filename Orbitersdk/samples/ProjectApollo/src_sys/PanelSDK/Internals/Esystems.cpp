@@ -406,7 +406,7 @@ void FCell::Reaction(double dt, double thrust)
 	*/
 }
 
-void FCell::UpdateFlow(double dt) 
+void FCell::UpdateFlow(double dt)
 {
 
 	//
@@ -428,6 +428,8 @@ void FCell::UpdateFlow(double dt)
 		e_object::UpdateFlow(dt);
 		return;
 	}
+
+	if (power_load <= 1.0) { power_load = 1.0;} //prevent division by 0.
 
 	//first we check the start_handle;
 	double thrust = 0.0;
@@ -583,6 +585,8 @@ void FCell::Clogging(double dt)
 	//O2 impurities effect voltage drop substantially more than H2(not detectable according to AOH)
 	//here we're simulating the effect by making the O2 clogging effect the voltage drop 25x as much as the H2
 	clogg = (25 * (O2_clogging / O2_max_impurities) + (H2_clogging / H2_max_impurities)) / 26.0;
+
+	clogg = clogg / 3; //reduce clogging by a factor of 3 so we can make it to our purge interval without undervolt alarms; REPLACE WITH BETTER MODEL
 }
 
 void FCell::Load(char *line)
