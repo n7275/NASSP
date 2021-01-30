@@ -1278,29 +1278,33 @@ void Cooling::refresh(double dt)
 		activelist_c[i]->thermic(heat_ex);
 	}
 
-	coolant_temp = activelist_c[nr_activelist - 2]->Temp; //radiator outlet temperature, typicially used by C/W systems
+	coolant_temp = activelist_c[nr_activelist - 1]->Temp; //radiator outlet temperature, typicially used by C/W systems
 
-	const double maxRegenHeatXferCoeff = 2.5;
+	const double maxRegenHeatXferCoeff = 10.25;
 	double regen_heatTransferCoeff, regenHeatEx;
+	h_Valve* outlet = &((h_Tank *)activelist_c[2])->OUT_valve;
+	h_Valve* inlet = &((h_Tank *)activelist_c[0])->IN_valve;
 	
-	//if(coolant_temp < min) //if ther radiator outlet temperature is below the minimum speficied
-	//{ 
-	//	regen_heatTransferCoeff = maxRegenHeatXferCoeff;
-	//}
-	//else if (coolant_temp > max)
-	//{
-	//	regen_heatTransferCoeff = 0.0;
-	//}
-	//else
-	//{
-	//	regen_heatTransferCoeff = (coolant_temp / (max - min))*maxRegenHeatXferCoeff;
-	//}
+	if(activelist_c[0]->Temp < min) //if the condenser temperature is below the minimum speficied
+	{ 
+		regen_heatTransferCoeff = maxRegenHeatXferCoeff;
+	}
+	else if (activelist_c[0]->Temp < max)
+	{
+		regen_heatTransferCoeff = (coolant_temp / (max - min))*maxRegenHeatXferCoeff;
+	}
+	else
+	{
+		return;
+	}
+	
 
-	//regenHeatEx = (activelist_c[0]->Temp - activelist_c[nr_activelist - 1]->Temp)*regen_heatTransferCoeff;
-	
-	//disable temporarily
-	//activelist_c[0]->thermic(regenHeatEx);
-	//activelist_c[1]->thermic(-regenHeatEx);
+	regenHeatEx = (activelist_c[0]->mass*activelist_c[0]->c)*
+		(outlet->GetTemp() - inlet->GetTemp())*
+		(1 - exp(-(regen_heatTransferCoeff * dt) / (activelist_c[0]->mass*activelist_c[0]->c))); //analytical heat transfer model, replaces old Eüler's method model
+
+	outlet->thermic(-regenHeatEx);
+	inlet->thermic(regenHeatEx);
 }
 
 void Cooling::Load(char *line, FILEHANDLE scn) {

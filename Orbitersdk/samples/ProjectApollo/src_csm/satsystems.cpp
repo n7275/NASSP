@@ -3298,7 +3298,11 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	fc.NitrogenAtmPressure = *FuelCellNitrogenPressure[index - 1] * PSI;
 
 	fc.TempF = KelvinToFahrenheit(f->Temp);
-	fc.CondenserTempF = KelvinToFahrenheit(f->condenserTemp);
+
+	if(FuelCellCooling[index - 1]->nr_list)
+	{
+		fc.CondenserTempF = KelvinToFahrenheit(FuelCellCooling[index - 1]->coolingObjects[0]->Temp);
+	}
 
 	fc.Voltage = FuelCells[index - 1]->Voltage();
 	fc.Current = FuelCells[index - 1]->Current();
