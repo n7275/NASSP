@@ -1027,9 +1027,10 @@ h_Radiator::~h_Radiator() {
 
 void h_Radiator::refresh(double dt) 
 {
-	double AirHeatTransferCoefficient = 10.0; //Watts/m^2K 
+	const double AirHeatTransferCoefficient = 2.0; //Watts/m^2K 
 
-	double Qc, Qr;
+	double Qc = 0.0;
+	double Qr = 0.0;
 
 	double AirTemp = parent->Vessel->GetAtmTemperature();
 
@@ -1044,6 +1045,7 @@ void h_Radiator::refresh(double dt)
 	}
 	else if (parent->Vessel->GetAtmDensity() < 1.0)
 	{
+		Qr = rad * size * 5.67e-8 * dt * pow(Temp, 4); //Stefan–Boltzmann law 
 		Qr -= Qr * (parent->Vessel->GetAtmDensity() / 1.225);
 	}
 	else

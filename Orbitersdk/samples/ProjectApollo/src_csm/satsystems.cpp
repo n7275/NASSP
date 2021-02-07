@@ -164,9 +164,9 @@ void Saturn::SystemsInit() {
 	EPScoolantPump[1]->WireTo(&FuelCell2PumpsACCB);
 	EPScoolantPump[2]->WireTo(&FuelCell3PumpsACCB);
 
-	CoolantReturn[0] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8-CONDENSER1");
-	CoolantReturn[1] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8-CONDENSER2");
-	CoolantReturn[2] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8-CONDENSER3");
+	CoolantReturn[0] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8-FUELCELL1REGEN");
+	CoolantReturn[1] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8-FUELCELL2REGEN");
+	CoolantReturn[2] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8-FUELCELL2REGEN");
 
 	CoolantPipeRad_5_6[0] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TO5-6TO8TUBE1");
 	CoolantPipeRad_5_6[1] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TO5-6TO8TUBE2");
@@ -968,6 +968,15 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2CHAMBER:PRESS"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CHAMBER:PRESS"));*/
 
+	//Fuel Cell Reactant Chamber Temperatures
+	sprintf(oapiDebugString(), "FC1 O2 TEMP %0.2fK, FC2 O2 TEMP %0.2fK, FC3 O2 TEMP %0.2fK, FC1 H2 TEMP %0.2fK, FC2 H2 TEMP %0.2fK, FC3 H2 TEMP %0.2fK",
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1CHAMBER:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2CHAMBER:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3CHAMBER:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1CHAMBER:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2CHAMBER:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CHAMBER:TEMP"));
+
 	//Fuel Cell Preheat Pressures
 	//sprintf(oapiDebugString(), "FC1 O2 PRESS %0.2f, FC2 O2 PRESS %0.2f, FC3 O2 PRESS %0.2f, FC1 H2 PRESS %0.2f, FC2 H2 PRESS %0.2f, FC3 H2 PRESS %0.2f",
 	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1PREHEAT:PRESS"),
@@ -1013,40 +1022,28 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET:PRESS") / 1000);*/
 
 	//FUELCELL1 GLYCOL LOOP
-	sprintf(oapiDebugString(), "FC1 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1-5 %0.3fK RAD6-8 %0.3fK",
+	/*sprintf(oapiDebugString(), "FC1 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1-5 %0.3fK RAD6-8 %0.3fK",
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL1CONDENSER:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL1O2PREHEATGLYCOL:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL1H2PREHEATGLYCOL:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TO5TUBE1:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8TUBE1:TEMP"));
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8TUBE1:TEMP"));*/
 
 	//FUELCELL2 GLYCOL LOOP
-	/*sprintf(oapiDebugString(), "FC2 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1 %0.3fK RAD2 %0.3fK RAD3 %0.3fK RAD4 %0.3fK RAD5 %0.3fK RAD6 %0.3fK RAD7 %0.3fK RAD8 %0.3fK",
+	/*sprintf(oapiDebugString(), "FC2 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1-5 %0.3fK RAD6-8 %0.3fK",
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL2CONDENSER:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL2O2PREHEATGLYCOL:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL2H2PREHEATGLYCOL:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR2TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR3TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR4TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR7TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE2:TEMP"));*/
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TO5TUBE2:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8TUBE2:TEMP"));*/
 
 	//FUELCELL3 GLYCOL LOOP
-	/*sprintf(oapiDebugString(), "FC3 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1 %0.3fK RAD2 %0.3fK RAD3 %0.3fK RAD4 %0.3fK RAD5 %0.3fK RAD6 %0.3fK RAD7 %0.3fK RAD8 %0.3fK",
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL3CONDENSER:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL3O2PREHEATGLYCOL:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL3H2PREHEATGLYCOL:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE3:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR2TUBE3:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR3TUBE3:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR4TUBE3:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5TUBE3:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TUBE3:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR7TUBE3:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE3:TEMP"));*/
+	/*sprintf(oapiDebugString(), "FC3 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1-5 %0.3fK RAD6-8 %0.3fK",
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL2CONDENSER:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL2O2PREHEATGLYCOL:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL2H2PREHEATGLYCOL:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TO5TUBE2:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8TUBE2:TEMP")); */
 	
 
 	//sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; EPS-R1 %0.1fK, EPS-R2 %0.1fK, EPS-R3 %0.1fK, EPS-R4 %0.1fK",

@@ -191,28 +191,32 @@ void Thermal_engine::Radiative(double dt) {
 
 	while (runner) {
 		if (planetIsEarth) {
-			Q = (float) (190.0 * (runner->pos % myr) * PlanetDistanceFactor); //blank radiation from Earth
-		} else {
+			Q = (float)(190.0 * (runner->pos % myr) * PlanetDistanceFactor); //blank radiation from Earth
+		}
+		else {
 			Q = 0;
 		}
 		Q0 = Q;
 		if (Q < 0.0) Q = 0.0;
-		
+
 		Q1 = 0.0;
-		if (InSun || planetIsSun) Q1 = (float) (1372.0 * (runner->pos % sun));	//we are not behind planet,
+		if (InSun || planetIsSun) Q1 = (float)(1372.0 * (runner->pos % sun));	//we are not behind planet,
 		if (Q1 > 0)	Q += Q1;
 
 		Q2 = 0.0;
-		if (!planetIsSun && InPlanet > 0) Q2 = (float) (300.0 * (runner->pos % myr) * InPlanet);  //300W from planet's albedo
+		if (!planetIsSun && InPlanet > 0) Q2 = (float)(300.0 * (runner->pos % myr) * InPlanet);  //300W from planet's albedo
 		if (Q2 > 0) Q += Q2;
 
-		Q3 = (float) (q * pow(runner->Temp - 3.0, 4));
+		Q3 = (float)(q * pow(runner->Temp - 3.0, 4));
 		Q -= Q3;
 
-		if (ObjToDebug && runner == ObjToDebug) 
-			sprintf(oapiDebugString(), "Earth %.1f Sun %.1f Albedo %.1f Space %.1f Ges %.1f Temp %.1f", (Q0>0?Q0:0) * runner->Area * runner->isolation, (Q1>0?Q1:0) * runner->Area * runner->isolation, (Q2>0?Q2:0) * runner->Area * runner->isolation, -Q3 * runner->Area * runner->isolation, Q * runner->Area * runner->isolation, runner->GetTemp());
+		if (ObjToDebug && runner == ObjToDebug)
+			sprintf(oapiDebugString(), "Earth %.1f Sun %.1f Albedo %.1f Space %.1f Ges %.1f Temp %.1f", (Q0 > 0 ? Q0 : 0) * runner->Area * runner->isolation, (Q1 > 0 ? Q1 : 0) * runner->Area * runner->isolation, (Q2 > 0 ? Q2 : 0) * runner->Area * runner->isolation, -Q3 * runner->Area * runner->isolation, Q * runner->Area * runner->isolation, runner->GetTemp());
 
-		runner->thermic(Q * runner->Area * dt * runner->isolation);
+		if (v->GetAtmDensity() < 1.0)
+		{
+			runner->thermic(Q * runner->Area * dt * runner->isolation);
+		}
 		runner=runner->next_t;
 	}
 }

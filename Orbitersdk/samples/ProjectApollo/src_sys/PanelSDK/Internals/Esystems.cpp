@@ -540,19 +540,41 @@ void FCell::UpdateFlow(double dt)
 		thermic((300.0 - Temp) * ConductiveHeatTransferCoefficient * dt);
 	}	
 
-	N2_Blanket->thermic((Temp - N2_Blanket->Temp)* 2.5 * dt);
-	thermic((N2_Blanket->Temp - Temp)* 2.5 * dt);
+	double Q_N2_Blanket;
+	double Q_N2_StorageTank;
+	double Q_O2_Source;
+	double Q_H2_Source;
 
-	N2_storageTank->thermic((Temp - N2_storageTank->Temp)* 0.8 * dt);
-	thermic((N2_storageTank->Temp - Temp)* 0.8 * dt);
+	Q_N2_Blanket = (N2_Blanket->mass*N2_Blanket->c)*
+		(Temp - N2_Blanket->Temp)*
+		(1 - exp(-(2.5 * dt) / (N2_Blanket->mass*N2_Blanket->c))); //analytical heat transfer model, replaces old Eüler's method model
 
-	const double preheaterHeatTransferCoeff = 250.0;
+	N2_Blanket->thermic(Q_N2_Blanket);
+	thermic(-Q_N2_Blanket);
 
-	O2_SRC->parent->thermic((Temp - O2_SRC->parent->Temp) * preheaterHeatTransferCoeff * dt);
-	thermic((O2_SRC->parent->Temp - Temp) * preheaterHeatTransferCoeff * dt);
+	Q_N2_StorageTank = (N2_storageTank->mass*N2_storageTank->c)*
+		(Temp - N2_storageTank->Temp)*
+		(1 - exp(-(0.8 * dt) / (N2_storageTank->mass*N2_storageTank->c))); //analytical heat transfer model, replaces old Eüler's method model
+	
+	N2_storageTank->thermic(Q_N2_StorageTank);
+	thermic(-Q_N2_StorageTank);
 
-	H2_SRC->parent->thermic((Temp - H2_SRC->parent->Temp) * preheaterHeatTransferCoeff * dt);
-	thermic((H2_SRC->parent->Temp - Temp) * preheaterHeatTransferCoeff * dt);
+	const double O2ChamberHeatTransferCoeff = 500.0;
+	const double H2ChamberHeatTransferCoeff = 250.0;
+
+	Q_O2_Source = (O2_SRC->parent->mass*O2_SRC->parent->c)*
+		(Temp - O2_SRC->parent->Temp)*
+		(1 - exp(-(O2ChamberHeatTransferCoeff * dt) / (O2_SRC->parent->mass*O2_SRC->parent->c))); //analytical heat transfer model, replaces old Eüler's method model
+
+	O2_SRC->thermic(Q_O2_Source);
+	thermic(-Q_O2_Source);
+
+	Q_H2_Source = (H2_SRC->parent->mass*H2_SRC->parent->c)*
+		(Temp - H2_SRC->parent->Temp)*
+		(1 - exp(-(H2ChamberHeatTransferCoeff * dt) / (H2_SRC->parent->mass*H2_SRC->parent->c))); //analytical heat transfer model, replaces old Eüler's method model
+
+	H2_SRC->thermic(Q_H2_Source);
+	thermic(-Q_H2_Source);
 
 	//*********************
 
@@ -1278,33 +1300,25 @@ void Cooling::refresh(double dt)
 		activelist_c[i]->thermic(heat_ex);
 	}
 
-	coolant_temp = activelist_c[nr_activelist - 1]->Temp; //radiator outlet temperature, typicially used by C/W systems
+	coolant_temp = activelist_c[nr_activelist - 1]->Temp; //radiator outlet temperature, typicially used by C/W systems 
 
-	const double maxRegenHeatXferCoeff = 10.25;
-	double regen_heatTransferCoeff, regenHeatEx;
-	h_Valve* outlet = &((h_Tank *)activelist_c[2])->OUT_valve;
-	h_Valve* inlet = &((h_Tank *)activelist_c[0])->IN_valve;
+	const double maxRegenHeatXferCoeff = 50.00;
+	double regen_heatTransferCoeff;
 	
 	if(activelist_c[0]->Temp < min) //if the condenser temperature is below the minimum speficied
 	{ 
 		regen_heatTransferCoeff = maxRegenHeatXferCoeff;
 	}
-	else if (activelist_c[0]->Temp < max)
+	else if (activelist_c[0]->Temp > max)
 	{
-		regen_heatTransferCoeff = (coolant_temp / (max - min))*maxRegenHeatXferCoeff;
+		regen_heatTransferCoeff = 0.00000000000000001; //avoid NaNs....
 	}
 	else
 	{
-		return;
+		regen_heatTransferCoeff = ((max-activelist_c[0]->Temp) / (max - min))*maxRegenHeatXferCoeff;
 	}
-	
 
-	regenHeatEx = (activelist_c[0]->mass*activelist_c[0]->c)*
-		(outlet->GetTemp() - inlet->GetTemp())*
-		(1 - exp(-(regen_heatTransferCoeff * dt) / (activelist_c[0]->mass*activelist_c[0]->c))); //analytical heat transfer model, replaces old Eüler's method model
-
-	outlet->thermic(-regenHeatEx);
-	inlet->thermic(regenHeatEx);
+	active_h[nr_activelist - 1] = regen_heatTransferCoeff;
 }
 
 void Cooling::Load(char *line, FILEHANDLE scn) {
