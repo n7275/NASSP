@@ -100,6 +100,7 @@ class h_volume
 	double Press;					//total press.. sum of all p_press (Pa)
 	double Temp;					//averaged temp of volume.. (K)
 	double Volume;					//liters
+	double AverageC;				//Average Heat Capacity
 	void ThermalComps(double dt);	//levels temp throughout all subst...much like stirring a tank,only instanaeously
 	void Void();					//empty all inside the volume
 };

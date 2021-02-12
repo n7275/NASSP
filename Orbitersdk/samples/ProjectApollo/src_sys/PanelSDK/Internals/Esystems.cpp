@@ -329,9 +329,15 @@ void FCell::Reaction(double dt, double thrust)
 	double H2O_flow = O2_flow + H2_flow;
 
 	//heat generation
-	//double heat = H2_flow * 141528.150134; //H20 Heat of Formation
-	double heat = (hydrogenHHV*numCells - Volts)*Amperes*dt;
-	//heat -= power_load * dt;
+	//double heat = (hydrogenHHV*numCells - Volts)*Amperes*dt;
+	//efficiency model calculated from APOLLO TRAINING | ELECTRICAL POWER SYSTEMSTUDY GUIDE COURSE NO.A212, and referenced documents
+	double heat = power_load / (0.9063642805859956 +
+		-0.00040191337758397755 * power_load +
+		0.0000003368939782880486 * power_load * power_load +
+		-1.5580350625528442e-10 * power_load * power_load * power_load * +
+		3.2902028095999155e-14 * power_load * power_load * power_load * power_load +
+		-2.581100488488906e-18 * power_load * power_load * power_load * power_load * power_load) - power_load; //I think this executes faster than calling pow()
+	
 
 	// purging
 	if (status == 3)
@@ -518,8 +524,8 @@ void FCell::UpdateFlow(double dt)
 		}
 
 		//"clogg" is used to make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
-		Amperes -= (2.25*clogg);
-		Volts -= -(5.2*clogg);
+		Amperes -= (0.225*clogg);
+		Volts -= -(0.52*clogg);
 		power_load = Amperes * Volts; //recalculate power_load again after clogging
 
 		//---- throttle of the fuel cell [0..1]
@@ -532,13 +538,13 @@ void FCell::UpdateFlow(double dt)
 
 	//condenser exhaust temperature is not simulated realistically at the moment
 	condenserTemp = (0.29 * Temp) + 209.0;
+	
+
 
 	//Conductive heat transfer
 	const double ConductiveHeatTransferCoefficient = 0.54758; // w/K, calculated from CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-21
-	if (Temp > 300.0) //assume that the ambient internal temperature of the spacecraft is 300K, ~80°F, eventually we need to simulate this too
-	{ 
-		thermic((300.0 - Temp) * ConductiveHeatTransferCoefficient * dt);
-	}	
+	//assume that the ambient internal temperature of the spacecraft is 300K, ~80°F, eventually we need to simulate this too 
+	thermic((300.0 - Temp) * ConductiveHeatTransferCoefficient * dt);	
 
 	double Q_N2_Blanket;
 	double Q_N2_StorageTank;
@@ -559,24 +565,28 @@ void FCell::UpdateFlow(double dt)
 	N2_storageTank->thermic(Q_N2_StorageTank);
 	thermic(-Q_N2_StorageTank);
 
-	const double O2ChamberHeatTransferCoeff = 500.0;
-	const double H2ChamberHeatTransferCoeff = 250.0;
+	const double O2ChamberHeatTransferCoeff = 350.0;
+	const double H2ChamberHeatTransferCoeff = 350.0;
 
 	Q_O2_Source = (O2_SRC->parent->mass*O2_SRC->parent->c)*
 		(Temp - O2_SRC->parent->Temp)*
 		(1 - exp(-(O2ChamberHeatTransferCoeff * dt) / (O2_SRC->parent->mass*O2_SRC->parent->c))); //analytical heat transfer model, replaces old Eüler's method model
-
-	O2_SRC->thermic(Q_O2_Source);
+	
+	O2_SRC->parent->thermic(Q_O2_Source);
 	thermic(-Q_O2_Source);
 
 	Q_H2_Source = (H2_SRC->parent->mass*H2_SRC->parent->c)*
 		(Temp - H2_SRC->parent->Temp)*
 		(1 - exp(-(H2ChamberHeatTransferCoeff * dt) / (H2_SRC->parent->mass*H2_SRC->parent->c))); //analytical heat transfer model, replaces old Eüler's method model
 
-	H2_SRC->thermic(Q_H2_Source);
+	H2_SRC->parent->thermic(Q_H2_Source);
 	thermic(-Q_H2_Source);
 
 	//*********************
+	//if (!strcmp(name, "FUELCELL2"))
+	//{
+	//	sprintf(oapiDebugString(), "N2 Blanket %0.3fW, Storage %0.3fW, O2 %0.3fW, H2 %0.3fW", Q_N2_Blanket / dt, Q_N2_StorageTank / dt, Q_O2_Source / dt, Q_H2_Source / dt);
+	//}
 
 	e_object::UpdateFlow(dt);
 }
@@ -607,8 +617,6 @@ void FCell::Clogging(double dt)
 	//O2 impurities effect voltage drop substantially more than H2(not detectable according to AOH)
 	//here we're simulating the effect by making the O2 clogging effect the voltage drop 25x as much as the H2
 	clogg = (25 * (O2_clogging / O2_max_impurities) + (H2_clogging / H2_max_impurities)) / 26.0;
-
-	clogg = clogg / 3; //reduce clogging by a factor of 3 so we can make it to our purge interval without undervolt alarms; REPLACE WITH BETTER MODEL
 }
 
 void FCell::Load(char *line)
@@ -1301,24 +1309,6 @@ void Cooling::refresh(double dt)
 	}
 
 	coolant_temp = activelist_c[nr_activelist - 1]->Temp; //radiator outlet temperature, typicially used by C/W systems 
-
-	const double maxRegenHeatXferCoeff = 50.00;
-	double regen_heatTransferCoeff;
-	
-	if(activelist_c[0]->Temp < min) //if the condenser temperature is below the minimum speficied
-	{ 
-		regen_heatTransferCoeff = maxRegenHeatXferCoeff;
-	}
-	else if (activelist_c[0]->Temp > max)
-	{
-		regen_heatTransferCoeff = 0.00000000000000001; //avoid NaNs....
-	}
-	else
-	{
-		regen_heatTransferCoeff = ((max-activelist_c[0]->Temp) / (max - min))*maxRegenHeatXferCoeff;
-	}
-
-	active_h[nr_activelist - 1] = regen_heatTransferCoeff;
 }
 
 void Cooling::Load(char *line, FILEHANDLE scn) {

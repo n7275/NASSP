@@ -391,6 +391,7 @@ h_volume::h_volume() {
 	Press = 0;
 	Volume = 0;
 	Q = 0;	//no energy
+	AverageC = 0;
 }
 
 void h_volume::GetMaxSub() {
@@ -546,6 +547,8 @@ void h_volume::ThermalComps(double dt) {
 
 
 	}
+
+	AverageC = AvgC;
 }
 
 void h_volume::Void()
@@ -728,6 +731,7 @@ void h_Tank::refresh(double dt) {
 
 	Temp = space.Temp;
 	energy = space.Q;
+	c = space.AverageC;
 
 	IN_valve.refresh(dt);
 	OUT_valve.refresh(dt);
