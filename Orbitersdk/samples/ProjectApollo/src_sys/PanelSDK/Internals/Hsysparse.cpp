@@ -433,8 +433,8 @@ void* h_Pipe::GetComponent(char *component_name) {
 		return (void*)&flowMax;
 	if (!strnicmp (component_name, "FLOW", 4))
 		return (void*)&flow;
-	if (!strnicmp(component_name, "AGVFLOW", 7))
-		return (void*)&flowAgv;
+	if (!strnicmp(component_name, "AVGFLOW", 7))
+		return (void*)&flowAvg;
 	if (!strnicmp (component_name, "PRESSMAX", 8))
 		return (void*)&P_max;
 	if (!strnicmp (component_name, "PRESSMIN", 8))

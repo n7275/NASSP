@@ -825,7 +825,7 @@ h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double m
 	out = i_OUT;
 	open = 0;
 	flow = 0;
-	flowAgv = 0;
+	flowAvg = 0;
 	flowMax = 0;
 
 	flowAvgFilter = 0;
@@ -854,7 +854,7 @@ void h_Pipe::refresh(double dt) {
 	//do this before anyting below makes us return due to a closed valve
 
 	flowAvgFilter += (flow - flowAvgFilter)*flowFiltCoeff;
-	flowAgv += (flowAvgFilter - flowAgv)*flowFiltCoeff;
+	flowAvg += (flowAvgFilter - flowAvg)*flowFiltCoeff;
 
 	/*if (!strcmp(name, "O2FUELCELL1SUPPLYREGULATOR"))
 	{
@@ -867,12 +867,13 @@ void h_Pipe::refresh(double dt) {
 
 	double in_p = in->GetPress();
 	double out_p = out->GetPress();
-
+	double vsize = 1.0;
 	
 
 	if (type == 4) //VPREG
 	{
 		h_Tank* outTank = static_cast <h_Tank*> (out->parent);
+		
 
 		/*if (!strcmp(name, "O2FUELCELL1SUPPLYREGULATOR"))
 		{
@@ -888,6 +889,11 @@ void h_Pipe::refresh(double dt) {
 		else if (outTank->space.Press < P_min)
 		{
 			out->open = 1;
+			vsize = (P_min / outTank->space.Press)-1;
+			if (vsize > 1.0)
+			{
+				vsize = 1.0;
+			}
 		}
 	}
 
@@ -927,13 +933,13 @@ void h_Pipe::refresh(double dt) {
 		}
 
 		if (in_p > out_p) {
-			h_volume v = in->GetFlow(dt * (in_p - out_p), flowMax * dt);
+			h_volume v = in->GetFlow(dt * (in_p - out_p), flowMax * vsize * dt);
 			flow = v.GetMass() / dt;
 			out->Flow(v);
 		}
 
 		if ((two_ways) && (out_p > in->GetPress())) {
-			h_volume v = out->GetFlow(dt * (out_p - in_p), flowMax * dt);
+			h_volume v = out->GetFlow(dt * (out_p - in_p), flowMax * vsize * dt);
 			flow -= v.GetMass() / dt; 
 			in->Flow(v);
 		}
@@ -1031,7 +1037,7 @@ h_Radiator::~h_Radiator() {
 
 void h_Radiator::refresh(double dt) 
 {
-	const double AirHeatTransferCoefficient = 2.0; //Watts/m^2K 
+	const double AirHeatTransferCoefficient = 10.0; //Watts/m^2K 
 
 	double Qc = 0.0;
 	double Qr = 0.0;

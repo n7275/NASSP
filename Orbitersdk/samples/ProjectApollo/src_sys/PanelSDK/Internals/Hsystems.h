@@ -205,7 +205,7 @@ public:
 	h_Valve *out;
 	double flow;	// in g/s
 	double flowMax;
-	double flowAgv; //agerage flow rate, useful for gauges
+	double flowAvg; //agerage flow rate, useful for gauges
 	double flowAvgFilter;
 	double flowFiltCoeff;
 	double inIsolation; //override for conductive heat transfer through the in-valve, default to 1.0 so only determined by minimum valve size

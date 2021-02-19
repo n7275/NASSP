@@ -269,7 +269,7 @@ public:
 	void DrawPower(double watts);
 	void PUNLOAD(double watts);
 	void refresh(double dt);
-	void Reaction(double dt, double thrust);
+	void Reaction(double dt);
 	void Clogging(double dt);
 	void Load(char *line);
 	void Save(FILEHANDLE scn);

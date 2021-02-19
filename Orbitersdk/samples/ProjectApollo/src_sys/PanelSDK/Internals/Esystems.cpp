@@ -302,14 +302,12 @@ void FCell::PUNLOAD(double watts) {
 	power_load -= watts;
 }
 
-void FCell::Reaction(double dt, double thrust) 
+void FCell::Reaction(double dt) 
 {
 	//this function needs to be called *after* the power/current/voltage estimation code runs
 
 	#define H2RATIO 0.1119
 	#define O2RATIO 0.8881
-
-	//reactant = dt * max_power * thrust / 2880.0 * 0.2894; //grams /second/ 100 amps
 		
 	// get fuel from sources, maximum flow: grams/timestep from each valve
 	double O2_maxflow = O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
@@ -331,12 +329,12 @@ void FCell::Reaction(double dt, double thrust)
 	//heat generation
 	//double heat = (hydrogenHHV*numCells - Volts)*Amperes*dt;
 	//efficiency model calculated from APOLLO TRAINING | ELECTRICAL POWER SYSTEMSTUDY GUIDE COURSE NO.A212, and referenced documents
-	double heat = power_load / (0.9063642805859956 +
+	double heat = (power_load / (0.9063642805859956 +
 		-0.00040191337758397755 * power_load +
 		0.0000003368939782880486 * power_load * power_load +
 		-1.5580350625528442e-10 * power_load * power_load * power_load * +
 		3.2902028095999155e-14 * power_load * power_load * power_load * power_load +
-		-2.581100488488906e-18 * power_load * power_load * power_load * power_load * power_load) - power_load; //I think this executes faster than calling pow()
+		-2.581100488488906e-18 * power_load * power_load * power_load * power_load * power_load) - power_load) * dt; //I think this executes faster than calling pow()
 	
 
 	// purging
@@ -386,8 +384,6 @@ void FCell::Reaction(double dt, double thrust)
 	
 	//prevent oscilation due to boiling. fuelcells won't have been calling the Reaction() function
 	//	for a while when they've cooled to the point where there can be LH2 or LOX in the reactant chambers
-	H2_SRC->parent->space.composition->BoilAll();
-	O2_SRC->parent->space.composition->BoilAll();
 
 	// flow to output
 	h2o_volume.Void();
@@ -404,6 +400,11 @@ void FCell::Reaction(double dt, double thrust)
 	//{
 	//	sprintf(oapiDebugString(), "%0.10f, %0.10f", H2_SRC->parent->space.composition[SUBSTANCE_H2].mass, H2_SRC->parent->space.composition[SUBSTANCE_H2].vapor_mass);
 	//}
+
+	/*if (!strcmp(name, "FUELCELL3"))
+	{
+		sprintf(oapiDebugString(), "HEAT %0.5f", heat/dt);
+	}*/
 
 	// TSCH
 	/* sprintf(oapiDebugString(), "m %f Q %f Q/m %f", H2_SRC->parent->space.composition[SUBSTANCE_H2].mass,
@@ -438,7 +439,6 @@ void FCell::UpdateFlow(double dt)
 	if (power_load <= 1.0) { power_load = 1.0;} //prevent division by 0.
 
 	//first we check the start_handle;
-	double thrust = 0.0;
 	double loadResistance = 0.0;
 	if (start_handle == -1) status = 2; //stopped
 	if (start_handle == 1)	status = 1; //starting
@@ -482,7 +482,7 @@ void FCell::UpdateFlow(double dt)
 		break;
 
 	case 1:// starting; 
-		Reaction(dt, 1.0);
+		Reaction(dt);
 		//status = 2;
 		if (reaction > 0.96) {
 			status = 0; //started
@@ -528,18 +528,13 @@ void FCell::UpdateFlow(double dt)
 		Volts -= -(0.52*clogg);
 		power_load = Amperes * Volts; //recalculate power_load again after clogging
 
-		//---- throttle of the fuel cell [0..1]
-		thrust = power_load / max_power;
-
-		Reaction(dt, thrust);
+		Reaction(dt);
 
 		break;
 	}
 
 	//condenser exhaust temperature is not simulated realistically at the moment
 	condenserTemp = (0.29 * Temp) + 209.0;
-	
-
 
 	//Conductive heat transfer
 	const double ConductiveHeatTransferCoefficient = 0.54758; // w/K, calculated from CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-21
@@ -565,28 +560,30 @@ void FCell::UpdateFlow(double dt)
 	N2_storageTank->thermic(Q_N2_StorageTank);
 	thermic(-Q_N2_StorageTank);
 
-	const double O2ChamberHeatTransferCoeff = 350.0;
-	const double H2ChamberHeatTransferCoeff = 350.0;
+	const double O2ChamberHeatTransferCoeff = 150.0;
+	const double H2ChamberHeatTransferCoeff = 75.0;
 
 	Q_O2_Source = (O2_SRC->parent->mass*O2_SRC->parent->c)*
 		(Temp - O2_SRC->parent->Temp)*
 		(1 - exp(-(O2ChamberHeatTransferCoeff * dt) / (O2_SRC->parent->mass*O2_SRC->parent->c))); //analytical heat transfer model, replaces old Eüler's method model
 	
 	O2_SRC->parent->thermic(Q_O2_Source);
-	thermic(-Q_O2_Source);
+	O2_SRC->parent->space.composition->BoilAll(); /// \todo {fix substances so that this bad thermodynamics isnt needed}
+	thermic(-Q_O2_Source/12.0); /// \todo {fix substances so that this bad thermodynamics isnt needed}
 
 	Q_H2_Source = (H2_SRC->parent->mass*H2_SRC->parent->c)*
 		(Temp - H2_SRC->parent->Temp)*
 		(1 - exp(-(H2ChamberHeatTransferCoeff * dt) / (H2_SRC->parent->mass*H2_SRC->parent->c))); //analytical heat transfer model, replaces old Eüler's method model
 
 	H2_SRC->parent->thermic(Q_H2_Source);
-	thermic(-Q_H2_Source);
+	H2_SRC->parent->space.composition->BoilAll(); /// \todo {fix substances so that this bad thermodynamics isnt needed}
+	thermic(-Q_H2_Source/12.0); /// \todo {fix substances so that this bad thermodynamics isnt needed}
 
 	//*********************
-	//if (!strcmp(name, "FUELCELL2"))
-	//{
-	//	sprintf(oapiDebugString(), "N2 Blanket %0.3fW, Storage %0.3fW, O2 %0.3fW, H2 %0.3fW", Q_N2_Blanket / dt, Q_N2_StorageTank / dt, Q_O2_Source / dt, Q_H2_Source / dt);
-	//}
+	/*if (!strcmp(name, "FUELCELL2"))
+	{
+		sprintf(oapiDebugString(), "N2 Blanket %0.3fW, Storage %0.3fW, O2 %0.3fW, H2 %0.3fW", Q_N2_Blanket / dt, Q_N2_StorageTank / dt, Q_O2_Source / dt, Q_H2_Source / dt);
+	}*/
 
 	e_object::UpdateFlow(dt);
 }
@@ -1280,7 +1277,7 @@ void Cooling::refresh(double dt)
 	therm_obj* activelist[16];		//the list of objects in this instance Cooling 
 	double activelength[16];		//and their pipe length
 
-	therm_obj* activelist_c[16];	//list of cooling objects (radiator tubes)
+	h_Tank* activelist_c[16];	//list of cooling objects (radiator tubes)
 	double active_h[16];			//list of heat transfer coefficients in this instance
 	int nr_activelist = 0;
 
@@ -1292,7 +1289,7 @@ void Cooling::refresh(double dt)
 		{
 			activelist[nr_activelist] = list[i];
 			activelength[nr_activelist] = length[i];
-			activelist_c[nr_activelist] = coolingObjects[i];
+			activelist_c[nr_activelist] = (h_Tank*)coolingObjects[i];
 			active_h[nr_activelist] = heattransfercoeff[i];
 			nr_activelist++;
 		}
@@ -1302,12 +1299,12 @@ void Cooling::refresh(double dt)
 	{
 		heat_ex = (activelist[i]->mass*activelist[i]->c)*
 			(activelist[i]->Temp - activelist_c[i]->Temp)*
-			(1-exp(-(activelength[i] * active_h[i] * isolation * dt)/(activelist[i]->mass*activelist[i]->c))); //analytical heat transfer model, replaces old Eüler's method model
+			(1 - exp(-(activelength[i] * active_h[i] * isolation * dt) / (activelist[i]->mass*activelist[i]->c))); //analytical heat transfer model, replaces old Eüler's method model
 
 		activelist[i]->thermic(-heat_ex);
 		activelist_c[i]->thermic(heat_ex);
+		activelist_c[i]->refresh(dt);
 	}
-
 	coolant_temp = activelist_c[nr_activelist - 1]->Temp; //radiator outlet temperature, typicially used by C/W systems 
 }
 
