@@ -251,7 +251,7 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	max_stage = 99;
 	pos = i_pos;
 	Area = 0.35; //size of fuel cell
-	mass = 111100; 
+	mass = 10000; 
 	c = 0.5;
 	isolation = 0.0; 
 
@@ -328,8 +328,8 @@ void FCell::Reaction(double dt)
 
 	//heat generation
 	//double heat = (hydrogenHHV*numCells - Volts)*Amperes*dt;
-	//efficiency model calculated from APOLLO TRAINING | ELECTRICAL POWER SYSTEMSTUDY GUIDE COURSE NO.A212, and referenced documents
-	double heat = (power_load / (0.9063642805859956 +
+	//efficiency model calculated from APOLLO TRAINING | ELECTRICAL POWER SYSTEM STUDY GUIDE COURSE NO.A212, and referenced documents
+	double heat = (power_load / (0.8243642805859956 +
 		-0.00040191337758397755 * power_load +
 		0.0000003368939782880486 * power_load * power_load +
 		-1.5580350625528442e-10 * power_load * power_load * power_load * +
@@ -524,9 +524,9 @@ void FCell::UpdateFlow(double dt)
 		}
 
 		//"clogg" is used to make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
-		Amperes -= (0.225*clogg);
-		Volts -= -(0.52*clogg);
-		power_load = Amperes * Volts; //recalculate power_load again after clogging
+		//Amperes -= (0.225*clogg);
+		//Volts -= -(0.52*clogg);
+		//power_load = Amperes * Volts; //recalculate power_load again after clogging
 
 		Reaction(dt);
 
@@ -537,7 +537,7 @@ void FCell::UpdateFlow(double dt)
 	condenserTemp = (0.29 * Temp) + 209.0;
 
 	//Conductive heat transfer
-	const double ConductiveHeatTransferCoefficient = 0.54758; // w/K, calculated from CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-21
+	const double ConductiveHeatTransferCoefficient = 0.1825267; // w/K, calculated from CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-21
 	//assume that the ambient internal temperature of the spacecraft is 300K, ~80°F, eventually we need to simulate this too 
 	thermic((300.0 - Temp) * ConductiveHeatTransferCoefficient * dt);	
 
@@ -569,7 +569,7 @@ void FCell::UpdateFlow(double dt)
 	
 	O2_SRC->parent->thermic(Q_O2_Source);
 	O2_SRC->parent->space.composition->BoilAll(); /// \todo {fix substances so that this bad thermodynamics isnt needed}
-	thermic(-Q_O2_Source/12.0); /// \todo {fix substances so that this bad thermodynamics isnt needed}
+	thermic(-Q_O2_Source/10.0); /// \todo {fix substances so that this bad thermodynamics isnt needed}
 
 	Q_H2_Source = (H2_SRC->parent->mass*H2_SRC->parent->c)*
 		(Temp - H2_SRC->parent->Temp)*
@@ -577,7 +577,7 @@ void FCell::UpdateFlow(double dt)
 
 	H2_SRC->parent->thermic(Q_H2_Source);
 	H2_SRC->parent->space.composition->BoilAll(); /// \todo {fix substances so that this bad thermodynamics isnt needed}
-	thermic(-Q_H2_Source/12.0); /// \todo {fix substances so that this bad thermodynamics isnt needed}
+	thermic(-Q_H2_Source/10.0); /// \todo {fix substances so that this bad thermodynamics isnt needed}
 
 	//*********************
 	/*if (!strcmp(name, "FUELCELL2"))
@@ -1248,8 +1248,6 @@ Cooling::Cooling(char *i_name,int i_pump,e_object *i_SRC,double thermal_prop,dou
 	pumping=h_pump=i_pump;
 	max=max_t;
 	min=min_t;
-	/*handle_min=0;
-	handle_max=0;*/
 	nr_list=0;
 	coolant_temp = 300.0; // reasonable ambient temperature
 	isolation=thermal_prop;
@@ -1271,7 +1269,6 @@ void Cooling::AddObject(therm_obj* new_t, double lght, therm_obj* new_cool_obj, 
 
 void Cooling::refresh(double dt) 
 {
-	double throttle;
 	double heat_ex; //heat, to be exchanged, Joules
 
 	therm_obj* activelist[16];		//the list of objects in this instance Cooling 
@@ -1295,7 +1292,7 @@ void Cooling::refresh(double dt)
 		}
 	}
 
-	for (int i = 0; i < nr_activelist - 1; i++)
+	for (int i = 0; i <= nr_activelist - 1; i++)
 	{
 		heat_ex = (activelist[i]->mass*activelist[i]->c)*
 			(activelist[i]->Temp - activelist_c[i]->Temp)*
@@ -1303,7 +1300,6 @@ void Cooling::refresh(double dt)
 
 		activelist[i]->thermic(-heat_ex);
 		activelist_c[i]->thermic(heat_ex);
-		activelist_c[i]->refresh(dt);
 	}
 	coolant_temp = activelist_c[nr_activelist - 1]->Temp; //radiator outlet temperature, typicially used by C/W systems 
 }
