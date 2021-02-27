@@ -43,7 +43,7 @@
 #include "Mission.h"
 
 FILE *PanelsdkLogFile;
-FILE *FuelCellLogFile[3];
+//FILE *FuelCellLogFile[3];
 
 
 void Saturn::SystemsInit() {
@@ -59,9 +59,9 @@ void Saturn::SystemsInit() {
 
 	PanelsdkLogFile = fopen("ProjectApollo Saturn Systems.log", "w");
 
-	FuelCellLogFile[0] = fopen("ProjectApollo FuelCell1.log", "w");
-	FuelCellLogFile[1] = fopen("ProjectApollo FuelCell2.log", "w");
-	FuelCellLogFile[2] = fopen("ProjectApollo FuelCell3.log", "w");
+	//FuelCellLogFile[0] = fopen("ProjectApollo FuelCell1.log", "w");
+	//FuelCellLogFile[1] = fopen("ProjectApollo FuelCell2.log", "w");
+	//FuelCellLogFile[2] = fopen("ProjectApollo FuelCell3.log", "w");
 
 	//
 	// Electrical systems.
@@ -1066,7 +1066,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:TEMP"),
 	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:TEMP"));
 
-	FuelCellStatus FCstatLog;
+	/*FuelCellStatus FCstatLog;
 	for (int fc2log = 0; fc2log < 3; fc2log++)
 	{
 		GetFuelCellStatus(fc2log+1, FCstatLog);
@@ -1088,7 +1088,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 			FCstatLog.Voltage);
 
 		fflush(FuelCellLogFile[fc2log]);
-	}
+	}*/
 
 //------------------------------------------------------------------------------------
 // Various debug prints

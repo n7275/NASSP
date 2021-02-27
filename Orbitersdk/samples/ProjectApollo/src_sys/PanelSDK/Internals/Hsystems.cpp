@@ -831,7 +831,7 @@ h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double m
 	flowAvgFilter = 0;
 	flowFiltCoeff = flowFiltCoefficient;
 
-	//if Hsysparse doesn't read a value for these is send a 1.0
+	//if Hsysparse doesn't read a value for these, they are set to 1.0
 	//so we don't break older systems that only use minimum valve size
 	//this makes these two values optional in the cfg file
 	inIsolation = inIsol;

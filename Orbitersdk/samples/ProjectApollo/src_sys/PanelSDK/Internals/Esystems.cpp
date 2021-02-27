@@ -250,8 +250,8 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	strcpy(name, i_name);
 	max_stage = 99;
 	pos = i_pos;
-	Area = 0.35; //size of fuel cell
-	mass = 10000; 
+	Area = 0.0; //size of fuel cell
+	mass = 20000; 
 	c = 0.5;
 	isolation = 0.0; 
 
@@ -329,7 +329,7 @@ void FCell::Reaction(double dt)
 	//heat generation
 	//double heat = (hydrogenHHV*numCells - Volts)*Amperes*dt;
 	//efficiency model calculated from APOLLO TRAINING | ELECTRICAL POWER SYSTEM STUDY GUIDE COURSE NO.A212, and referenced documents
-	double heat = (power_load / (0.8243642805859956 +
+	double heat = (power_load / (0.9043642805859956 +
 		-0.00040191337758397755 * power_load +
 		0.0000003368939782880486 * power_load * power_load +
 		-1.5580350625528442e-10 * power_load * power_load * power_load * +
@@ -538,8 +538,9 @@ void FCell::UpdateFlow(double dt)
 
 	//Conductive heat transfer
 	const double ConductiveHeatTransferCoefficient = 0.1825267; // w/K, calculated from CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-21
+	const double coolingPerAmpReactants = 0.39116; //w/A eventually fix substances so this isnt needed
 	//assume that the ambient internal temperature of the spacecraft is 300K, ~80°F, eventually we need to simulate this too 
-	thermic((300.0 - Temp) * ConductiveHeatTransferCoefficient * dt);	
+	thermic((320.0 - Temp) * ConductiveHeatTransferCoefficient * dt);	
 
 	double Q_N2_Blanket;
 	double Q_N2_StorageTank;
@@ -561,7 +562,7 @@ void FCell::UpdateFlow(double dt)
 	thermic(-Q_N2_StorageTank);
 
 	const double O2ChamberHeatTransferCoeff = 150.0;
-	const double H2ChamberHeatTransferCoeff = 75.0;
+	const double H2ChamberHeatTransferCoeff = 150.0;
 
 	Q_O2_Source = (O2_SRC->parent->mass*O2_SRC->parent->c)*
 		(Temp - O2_SRC->parent->Temp)*
@@ -569,7 +570,7 @@ void FCell::UpdateFlow(double dt)
 	
 	O2_SRC->parent->thermic(Q_O2_Source);
 	O2_SRC->parent->space.composition->BoilAll(); /// \todo {fix substances so that this bad thermodynamics isnt needed}
-	thermic(-Q_O2_Source/10.0); /// \todo {fix substances so that this bad thermodynamics isnt needed}
+	//thermic(-Q_O2_Source); /// \todo {fix substances so that this bad thermodynamics isnt needed}
 
 	Q_H2_Source = (H2_SRC->parent->mass*H2_SRC->parent->c)*
 		(Temp - H2_SRC->parent->Temp)*
@@ -577,7 +578,12 @@ void FCell::UpdateFlow(double dt)
 
 	H2_SRC->parent->thermic(Q_H2_Source);
 	H2_SRC->parent->space.composition->BoilAll(); /// \todo {fix substances so that this bad thermodynamics isnt needed}
-	thermic(-Q_H2_Source/10.0); /// \todo {fix substances so that this bad thermodynamics isnt needed}
+	//thermic(-Q_H2_Source); /// \todo {fix substances so that this bad thermodynamics isnt needed}
+
+
+	const double H2SPECIFICC = 14.50; /// \todo {fix substances so that this bad thermodynamics isnt needed}
+	const double O2SPECIFICC = 0.956; /// \todo {fix substances so that this bad thermodynamics isnt needed}
+	thermic((H2_flow * H2SPECIFICC * (15.8-Temp) + O2_flow * O2SPECIFICC * (129.0 - Temp))*dt); //subtract the amount of heat needed to warm incoming reactants
 
 	//*********************
 	/*if (!strcmp(name, "FUELCELL2"))
