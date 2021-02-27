@@ -175,7 +175,7 @@ void Saturn::SystemsInit() {
 
 	CoolantReturn[0] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8-FUELCELL1REGEN");
 	CoolantReturn[1] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8-FUELCELL2REGEN");
-	CoolantReturn[2] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8-FUELCELL2REGEN");
+	CoolantReturn[2] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TO8-FUELCELL3REGEN");
 
 	CoolantPipeRad_5_6[0] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TO5-6TO8TUBE1");
 	CoolantPipeRad_5_6[1] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TO5-6TO8TUBE2");
