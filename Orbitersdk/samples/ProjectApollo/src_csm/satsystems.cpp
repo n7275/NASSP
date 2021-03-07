@@ -157,9 +157,9 @@ void Saturn::SystemsInit() {
 	FuelCellH2FlowRate[1] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2SUPPLYREGULATOR:AVGFLOW");
 	FuelCellH2FlowRate[2] = (double *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3SUPPLYREGULATOR:AVGFLOW");
 
-	FuelCellCoolantInletTemp[0] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TO5TUBE1:TEMP");
-	FuelCellCoolantInletTemp[1] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TO5TUBE2:TEMP");
-	FuelCellCoolantInletTemp[2] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TO5TUBE3:TEMP");
+	FuelCellCoolantInletTemp[0] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL1H2PREHEATGLYCOL:TEMP");
+	FuelCellCoolantInletTemp[1] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL2H2PREHEATGLYCOL:TEMP");
+	FuelCellCoolantInletTemp[2] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL3H2PREHEATGLYCOL:TEMP");
 
 	FuelCellNitrogenPressure[0] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1BLANKET:PRESS");
 	FuelCellNitrogenPressure[1] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2BLANKET:PRESS");
