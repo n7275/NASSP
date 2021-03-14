@@ -27,6 +27,7 @@
 #include "Internals/Hsystems.h"
 #include "Internals/Esystems.h"
 #include "vsmgmt.h"
+#include <thread>
 
 PanelSDK::PanelSDK() {
 
@@ -252,9 +253,13 @@ void PanelSDK::Timestep(double time)
 	double mintFactor = __max(dt / 100.0, 0.5);
 	double tFactor = __min(mintFactor, dt);
 	while (dt > 0) {
-		THERMAL->Radiative(tFactor);
-		HYDRAULIC->Refresh(tFactor);
-		ELECTRIC->Refresh(tFactor);
+		std::thread THERMALWORKER(&E_system::Refresh, ELECTRIC, tFactor);
+		std::thread HYDRAULICWORKER(&H_system::Refresh, HYDRAULIC, tFactor);
+		std::thread ELECTRICWORKER(&Thermal_engine::Radiative, THERMAL, tFactor);
+		
+		ELECTRICWORKER.join();
+		HYDRAULICWORKER.join();
+		THERMALWORKER.join();
 
 		dt -= tFactor;
 		tFactor = __min(mintFactor, dt);
@@ -262,11 +267,14 @@ void PanelSDK::Timestep(double time)
 }
 
 void PanelSDK::SimpleTimestep(double simdt) 
-
 {
-	THERMAL->Radiative(simdt);
-	HYDRAULIC->Refresh(simdt);
-	ELECTRIC->Refresh(simdt);
+	std::thread THERMALWORKER(&E_system::Refresh, ELECTRIC, simdt);
+	std::thread HYDRAULICWORKER(&H_system::Refresh, HYDRAULIC, simdt);
+	std::thread ELECTRICWORKER(&Thermal_engine::Radiative, THERMAL, simdt);
+
+	THERMALWORKER.join();
+	HYDRAULICWORKER.join();
+	ELECTRICWORKER.join();
 }
 
 void PanelSDK::SetStage(int stage,int load)
