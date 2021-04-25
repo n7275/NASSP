@@ -28,6 +28,108 @@
 #include "PanelSDK/PanelSDK.h"
 #include "PanelSDK/Internals/ESystems.h"
 
+namespace powerMergeCalc
+{
+	//This was generated using the following matlab script
+	// clear;
+	// clc;
+	// pkg load symbolic;
+	// sympref display unicode;
+
+	// syms R0 R1 R2 R3 R4 R5 real;
+	// syms V1 V2 V3 V4 V5 real;
+
+	// ImpedanceMatrix5 = [R1+R0,  -R1,      0,      0,   0;...
+	//                      -R1, R1+R2,    -R2,      0,   0;...
+	//                        0,   -R2,  R2+R3,    -R3,   0;
+	//                        0,     0,    -R3,  R3+R4,  -R4;
+	//                        0,     0,      0,    -R4,  R4+R5];
+
+
+	// Res5 = inv(ImpedanceMatrix5)*[V1,V2-V1,V3-V2,V4-V3,V5-V4]';
+
+	// I1 = simplify(Res5(1));
+	// I2 = simplify(Res5(2));
+	// I3 = simplify(Res5(3));
+	// I4 = simplify(Res5(4));
+	// I5 = simplify(Res5(5));
+
+	// P51 = ccode(simplify((I1-I2)*V1));
+	// P52 = ccode(simplify((I2-I3)*V2));
+	// P53 = ccode(simplify((I3-I4)*V3));
+	// P54 = ccode(simplify((I4-I5)*V4));
+	// P55 = ccode(simplify((I5-0)*V5));
+
+	// clear I1 I2 I3 I4 I5;
+
+	// ImpedanceMatrix4 = ImpedanceMatrix5(1:end-1,1:end-1);
+	// Res4 = inv(ImpedanceMatrix4)*[V1,V2-V1,V3-V2,V4-V3]';
+	// I1 = simplify(Res4(1));
+	// I2 = simplify(Res4(2));
+	// I3 = simplify(Res4(3));
+	// I4 = simplify(Res4(4));
+
+	// P41 = ccode(simplify((I1-I2)*V1));
+	// P42 = ccode(simplify((I2-I3)*V2));
+	// P43 = ccode(simplify((I3-I4)*V3));
+	// P44 = ccode(simplify((I4-0)*V4));
+
+	// clear I1 I2 I3 I4;
+
+	// ImpedanceMatrix3 = ImpedanceMatrix4(1:end-1,1:end-1);
+	// Res3 = inv(ImpedanceMatrix3)*[V1,V2-V1,V3-V2]';
+	// I1 = simplify(Res3(1));
+	// I2 = simplify(Res3(2));
+	// I3 = simplify(Res3(3));
+
+	// P31 = ccode(simplify((I1-I2)*V1));
+	// P32 = ccode(simplify((I2-I3)*V2));
+	// P33 = ccode(simplify((I3-0)*V3));
+
+	// clear I1 I2 I3;
+
+	// ImpedanceMatrix2 = ImpedanceMatrix3(1:end-1,1:end-1);
+	// Res2 = inv(ImpedanceMatrix2)*[V1,V2-V1]';
+	// I1 = simplify(Res2(1));
+	// I2 = simplify(Res2(2));
+
+	// P21 = ccode(simplify((I1-I2)*V1));
+	// P22 = ccode(simplify(I2)*V2));
+
+	static inline void twoway(double V1, double V2, double R0, double R1, double R2, double &P1, double &P2)
+	{
+		P1 = V1 * (R0*V1 - R0 * V2 + R2 * V1) / (R0*R1 + R0 * R2 + R1 * R2);
+		P2 = V2 * (-R0 * V1 + R0 * V2 + R1 * V2) / (R0*R1 + R0 * R2 + R1 * R2);
+	}
+
+	static inline void threeway(double V1, double V2, double V3, double R0, double R1, double R2, double R3, double &P1, double &P2, double &P3)
+	{
+		double denominator = (R0*R1*R2 + R0 * R1*R3 + R0 * R2*R3 + R1 * R2*R3);
+		P1 = V1 * (R0*R2*V1 - R0 * R2*V3 + R0 * R3*V1 - R0 * R3*V2 + R2 * R3*V1) / denominator;
+		P2 = V2 * (R0*R1*V2 - R0 * R1*V3 - R0 * R3*V1 + R0 * R3*V2 + R1 * R3*V2) / denominator;
+		P3 = V3 * (-R0 * R1*V2 + R0 * R1*V3 - R0 * R2*V1 + R0 * R2*V3 + R1 * R2*V3) / denominator;
+	}
+
+	static inline void fourway(double V1, double V2, double V3, double V4, double R0, double R1, double R2, double R3, double R4, double &P1, double &P2, double &P3, double &P4)
+	{
+		double denominator = (R0*R1*R2*R3 + R0 * R1*R2*R4 + R0 * R1*R3*R4 + R0 * R2*R3*R4 + R1 * R2*R3*R4);
+		P1 = V1 * (R0*R2*R3*V1 - R0 * R2*R3*V4 + R0 * R2*R4*V1 - R0 * R2*R4*V3 + R0 * R3*R4*V1 - R0 * R3*R4*V2 + R2 * R3*R4*V1) / denominator;
+		P2 = V2 * (R0*R1*R3*V2 - R0 * R1*R3*V4 + R0 * R1*R4*V2 - R0 * R1*R4*V3 - R0 * R3*R4*V1 + R0 * R3*R4*V2 + R1 * R3*R4*V2) / denominator;
+		P3 = V3 * (R0*R1*R2*V3 - R0 * R1*R2*V4 - R0 * R1*R4*V2 + R0 * R1*R4*V3 - R0 * R2*R4*V1 + R0 * R2*R4*V3 + R1 * R2*R4*V3) / denominator;
+		P4 = V4 * (-R0 * R1*R2*V3 + R0 * R1*R2*V4 - R0 * R1*R3*V2 + R0 * R1*R3*V4 - R0 * R2*R3*V1 + R0 * R2*R3*V4 + R1 * R2*R3*V4) / denominator;
+	}
+
+	static inline void fiveWay(double V1, double V2, double V3, double V4, double V5, double R0, double R1, double R2, double R3, double R4, double R5, double &P1, double &P2, double &P3, double &P4, double &P5)
+	{
+		double denominator = (R0*R1*R2*R3*R4 + R0 * R1*R2*R3*R5 + R0 * R1*R2*R4*R5 + R0 * R1*R3*R4*R5 + R0 * R2*R3*R4*R5 + R1 * R2*R3*R4*R5);
+		P1 = V1 * (R0*R2*R3*R4*V1 - R0 * R2*R3*R4*V5 + R0 * R2*R3*R5*V1 - R0 * R2*R3*R5*V4 + R0 * R2*R4*R5*V1 - R0 * R2*R4*R5*V3 + R0 * R3*R4*R5*V1 - R0 * R3*R4*R5*V2 + R2 * R3*R4*R5*V1) / denominator;
+		P2 = V2 * (R0*R1*R3*R4*V2 - R0 * R1*R3*R4*V5 + R0 * R1*R3*R5*V2 - R0 * R1*R3*R5*V4 + R0 * R1*R4*R5*V2 - R0 * R1*R4*R5*V3 - R0 * R3*R4*R5*V1 + R0 * R3*R4*R5*V2 + R1 * R3*R4*R5*V2) / denominator;
+		P3 = V3 * (R0*R1*R2*R4*V3 - R0 * R1*R2*R4*V5 + R0 * R1*R2*R5*V3 - R0 * R1*R2*R5*V4 - R0 * R1*R4*R5*V2 + R0 * R1*R4*R5*V3 - R0 * R2*R4*R5*V1 + R0 * R2*R4*R5*V3 + R1 * R2*R4*R5*V3) / denominator;
+		P4 = V4 * (R0*R1*R2*R3*V4 - R0 * R1*R2*R3*V5 - R0 * R1*R2*R5*V3 + R0 * R1*R2*R5*V4 - R0 * R1*R3*R5*V2 + R0 * R1*R3*R5*V4 - R0 * R2*R3*R5*V1 + R0 * R2*R3*R5*V4 + R1 * R2*R3*R5*V4) / denominator;
+		P5 = V5 * (-R0 * R1*R2*R3*V4 + R0 * R1*R2*R3*V5 - R0 * R1*R2*R4*V3 + R0 * R1*R2*R4*V5 - R0 * R1*R3*R4*V2 + R0 * R1*R3*R4*V5 - R0 * R2*R3*R4*V1 + R0 * R2*R3*R4*V5 + R1 * R2*R3*R4*V5) / denominator;
+	}
+}
+
 class PowerSource : public e_object {
 
 public:
