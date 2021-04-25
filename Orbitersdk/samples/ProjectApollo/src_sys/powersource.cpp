@@ -116,13 +116,12 @@ void PowerSDKObject::DrawPower(double watts)
 //
 
 PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p)
-
 {
 	if (i_name)
 		strcpy(name, i_name);
 
-	BusA = 0; 
-	BusB = 0;
+	BusA = NULL; 
+	BusB = NULL;
 
 	sdk.AddElectrical(this, false);
 }
@@ -144,7 +143,6 @@ double PowerMerge::Voltage()
 }
 
 double PowerMerge::Current()
-
 {
 	double Volts = Voltage();
 
@@ -160,6 +158,7 @@ void PowerMerge::DrawPower(double watts)
 	double Volts = 0.0;
 	double VoltsA = 0.0;
 	double VoltsB = 0.0;
+	double Power1, Power2;
 
 	power_load += watts;
 
@@ -170,11 +169,25 @@ void PowerMerge::DrawPower(double watts)
 
 	Volts = VoltsA + VoltsB;
 
-	if (Volts > 0.0) {
-		if (BusA)
-			BusA->DrawPower(watts * VoltsA / Volts);
-		if (BusB)
-			BusB->DrawPower(watts * VoltsB / Volts);
+	if (Volts > 0.0)
+	{
+		if (BusA && BusB)
+		{
+			powerMergeCalc::twoWay(BusA->Voltage(), BusB->Voltage(), 28 * 28 / watts, 0.01, 0.01, Power1, Power2);
+			BusA->DrawPower(Power1);
+			BusB->DrawPower(Power2);
+		}
+		else
+		{
+			if (BusA)
+			{
+				BusA->DrawPower(watts);
+			}
+			if (BusB)
+			{
+				BusA->DrawPower(watts);
+			}
+		}
 	}
 }
 
