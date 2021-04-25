@@ -1652,6 +1652,12 @@ void Pump::Save(FILEHANDLE scn) {
 
 
 //------------------------------ Diode Class -----------------------------------
+Diode::Diode()
+{
+	Is = 0.01;
+	kT_q = 0.0249902579904080;
+}
+
 Diode::Diode(char* i_name, e_object* i_src, double NominalTemperature, double saturationCurrent)
 {
 	strcpy(name, i_name);
@@ -1671,6 +1677,13 @@ Diode::Diode(char* i_name, e_object* i_src, double NominalTemperature, double sa
 
 double Diode::Current()
 {
+	Enable();
+
+	if (power_load < 0.0)
+	{
+		Disable();
+	}
+
 	if (SRC && SRC->IsEnabled() && power_load > 0.0)
 	{
 		Amperes = power_load / Volts;

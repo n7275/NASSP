@@ -126,14 +126,21 @@ PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p)
 	sdk.AddElectrical(this, false);
 }
 
-double PowerMerge::Voltage()
+void PowerMerge::WireToBuses(e_object *a, e_object *b)
+{
+	BusA = a;
+	BusB = b;
+	DiodeA.WireTo(BusA);
+	DiodeB.WireTo(BusA);
+}
 
+double PowerMerge::Voltage()
 {
 	double VoltsA = 0;
 	double VoltsB = 0;
 
-	if (BusA) VoltsA = BusA->Voltage();
-	if (BusB) VoltsB = BusB->Voltage();
+	if (BusA) VoltsA = DiodeA.Voltage();
+	if (BusB) VoltsB = DiodeA.Voltage();
 
 	if (VoltsA != 0 && VoltsB != 0) return (VoltsA + VoltsB) / 2.0;
 	if (VoltsA != 0) return VoltsA;
@@ -144,7 +151,7 @@ double PowerMerge::Voltage()
 
 double PowerMerge::Current()
 {
-	double Volts = Voltage();
+	//double Volts = Voltage();
 
 	if (Volts > 0.0) {
 		return power_load / Volts;
@@ -153,41 +160,45 @@ double PowerMerge::Current()
 }
 
 void PowerMerge::DrawPower(double watts)
-
 {
-	double Volts = 0.0;
+	//double Volts = 0.0;
 	double VoltsA = 0.0;
 	double VoltsB = 0.0;
 	double Power1, Power2;
 
 	power_load += watts;
 
-	if (BusA)
-		VoltsA = BusA->Voltage();
-	if (BusB)
-		VoltsB = BusB->Voltage();
+	if (BusA && DiodeA.IsEnabled())
+		VoltsA = DiodeA.Voltage();
+	if (BusB && DiodeA.IsEnabled())
+		VoltsB = DiodeB.Voltage();
 
 	Volts = VoltsA + VoltsB;
 
 	if (Volts > 0.0)
 	{
-		if (BusA && BusB)
+		if (BusA && BusB && VoltsA > 0 && VoltsB > 0)
 		{
-			powerMergeCalc::twoWay(BusA->Voltage(), BusB->Voltage(), 28 * 28 / watts, 0.01, 0.01, Power1, Power2);
-			BusA->DrawPower(Power1);
-			BusB->DrawPower(Power2);
+			powerMergeCalc::twoWay(VoltsA, VoltsB, 28 * 28 / watts, 0.015, 0.015, Power1, Power2);
+			DiodeA.DrawPower(Power1);
+			DiodeB.DrawPower(Power2);
 		}
 		else
 		{
-			if (BusA)
+			if (BusA && VoltsA > 0)
 			{
-				BusA->DrawPower(watts);
+				DiodeA.DrawPower(watts);
 			}
-			if (BusB)
+			if (BusB && VoltsB > 0)
 			{
-				BusA->DrawPower(watts);
+				DiodeB.DrawPower(watts);
 			}
 		}
+	}
+
+	if (!strcmp(name, "Instrumentation-Power-Feeder"))
+	{
+		sprintf(oapiDebugString(), "A %lf, B%lf", DiodeA.PowerLoad(), DiodeB.PowerLoad());
 	}
 }
 

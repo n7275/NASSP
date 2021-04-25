@@ -96,13 +96,13 @@ namespace powerMergeCalc
 	// P21 = ccode(simplify((I1-I2)*V1));
 	// P22 = ccode(simplify(I2)*V2));
 
-	static inline void twoWay(double V1, double V2, double R0, double R1, double R2, double &P1, double &P2)
+	inline void twoWay(double V1, double V2, double R0, double R1, double R2, double &P1, double &P2)
 	{
 		P1 = V1 * (R0*V1 - R0 * V2 + R2 * V1) / (R0*R1 + R0 * R2 + R1 * R2);
 		P2 = V2 * (-R0 * V1 + R0 * V2 + R1 * V2) / (R0*R1 + R0 * R2 + R1 * R2);
 	}
 
-	static inline void threeWay(double V1, double V2, double V3, double R0, double R1, double R2, double R3, double &P1, double &P2, double &P3)
+	inline void threeWay(double V1, double V2, double V3, double R0, double R1, double R2, double R3, double &P1, double &P2, double &P3)
 	{
 		double denominator = (R0*R1*R2 + R0 * R1*R3 + R0 * R2*R3 + R1 * R2*R3);
 		P1 = V1 * (R0*R2*V1 - R0 * R2*V3 + R0 * R3*V1 - R0 * R3*V2 + R2 * R3*V1) / denominator;
@@ -110,7 +110,7 @@ namespace powerMergeCalc
 		P3 = V3 * (-R0 * R1*V2 + R0 * R1*V3 - R0 * R2*V1 + R0 * R2*V3 + R1 * R2*V3) / denominator;
 	}
 
-	static inline void fourWay(double V1, double V2, double V3, double V4, double R0, double R1, double R2, double R3, double R4, double &P1, double &P2, double &P3, double &P4)
+	inline void fourWay(double V1, double V2, double V3, double V4, double R0, double R1, double R2, double R3, double R4, double &P1, double &P2, double &P3, double &P4)
 	{
 		double denominator = (R0*R1*R2*R3 + R0 * R1*R2*R4 + R0 * R1*R3*R4 + R0 * R2*R3*R4 + R1 * R2*R3*R4);
 		P1 = V1 * (R0*R2*R3*V1 - R0 * R2*R3*V4 + R0 * R2*R4*V1 - R0 * R2*R4*V3 + R0 * R3*R4*V1 - R0 * R3*R4*V2 + R2 * R3*R4*V1) / denominator;
@@ -119,7 +119,7 @@ namespace powerMergeCalc
 		P4 = V4 * (-R0 * R1*R2*V3 + R0 * R1*R2*V4 - R0 * R1*R3*V2 + R0 * R1*R3*V4 - R0 * R2*R3*V1 + R0 * R2*R3*V4 + R1 * R2*R3*V4) / denominator;
 	}
 
-	static inline void fiveWay(double V1, double V2, double V3, double V4, double V5, double R0, double R1, double R2, double R3, double R4, double R5, double &P1, double &P2, double &P3, double &P4, double &P5)
+	inline void fiveWay(double V1, double V2, double V3, double V4, double V5, double R0, double R1, double R2, double R3, double R4, double R5, double &P1, double &P2, double &P3, double &P4, double &P5)
 	{
 		double denominator = (R0*R1*R2*R3*R4 + R0 * R1*R2*R3*R5 + R0 * R1*R2*R4*R5 + R0 * R1*R3*R4*R5 + R0 * R2*R3*R4*R5 + R1 * R2*R3*R4*R5);
 		P1 = V1 * (R0*R2*R3*R4*V1 - R0 * R2*R3*R4*V5 + R0 * R2*R3*R5*V1 - R0 * R2*R3*R5*V4 + R0 * R2*R4*R5*V1 - R0 * R2*R4*R5*V3 + R0 * R3*R4*R5*V1 - R0 * R3*R4*R5*V2 + R2 * R3*R4*R5*V1) / denominator;
@@ -147,7 +147,7 @@ public:
 	PowerMerge(char *i_name, PanelSDK &p);
 	double Voltage();
 	void DrawPower(double watts);
-	void WireToBuses(e_object *a, e_object *b) { BusA = a; BusB = b; };
+	void WireToBuses(e_object *a, e_object *b);
 	double Current();
 
 protected:
@@ -155,6 +155,7 @@ protected:
 
 	e_object *BusA;
 	e_object *BusB;
+	Diode DiodeA, DiodeB;
 };
 
 class ThreeWayPowerMerge : public PowerSource {

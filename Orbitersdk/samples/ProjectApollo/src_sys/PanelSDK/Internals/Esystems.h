@@ -587,6 +587,7 @@ public:
 ///
 class Diode : public e_object {
 public:
+	Diode();
 	Diode(char *i_name, e_object *i_src, double NominalTemperature, double saturationCurrent); //name, source, Kelvens, Amperes
 	double Voltage();
 	double Current();
