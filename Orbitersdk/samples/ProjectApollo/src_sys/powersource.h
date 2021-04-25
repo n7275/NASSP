@@ -96,13 +96,13 @@ namespace powerMergeCalc
 	// P21 = ccode(simplify((I1-I2)*V1));
 	// P22 = ccode(simplify(I2)*V2));
 
-	static inline void twoway(double V1, double V2, double R0, double R1, double R2, double &P1, double &P2)
+	static inline void twoWay(double V1, double V2, double R0, double R1, double R2, double &P1, double &P2)
 	{
 		P1 = V1 * (R0*V1 - R0 * V2 + R2 * V1) / (R0*R1 + R0 * R2 + R1 * R2);
 		P2 = V2 * (-R0 * V1 + R0 * V2 + R1 * V2) / (R0*R1 + R0 * R2 + R1 * R2);
 	}
 
-	static inline void threeway(double V1, double V2, double V3, double R0, double R1, double R2, double R3, double &P1, double &P2, double &P3)
+	static inline void threeWay(double V1, double V2, double V3, double R0, double R1, double R2, double R3, double &P1, double &P2, double &P3)
 	{
 		double denominator = (R0*R1*R2 + R0 * R1*R3 + R0 * R2*R3 + R1 * R2*R3);
 		P1 = V1 * (R0*R2*V1 - R0 * R2*V3 + R0 * R3*V1 - R0 * R3*V2 + R2 * R3*V1) / denominator;
@@ -110,7 +110,7 @@ namespace powerMergeCalc
 		P3 = V3 * (-R0 * R1*V2 + R0 * R1*V3 - R0 * R2*V1 + R0 * R2*V3 + R1 * R2*V3) / denominator;
 	}
 
-	static inline void fourway(double V1, double V2, double V3, double V4, double R0, double R1, double R2, double R3, double R4, double &P1, double &P2, double &P3, double &P4)
+	static inline void fourWay(double V1, double V2, double V3, double V4, double R0, double R1, double R2, double R3, double R4, double &P1, double &P2, double &P3, double &P4)
 	{
 		double denominator = (R0*R1*R2*R3 + R0 * R1*R2*R4 + R0 * R1*R3*R4 + R0 * R2*R3*R4 + R1 * R2*R3*R4);
 		P1 = V1 * (R0*R2*R3*V1 - R0 * R2*R3*V4 + R0 * R2*R4*V1 - R0 * R2*R4*V3 + R0 * R3*R4*V1 - R0 * R3*R4*V2 + R2 * R3*R4*V1) / denominator;
