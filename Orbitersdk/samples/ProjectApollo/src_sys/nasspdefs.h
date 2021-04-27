@@ -167,6 +167,12 @@
 ///
 
 ///
+/// \defgroup PowerSource
+/// \ingroup PanelSDK
+/// \brief Extensions to PanelSDK's E_system objects, to allow power draw from multiple sources and between vessels
+///
+
+///
 /// \defgroup Propulsion Spacecraft propulsion systems code.
 /// \ingroup InternalSystems
 /// \brief Simulation of systems for and supporting spacecraft propulsion.

@@ -142,7 +142,12 @@ public:
 protected:
 };
 
-class PowerMerge : public PowerSource {
+///
+/// \ingroup PowerSource
+/// \brief Allows drawing power from two sources simultaneously. Optionally simulates diodes on none, either, or both of the inputs.
+/// 
+
+class PowerMerge : public PowerSource{
 public:
 	PowerMerge(char *i_name, PanelSDK &p);
 	double Voltage();
@@ -155,8 +160,16 @@ protected:
 
 	e_object *BusA;
 	e_object *BusB;
+	bool HasDiodeA, HasDiodeB;
+	double R1, R2;
 	Diode DiodeA, DiodeB;
 };
+
+///
+/// \ingroup PowerSource
+/// \brief Allows drawing power from three sources simultaneously. Optionally simulates diodes on any combination of inputs inputs.
+///	\see PowerMerge
+/// 
 
 class ThreeWayPowerMerge : public PowerSource {
 public:
@@ -288,8 +301,8 @@ protected:
 };
 
 class Connector;
-
 ///
+/// \ingroup PowerSource
 /// \brief Connector object: sends messages to a connector, rather than to the next e_object
 /// in the chain. Mostly used for connecting to another vessel.
 ///
