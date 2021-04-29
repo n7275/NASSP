@@ -149,6 +149,7 @@ protected:
 
 class PowerMerge : public PowerSource{
 public:
+	PowerMerge(char *i_name, PanelSDK &p, bool HasDiodeA, bool HasDiodeB, double ISatA, double ISatB, double InResistenceA, double InResistenceB);
 	PowerMerge(char *i_name, PanelSDK &p);
 	double Voltage();
 	void DrawPower(double watts);
@@ -160,7 +161,7 @@ protected:
 
 	e_object *BusA;
 	e_object *BusB;
-	bool HasDiodeA, HasDiodeB;
+	bool IsDiodeA, IsDiodeB;
 	double R1, R2;
 	Diode DiodeA, DiodeB;
 };

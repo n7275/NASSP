@@ -115,6 +115,49 @@ void PowerSDKObject::DrawPower(double watts)
 // Tie power together from two sources. 
 //
 
+PowerMerge::PowerMerge(char * i_name, PanelSDK & p, bool HasDiodeA, bool HasDiodeB, double ISatA, double ISatB, double InResistenceA, double InResistenceB) : sdk(p), 
+DiodeA(ISatA),
+DiodeB(ISatB)
+{
+	if (i_name)
+	{
+		strcpy(name, i_name);
+
+		strcpy(DiodeA.name, i_name);
+		strcpy(DiodeB.name, i_name);
+
+		strncat(DiodeA.name, "_DiodeA", 8);
+		strncat(DiodeB.name, "_DiodeB", 8);
+	}
+
+	BusA = NULL;
+	BusB = NULL;
+
+	sdk.AddElectrical(this, false);
+
+	IsDiodeA = HasDiodeA;
+	IsDiodeB = HasDiodeB;
+
+	if (InResistenceA < 1E-5)
+	{
+		R1 = 1E-5;
+	}
+	else
+	{
+		R1 = InResistenceA;
+	}
+
+	if (InResistenceB < 1E-5)
+	{
+		R2 = 1E-5;
+	}
+	else
+	{
+		R2 = InResistenceA;
+	}
+
+}
+
 PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p)
 {
 	if (i_name)
@@ -124,29 +167,24 @@ PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p)
 	BusB = NULL;
 
 	sdk.AddElectrical(this, false);
+
+	IsDiodeA = true;
+	IsDiodeB = true;
+	R1 = 0.001;
+	R2 = 0.001;
 }
 
 void PowerMerge::WireToBuses(e_object *a, e_object *b)
 {
 	BusA = a;
 	BusB = b;
-	DiodeA.WireTo(BusA);
-	DiodeB.WireTo(BusA);
+	DiodeA.WireTo(BusA, this);
+	DiodeB.WireTo(BusB, this);
 }
 
 double PowerMerge::Voltage()
 {
-	double VoltsA = 0;
-	double VoltsB = 0;
-
-	if (BusA) VoltsA = DiodeA.Voltage();
-	if (BusB) VoltsB = DiodeA.Voltage();
-
-	if (VoltsA != 0 && VoltsB != 0) return (VoltsA + VoltsB) / 2.0;
-	if (VoltsA != 0) return VoltsA;
-	if (VoltsB != 0) return VoltsB;
-
-	return 0;
+	return Volts;
 }
 
 double PowerMerge::Current()
@@ -161,45 +199,45 @@ double PowerMerge::Current()
 
 void PowerMerge::DrawPower(double watts)
 {
-	//double Volts = 0.0;
+	if (watts == 0.0)
+		return;
+
 	double VoltsA = 0.0;
 	double VoltsB = 0.0;
 	double Power1, Power2;
 
 	power_load += watts;
 
-	if (BusA && DiodeA.IsEnabled())
-		VoltsA = DiodeA.Voltage();
-	if (BusB && DiodeA.IsEnabled())
-		VoltsB = DiodeB.Voltage();
+	double loadResistance = 28 * 28 / power_load;
 
-	Volts = VoltsA + VoltsB;
+	VoltsA = DiodeA.Voltage();
+	VoltsB = DiodeB.Voltage();
 
-	if (Volts > 0.0)
-	{
-		if (BusA && BusB && VoltsA > 0 && VoltsB > 0)
-		{
-			powerMergeCalc::twoWay(VoltsA, VoltsB, 28 * 28 / watts, 0.015, 0.015, Power1, Power2);
-			DiodeA.DrawPower(Power1);
-			DiodeB.DrawPower(Power2);
-		}
-		else
-		{
-			if (BusA && VoltsA > 0)
-			{
-				DiodeA.DrawPower(watts);
-			}
-			if (BusB && VoltsB > 0)
-			{
-				DiodeB.DrawPower(watts);
-			}
-		}
-	}
+	
 
-	if (!strcmp(name, "Instrumentation-Power-Feeder"))
-	{
-		sprintf(oapiDebugString(), "A %lf, B%lf", DiodeA.PowerLoad(), DiodeB.PowerLoad());
-	}
+	//if (Volts > 0.0)
+	//{
+	//	if (VoltsA > 0 && VoltsB > 0)
+	//	{
+	//		powerMergeCalc::twoWay(VoltsA, VoltsB, 28 * 28 / watts, R1, R2, Power1, Power2);
+	//		DiodeA.DrawPower(Power1);
+	//		DiodeB.DrawPower(Power2);
+	//	}
+	//	else
+	//	{
+	//		if (VoltsA > 0)
+	//		{
+	//			DiodeA.DrawPower(watts);
+	//			Volts = VoltsA;
+	//		}
+	//		if (VoltsB > 0)
+	//		{
+	//			DiodeB.DrawPower(watts);
+	//			Volts = VoltsB;
+	//		}
+	//	}
+	//}
+
 }
 
 //

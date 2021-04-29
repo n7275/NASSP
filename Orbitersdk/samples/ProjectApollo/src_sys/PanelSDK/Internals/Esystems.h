@@ -588,13 +588,18 @@ public:
 class Diode : public e_object {
 public:
 	Diode();
+	Diode(double saturationCurrent);
 	Diode(char *i_name, e_object *i_src, double NominalTemperature, double saturationCurrent); //name, source, Kelvens, Amperes
 	double Voltage();
 	double Current();
+	void DrawPower(double watts);
+	void UpdateFlow(double dt);
 
+	virtual void WireTo(e_object *p, e_object *out) { SRC = p; output = out; };
 	void Load(char *line);
 	void Save(FILEHANDLE scn);
 protected:
+	e_object *output;
 	double Is; //Saturation Current
 	double kT_q; //Thermal Voltage. Currently statatic, as diode temperature is static.
 };

@@ -954,6 +954,8 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //double *pressequalFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE:FLOW");
 //sprintf(oapiDebugString(), "CSM Tunnel: %lf LM Tunnel: %lf TunnelFlow %lf EqFlow: %lf", (csmtunnelpipe->in->parent->space.Press)*PSI, (csmtunnelpipe->out->parent->space.Press)*PSI, (csmtunnelpipe->flow)*LBH, *pressequalFlow*LBH);
 
+	//sprintf(oapiDebugString(), "%lf", *(double*)Panelsdk.GetPointerByString("SHIP:Battery-Bus-A_DiodeA:VOLTS"));
+
 #ifdef _DEBUG
 
 		/*sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; R1 %0.1fK, R2 %0.1fK, R3 %0.1fK, R4 %0.1fK, R5 %0.1fK, R6 %0.1fK, R7 %0.1fK, R8 %0.1fK",

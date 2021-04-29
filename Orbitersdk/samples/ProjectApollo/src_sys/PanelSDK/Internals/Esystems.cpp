@@ -49,35 +49,29 @@ void e_object::refresh(double dt)
 }
 
 void e_object::DrawPower(double watts)
-
 {
 	if (SRC)
 		SRC->DrawPower(watts);
 }
 
 void e_object::PUNLOAD(double watts)
-
 {
 }
 
 void e_object::connect(e_object *new_src)
-
 {
 	SRC=new_src;
 }
 
 void e_object::Save(FILEHANDLE scn)
-
 {
 }
 
 void e_object::Load(char *line)
-
 {
 }
 
 double e_object::Voltage() 
-
 {
 	if (IsEnabled()) {
 		if (SRC)
@@ -89,7 +83,6 @@ double e_object::Voltage()
 }
 
 double e_object::Current() 
-
 {
 	if (IsEnabled()) {
 		if (SRC)
@@ -101,7 +94,6 @@ double e_object::Current()
 }
 
 double e_object::Frequency()
-
 {
 	if (IsEnabled()) {
 		if (SRC)
@@ -113,7 +105,6 @@ double e_object::Frequency()
 }
 
 double e_object::PowerLoad()
-
 {
 	if (IsEnabled())
 		return power_load;
@@ -127,7 +118,6 @@ double e_object::PowerLoad()
 //
 
 void e_object::UpdateFlow(double dt)
-
 {
 	if (SRC)
 		Volts = SRC->Voltage();
@@ -1654,8 +1644,31 @@ void Pump::Save(FILEHANDLE scn) {
 //------------------------------ Diode Class -----------------------------------
 Diode::Diode()
 {
+	max_stage = 99;
+	SRC = NULL;
+	output = NULL;
+
 	Is = 0.01;
 	kT_q = 0.0249902579904080;
+
+	Volts = 0;
+	Amperes = 0.0;
+	power_load = 0.0;
+}
+
+Diode::Diode(double saturationCurrent)
+{
+	max_stage = 99;
+
+	SRC = NULL;
+	output = NULL;
+
+	Is = saturationCurrent;
+	kT_q = (1.38064852E-23*290) / 1.60217662E-19;
+
+	Volts = 0;
+	Amperes = 0.0;
+	power_load = 0.0;
 }
 
 Diode::Diode(char* i_name, e_object* i_src, double NominalTemperature, double saturationCurrent)
@@ -1663,6 +1676,7 @@ Diode::Diode(char* i_name, e_object* i_src, double NominalTemperature, double sa
 	strcpy(name, i_name);
 	max_stage = 99;
 	SRC = i_src;
+	output = NULL;
 
 	if (SRC && SRC->IsEnabled())
 	{
@@ -1675,16 +1689,20 @@ Diode::Diode(char* i_name, e_object* i_src, double NominalTemperature, double sa
 	kT_q = (1.38064852E-23*NominalTemperature) / 1.60217662E-19;
 }
 
-double Diode::Current()
+double Diode::Voltage()
 {
-	Enable();
-
-	if (power_load < 0.0)
+	if (SRC && SRC->IsEnabled())
 	{
-		Disable();
+		Volts = SRC->Voltage() - (kT_q*log((Amperes + 1) / Is));
+		return Volts;
 	}
 
-	if (SRC && SRC->IsEnabled() && power_load > 0.0)
+	return 0.0;
+}
+
+double Diode::Current()
+{
+	if (SRC && SRC->IsEnabled())
 	{
 		Amperes = power_load / Volts;
 			return Amperes;
@@ -1693,16 +1711,26 @@ double Diode::Current()
 	return 0.0;
 }
 
-double Diode::Voltage()
+void Diode::DrawPower(double watts)
 {
-	if (SRC && SRC->IsEnabled())
-	{
-		Volts = SRC->Voltage() - (kT_q*log((Amperes+1) / Is));
-		return Volts;
-	}
-
-	return 0.0;
+	if (SRC && enabled)
+		SRC->DrawPower(watts);
 }
+
+void Diode::UpdateFlow(double dt)
+{	
+	Enable();
+
+	if (power_load < -Is)
+		Disable();
+
+	if (output)
+	{
+		if (Volts < output->Voltage());
+			Disable();
+	}
+}
+
 
 void Diode::Load(char *line)
 
