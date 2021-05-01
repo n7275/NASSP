@@ -1691,7 +1691,7 @@ Diode::Diode(char* i_name, e_object* i_src, double NominalTemperature, double sa
 
 double Diode::Voltage()
 {
-	if (SRC && SRC->IsEnabled())
+	if (SRC && SRC->IsEnabled() && enabled)
 	{
 		Volts = SRC->Voltage() - (kT_q*log((Amperes + 1) / Is));
 		return Volts;

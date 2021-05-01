@@ -130,8 +130,18 @@ DiodeB(ISatB)
 		strncat(DiodeB.name, "_DiodeB", 8);
 	}
 
+	Volts = 28;
+	Amperes = 0;
+	power_load = 0;
+
 	BusA = NULL;
 	BusB = NULL;
+	DrawA = NULL;
+	DrawB = NULL;
+	VoltsA = 0.0;
+	VoltsB = 0.0;
+	Power1 = 0.0;
+	Power2 = 0.0;
 
 	sdk.AddElectrical(this, false);
 
@@ -163,8 +173,18 @@ PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p)
 	if (i_name)
 		strcpy(name, i_name);
 
+	Volts = 28;
+	Amperes = 0;
+	power_load = 0;
+
 	BusA = NULL; 
 	BusB = NULL;
+	DrawA = NULL;
+	DrawB = NULL;
+	VoltsA = 0.0;
+	VoltsB = 0.0;
+	Power1 = 0.0;
+	Power2 = 0.0;
 
 	sdk.AddElectrical(this, false);
 
@@ -189,55 +209,101 @@ double PowerMerge::Voltage()
 
 double PowerMerge::Current()
 {
-	//double Volts = Voltage();
-
-	if (Volts > 0.0) {
-		return power_load / Volts;
-	}
-	return 0.0;
+	return Amperes;
 }
 
 void PowerMerge::DrawPower(double watts)
 {
 	if (watts == 0.0)
+	{
 		return;
-
-	double VoltsA = 0.0;
-	double VoltsB = 0.0;
-	double Power1, Power2;
-
+	}
+	
 	power_load += watts;
 
-	double loadResistance = 28 * 28 / power_load;
+	if (DrawA && DrawB)
+	{
+		powerMergeCalc::twoWay(VoltsA, VoltsB, (28*28)/power_load, R1, R2, Power1, Power2);
+		DrawA->DrawPower(Power1);
+		DrawB->DrawPower(Power2);
+	}
+	else if (DrawA)
+	{
+		DrawA->DrawPower(watts);
+	}
+	else if (DrawB)
+	{
+		DrawB->DrawPower(watts);
+	}
+}
 
-	VoltsA = DiodeA.Voltage();
-	VoltsB = DiodeB.Voltage();
+void PowerMerge::UpdateFlow(double dt)
+{
+	//Pick an input for A (diode or not based on what was set in the constructor) and get its voltage
+	if (IsDiodeA)
+	{
+		VoltsA = DiodeA.Voltage();
+		if (VoltsA > 0)
+			DrawA = &DiodeA;
+	}
+	else if (BusA)
+	{
+		VoltsA = BusA->Voltage();
+		if (VoltsA > 0)
+			DrawA = BusA;
+	}
+	else
+	{
+		VoltsA = 0;
+		DrawA = NULL;
+	}
 
-	
+	//Pick an input for B (diode or not based on what was set in the constructor) and get its voltage
+	if (IsDiodeB)
+	{
+		VoltsB = DiodeB.Voltage();
+		if (VoltsB > 0)
+			DrawB = &DiodeB;
+	}
+	else if (BusB)
+	{
+		VoltsB = BusA->Voltage();
+		if (VoltsB > 0)
+			DrawB = BusB;
+	}
+	else
+	{
+		VoltsA = 0;
+		DrawA = NULL;
+	}
 
-	//if (Volts > 0.0)
-	//{
-	//	if (VoltsA > 0 && VoltsB > 0)
-	//	{
-	//		powerMergeCalc::twoWay(VoltsA, VoltsB, 28 * 28 / watts, R1, R2, Power1, Power2);
-	//		DiodeA.DrawPower(Power1);
-	//		DiodeB.DrawPower(Power2);
-	//	}
-	//	else
-	//	{
-	//		if (VoltsA > 0)
-	//		{
-	//			DiodeA.DrawPower(watts);
-	//			Volts = VoltsA;
-	//		}
-	//		if (VoltsB > 0)
-	//		{
-	//			DiodeB.DrawPower(watts);
-	//			Volts = VoltsB;
-	//		}
-	//	}
-	//}
+	//Calculate node input voltage
+	if (DrawA && DrawB)
+	{
+		Volts = sqrt((Power1+Power2)*((28 * 28) / power_load));
+	}
+	else if(DrawA)
+	{
+		Volts = VoltsA;
+	}
+	else if (DrawB)
+	{
+		Volts = VoltsB;
+	}
+	else
+	{
+		Volts = 0;
+	}
 
+	//Calculate current though the node
+	if (Volts > 0.0) {
+		Amperes = (power_load / Volts);
+	}
+
+	//Reset power load before the next timestep
+	power_load = 0.0;
+	Power1 = 0.0;
+	Power2 = 0.0;
 }
 
 //
