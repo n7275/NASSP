@@ -1693,7 +1693,6 @@ double Diode::Voltage()
 {
 	if (SRC && SRC->IsEnabled() && enabled)
 	{
-		Volts = SRC->Voltage() - (kT_q*log((Amperes + 1) / Is));
 		return Volts;
 	}
 
@@ -1704,8 +1703,7 @@ double Diode::Current()
 {
 	if (SRC && SRC->IsEnabled())
 	{
-		Amperes = power_load / Volts;
-			return Amperes;
+		return Amperes;
 	}
 
 	return 0.0;
@@ -1720,9 +1718,19 @@ void Diode::DrawPower(double watts)
 void Diode::UpdateFlow(double dt)
 {	
 	Enable();
+	Volts = 0;
+
+	if(SRC)
+		Volts = SRC->Voltage() - (kT_q*log((Amperes + 1) / Is));
+	
+	if(Volts > 0.0)
+		Amperes = power_load / Volts;
 
 	if (power_load < -Is)
+	{
 		Disable();
+		Volts = 0;
+	}
 
 	if (output)
 	{
