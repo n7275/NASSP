@@ -1678,10 +1678,7 @@ Diode::Diode(char* i_name, e_object* i_src, double NominalTemperature, double sa
 	SRC = i_src;
 	output = NULL;
 
-	if (SRC && SRC->IsEnabled())
-	{
-		Volts = SRC->Voltage() - (kT_q*log((Amperes / Is) + 1));
-	}
+	Volts = 0;
 	Amperes = 0.0;
 	power_load = 0.0;
 
@@ -1691,7 +1688,7 @@ Diode::Diode(char* i_name, e_object* i_src, double NominalTemperature, double sa
 
 double Diode::Voltage()
 {
-	if (SRC && SRC->IsEnabled() && enabled)
+	if (SRC && SRC->IsEnabled())
 	{
 		return Volts;
 	}
@@ -1701,7 +1698,7 @@ double Diode::Voltage()
 
 double Diode::Current()
 {
-	if (SRC && SRC->IsEnabled())
+	if (SRC && SRC->IsEnabled() && enabled)
 	{
 		return Amperes;
 	}
@@ -1715,18 +1712,30 @@ void Diode::DrawPower(double watts)
 		SRC->DrawPower(watts);
 }
 
-void Diode::UpdateFlow(double dt)
+void Diode::refresh(double dt)
 {	
 	Enable();
 	Volts = 0;
 
-	if(SRC)
+	if (SRC && enabled)
+	{
 		Volts = SRC->Voltage() - (kT_q*log((Amperes + 1) / Is));
-	
-	if(Volts > 0.0)
-		Amperes = power_load / Volts;
 
-	if (power_load < -Is)
+		if (Volts < 0)
+			Volts = 0.0;
+	}
+
+	/*if (!strcmp(name, "Instrumentation-Power-FeederDiodeA"))
+	{
+		sprintf(oapiDebugString(), "Voltage: %0.2fV", Volts);
+	}*/
+	
+	if (Volts > 0.0)
+	{
+		Amperes = power_load / Volts;
+	}
+
+	if (power_load < -(Is*Volts))
 	{
 		Disable();
 		Volts = 0;
@@ -1734,8 +1743,10 @@ void Diode::UpdateFlow(double dt)
 
 	if (output)
 	{
-		if (Volts < output->Voltage());
+		if (Volts < output->Voltage())
+		{
 			Disable();
+		}
 	}
 }
 

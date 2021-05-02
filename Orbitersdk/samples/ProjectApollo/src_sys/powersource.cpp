@@ -126,8 +126,8 @@ DiodeB(ISatB)
 		strcpy(DiodeA.name, i_name);
 		strcpy(DiodeB.name, i_name);
 
-		strncat(DiodeA.name, "_DiodeA", 8);
-		strncat(DiodeB.name, "_DiodeB", 8);
+		strncat(DiodeA.name, "DiodeA", 8);
+		strncat(DiodeB.name, "DiodeB", 8);
 	}
 
 	Volts = 28;
@@ -142,6 +142,8 @@ DiodeB(ISatB)
 	VoltsB = 0.0;
 	Power1 = 0.0;
 	Power2 = 0.0;
+	PowerA = 0.0;
+	PowerB = 0.0;
 
 	sdk.AddElectrical(this, false);
 
@@ -168,10 +170,22 @@ DiodeB(ISatB)
 
 }
 
-PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p)
+PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p),
+DiodeA(1),
+DiodeB(1)
 {
 	if (i_name)
+	{
 		strcpy(name, i_name);
+
+		strcpy(DiodeA.name, i_name);
+		strcpy(DiodeB.name, i_name);
+
+		strncat(DiodeA.name, "DiodeA", 7);
+		strncat(DiodeB.name, "DiodeB", 7);
+	}
+
+	
 
 	Volts = 28;
 	Amperes = 0;
@@ -185,8 +199,12 @@ PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p)
 	VoltsB = 0.0;
 	Power1 = 0.0;
 	Power2 = 0.0;
+	PowerA = 0.0;
+	PowerB = 0.0;
 
 	sdk.AddElectrical(this, false);
+	sdk.AddElectrical(&DiodeA, false);
+	sdk.AddElectrical(&DiodeB, false);
 
 	IsDiodeA = true;
 	IsDiodeB = true;
@@ -198,8 +216,8 @@ void PowerMerge::WireToBuses(e_object *a, e_object *b)
 {
 	BusA = a;
 	BusB = b;
-	DiodeA.WireTo(BusA, this);
-	DiodeB.WireTo(BusB, this);
+	DiodeA.WireTo(a, this);
+	DiodeB.WireTo(b, this);
 }
 
 double PowerMerge::Voltage()
@@ -214,11 +232,8 @@ double PowerMerge::Current()
 
 void PowerMerge::DrawPower(double watts)
 {
-	if (watts == 0.0)
-	{
-		return;
-	}
-	
+	Power1 = 0;
+	Power2 = 0;
 	power_load += watts;
 
 	if (DrawA && DrawB)
@@ -226,6 +241,9 @@ void PowerMerge::DrawPower(double watts)
 		powerMergeCalc::twoWay(VoltsA, VoltsB, (28*28)/power_load, R1, R2, Power1, Power2);
 		DrawA->DrawPower(Power1);
 		DrawB->DrawPower(Power2);
+
+		PowerA += Power1;
+		PowerB += Power2;
 	}
 	else if (DrawA)
 	{
@@ -242,12 +260,14 @@ void PowerMerge::UpdateFlow(double dt)
 	//Pick an input for A (diode or not based on what was set in the constructor) and get its voltage
 	if (IsDiodeA)
 	{
+		DiodeA.refresh(dt);
 		VoltsA = DiodeA.Voltage();
 		if (VoltsA > 0)
 			DrawA = &DiodeA;
 	}
 	else if (BusA)
 	{
+		DiodeB.refresh(dt);
 		VoltsA = BusA->Voltage();
 		if (VoltsA > 0)
 			DrawA = BusA;
@@ -277,10 +297,15 @@ void PowerMerge::UpdateFlow(double dt)
 		DrawA = NULL;
 	}
 
+	if (!strcmp(name, "Instrumentation-Power-Feeder"))
+	{
+		sprintf(oapiDebugString(), "Voltage: %0.2fV, Current: %0.2fA, Power: %0.2fW, VoltsA: %0.2fV, VoltsB: %0.2fV, PowerA: %0.2fW, Power2: %0.2fW", Volts, Amperes, power_load, VoltsA, VoltsB, Power1, Power2);
+	}
+
 	//Calculate node input voltage
 	if (DrawA && DrawB)
 	{
-		Volts = sqrt((Power1+Power2)*((28 * 28) / power_load));
+		Volts = sqrt(abs((PowerA+PowerB)*((28 * 28) / power_load)));
 	}
 	else if(DrawA)
 	{
@@ -296,14 +321,29 @@ void PowerMerge::UpdateFlow(double dt)
 	}
 
 	//Calculate current though the node
-	if (Volts > 0.0) {
+	if (Volts > 0.0)
+	{
 		Amperes = (power_load / Volts);
+	}
+	else
+	{
+		Amperes = 0;
+	}
+
+	if (!strcmp(name, "Instrumentation-Power-Feeder"))
+	{
+		//sprintf(oapiDebugString(), "Voltage: %0.2fV, Current: %0.2fA, Power: %0.2fW, VoltsA: %0.2fV, VoltsB: %0.2fV, PowerA: %0.2fW, Power2: %0.2fW", Volts, Amperes, power_load, VoltsA, VoltsB, Power1, Power2);
+		//sprintf(oapiDebugString(), "DiodeA %d, DiodeB %d", IsDiodeA, IsDiodeB);
+		//sprintf(oapiDebugString(), "DiodeA %d, DiodeB %d", DiodeA.IsEnabled(), DiodeB.IsEnabled());
+		//sprintf(oapiDebugString(), "DiodeA %lfV, DiodeB %lfV", DiodeA.Voltage(), DiodeB.Voltage());
+		//sprintf(oapiDebugString(), "DiodeA %d, DiodeB %d", DiodeA.SRC->IsEnabled(), DiodeB.SRC->IsEnabled());
+		//sprintf(oapiDebugString(), "DiodeAName: %s, DiodeBName: %s", DiodeA.name, DiodeB.name);
 	}
 
 	//Reset power load before the next timestep
 	power_load = 0.0;
-	Power1 = 0.0;
-	Power2 = 0.0;
+	PowerA = 0.0;
+	PowerB = 0.0;
 }
 
 //

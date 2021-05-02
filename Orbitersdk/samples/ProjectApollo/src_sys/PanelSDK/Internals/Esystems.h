@@ -593,7 +593,7 @@ public:
 	double Voltage();
 	double Current();
 	void DrawPower(double watts);
-	void UpdateFlow(double dt);
+	void refresh(double dt);
 
 	virtual void WireTo(e_object *p, e_object *out) { SRC = p; output = out; };
 	void Load(char *line);

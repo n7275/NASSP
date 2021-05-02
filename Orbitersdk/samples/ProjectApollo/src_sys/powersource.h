@@ -171,6 +171,7 @@ protected:
 	double R1, R2;
 	double VoltsA, VoltsB;
 	double Power1, Power2;
+	double PowerA, PowerB;
 	Diode DiodeA, DiodeB;
 	e_object *DrawA;
 	e_object *DrawB;
