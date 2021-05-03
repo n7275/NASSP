@@ -1708,7 +1708,7 @@ double Diode::Current()
 
 void Diode::DrawPower(double watts)
 {
-	if (SRC && enabled)
+	if (SRC && enabled && watts > 0)
 		SRC->DrawPower(watts);
 }
 
@@ -1719,16 +1719,16 @@ void Diode::refresh(double dt)
 
 	if (SRC && enabled)
 	{
-		Volts = SRC->Voltage() - (kT_q*log((Amperes + 1) / Is));
+		Volts = SRC->Voltage()-(kT_q*log((Amperes + 1) / Is));
 
 		if (Volts < 0)
 			Volts = 0.0;
 	}
 
-	/*if (!strcmp(name, "Instrumentation-Power-FeederDiodeA"))
+	if (!strcmp(name, "Instrumentation-Power-FeederDiodeA"))
 	{
 		sprintf(oapiDebugString(), "Voltage: %0.2fV", Volts);
-	}*/
+	}
 	
 	if (Volts > 0.0)
 	{
@@ -1754,7 +1754,7 @@ void Diode::refresh(double dt)
 void Diode::Load(char *line)
 
 {
-	sscanf(line, "    <DIODE> %s", name);
+	sscanf(line, "    <DIODE> %s %i %lf", name, &enabled, &Volts);
 }
 
 void Diode::Save(FILEHANDLE scn)
@@ -1762,6 +1762,6 @@ void Diode::Save(FILEHANDLE scn)
 
 	char cbuf[1000];
 
-	sprintf(cbuf, "%s", name);
+	sprintf(cbuf, "%s %i %lf", name, enabled, Volts);
 	oapiWriteScenario_string(scn, "    <DIODE> ", cbuf);
 }

@@ -130,7 +130,7 @@ DiodeB(ISatB)
 		strncat(DiodeB.name, "DiodeB", 8);
 	}
 
-	Volts = 28;
+	Volts = 0;
 	Amperes = 0;
 	power_load = 0;
 
@@ -145,6 +145,8 @@ DiodeB(ISatB)
 	PowerA = 0.0;
 	PowerB = 0.0;
 
+	sdk.AddElectrical(&DiodeA, false);
+	sdk.AddElectrical(&DiodeB, false);
 	sdk.AddElectrical(this, false);
 
 	IsDiodeA = HasDiodeA;
@@ -171,8 +173,8 @@ DiodeB(ISatB)
 }
 
 PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p),
-DiodeA(1),
-DiodeB(1)
+DiodeA(0.01),
+DiodeB(0.01)
 {
 	if (i_name)
 	{
@@ -185,9 +187,6 @@ DiodeB(1)
 		strncat(DiodeB.name, "DiodeB", 7);
 	}
 
-	
-
-	Volts = 28;
 	Amperes = 0;
 	power_load = 0;
 
@@ -202,14 +201,15 @@ DiodeB(1)
 	PowerA = 0.0;
 	PowerB = 0.0;
 
-	sdk.AddElectrical(this, false);
 	sdk.AddElectrical(&DiodeA, false);
 	sdk.AddElectrical(&DiodeB, false);
+	sdk.AddElectrical(this, false);
+	
 
 	IsDiodeA = true;
 	IsDiodeB = true;
-	R1 = 0.001;
-	R2 = 0.001;
+	R1 = 0.015;
+	R2 = 0.015;
 }
 
 void PowerMerge::WireToBuses(e_object *a, e_object *b)
@@ -260,14 +260,12 @@ void PowerMerge::UpdateFlow(double dt)
 	//Pick an input for A (diode or not based on what was set in the constructor) and get its voltage
 	if (IsDiodeA)
 	{
-		DiodeA.refresh(dt);
 		VoltsA = DiodeA.Voltage();
 		if (VoltsA > 0)
 			DrawA = &DiodeA;
 	}
 	else if (BusA)
 	{
-		DiodeB.refresh(dt);
 		VoltsA = BusA->Voltage();
 		if (VoltsA > 0)
 			DrawA = BusA;
@@ -297,15 +295,18 @@ void PowerMerge::UpdateFlow(double dt)
 		DrawA = NULL;
 	}
 
-	if (!strcmp(name, "Instrumentation-Power-Feeder"))
+	/*if (!strcmp(name, "Instrumentation-Power-Feeder"))
 	{
 		sprintf(oapiDebugString(), "Voltage: %0.2fV, Current: %0.2fA, Power: %0.2fW, VoltsA: %0.2fV, VoltsB: %0.2fV, PowerA: %0.2fW, Power2: %0.2fW", Volts, Amperes, power_load, VoltsA, VoltsB, Power1, Power2);
-	}
+	}*/
 
 	//Calculate node input voltage
 	if (DrawA && DrawB)
 	{
-		Volts = sqrt(abs((PowerA+PowerB)*((28 * 28) / power_load)));
+		DiodeA.refresh(dt);
+		DiodeB.refresh(dt);
+		//Volts = sqrt(abs((PowerA+PowerB)*((28 * 28) / power_load)));
+		Volts = (VoltsA + VoltsB) / 2;
 	}
 	else if(DrawA)
 	{
