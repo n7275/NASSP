@@ -173,8 +173,8 @@ DiodeB(ISatB)
 }
 
 PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p),
-DiodeA(0.01),
-DiodeB(0.01)
+DiodeA(1E-1),
+DiodeB(1E-1)
 {
 	if (i_name)
 	{
@@ -232,20 +232,19 @@ double PowerMerge::Current()
 
 void PowerMerge::DrawPower(double watts)
 {
-	Power1 = 0;
-	Power2 = 0;
 	power_load += watts;
 
 	if (DrawA && DrawB)
 	{
-		powerMergeCalc::twoWay(VoltsA, VoltsB, (28*28)/power_load, R1, R2, Power1, Power2);
-		DrawA->DrawPower(Power1);
-		DrawB->DrawPower(Power2);
+		//if (power_load > 0)
+		//{
+		//	
 
-		PowerA += Power1;
-		PowerB += Power2;
+		//	PowerA += Power1;
+		//	PowerB += Power2;
+		//}
 	}
-	else if (DrawA)
+	else if (DrawA && !DrawB)
 	{
 		DrawA->DrawPower(watts);
 	}
@@ -255,16 +254,20 @@ void PowerMerge::DrawPower(double watts)
 	}
 }
 
-void PowerMerge::UpdateFlow(double dt)
+void PowerMerge::refresh(double dt)
 {
+	Power1 = 0;
+	Power2 = 0;
+	DiodeA.refresh(dt);
+	DiodeB.refresh(dt);
+
 	//Pick an input for A (diode or not based on what was set in the constructor) and get its voltage
-	if (IsDiodeA)
+	if (IsDiodeA && DiodeA.IsEnabled())
 	{
 		VoltsA = DiodeA.Voltage();
-		if (VoltsA > 0)
-			DrawA = &DiodeA;
+		DrawA = &DiodeA;
 	}
-	else if (BusA)
+	else if (BusA && !IsDiodeA)
 	{
 		VoltsA = BusA->Voltage();
 		if (VoltsA > 0)
@@ -277,38 +280,39 @@ void PowerMerge::UpdateFlow(double dt)
 	}
 
 	//Pick an input for B (diode or not based on what was set in the constructor) and get its voltage
-	if (IsDiodeB)
+	if (IsDiodeB && DiodeB.IsEnabled())
 	{
 		VoltsB = DiodeB.Voltage();
-		if (VoltsB > 0)
-			DrawB = &DiodeB;
+		DrawB = &DiodeB;
 	}
-	else if (BusB)
+	else if (BusB && !IsDiodeB)
 	{
-		VoltsB = BusA->Voltage();
+		VoltsB = BusB->Voltage();
 		if (VoltsB > 0)
 			DrawB = BusB;
 	}
 	else
 	{
-		VoltsA = 0;
-		DrawA = NULL;
+		VoltsB = 0;
+		DrawB = NULL;
 	}
 
-	/*if (!strcmp(name, "Instrumentation-Power-Feeder"))
+	if (DrawA && DrawB && power_load > 0)
 	{
-		sprintf(oapiDebugString(), "Voltage: %0.2fV, Current: %0.2fA, Power: %0.2fW, VoltsA: %0.2fV, VoltsB: %0.2fV, PowerA: %0.2fW, Power2: %0.2fW", Volts, Amperes, power_load, VoltsA, VoltsB, Power1, Power2);
-	}*/
+		powerMergeCalc::twoWay(VoltsA, VoltsB, (28 * 28) / power_load, R1, R2, Power1, Power2);
+		DrawA->DrawPower(Power1);
+		DrawB->DrawPower(Power2);
+	}
+
 
 	//Calculate node input voltage
-	if (DrawA && DrawB)
+	if (DrawA && DrawB && VoltsA > 0 && VoltsB > 0 && power_load > 0)
 	{
-		DiodeA.refresh(dt);
-		DiodeB.refresh(dt);
 		//Volts = sqrt(abs((PowerA+PowerB)*((28 * 28) / power_load)));
-		Volts = (VoltsA + VoltsB) / 2;
+		Volts = VoltsA-((Power1 / VoltsA) * R1);
+		//Volts = (VoltsA + VoltsB) / 2;
 	}
-	else if(DrawA)
+	else if (DrawA && !DrawB)
 	{
 		Volts = VoltsA;
 	}
@@ -320,7 +324,7 @@ void PowerMerge::UpdateFlow(double dt)
 	{
 		Volts = 0;
 	}
-
+	
 	//Calculate current though the node
 	if (Volts > 0.0)
 	{
@@ -331,20 +335,28 @@ void PowerMerge::UpdateFlow(double dt)
 		Amperes = 0;
 	}
 
-	if (!strcmp(name, "Instrumentation-Power-Feeder"))
+	if (!strcmp(name, "IMUPower"))
 	{
-		//sprintf(oapiDebugString(), "Voltage: %0.2fV, Current: %0.2fA, Power: %0.2fW, VoltsA: %0.2fV, VoltsB: %0.2fV, PowerA: %0.2fW, Power2: %0.2fW", Volts, Amperes, power_load, VoltsA, VoltsB, Power1, Power2);
+		//sprintf(oapiDebugString(), "Voltage: %0.2fV, Current: %0.2fA, Power: %0.2fW, VoltsA: %0.2fV, VoltsB: %0.2fV, Power1: %0.2fW, Power2: %0.2fW", Volts, Amperes, power_load, VoltsA, VoltsB, Power1, Power2);
 		//sprintf(oapiDebugString(), "DiodeA %d, DiodeB %d", IsDiodeA, IsDiodeB);
-		//sprintf(oapiDebugString(), "DiodeA %d, DiodeB %d", DiodeA.IsEnabled(), DiodeB.IsEnabled());
+		/*sprintf(oapiDebugString(), "DiodeA %d, DiodeB %d", DiodeA.IsEnabled(), DiodeB.IsEnabled());*/
 		//sprintf(oapiDebugString(), "DiodeA %lfV, DiodeB %lfV", DiodeA.Voltage(), DiodeB.Voltage());
 		//sprintf(oapiDebugString(), "DiodeA %d, DiodeB %d", DiodeA.SRC->IsEnabled(), DiodeB.SRC->IsEnabled());
 		//sprintf(oapiDebugString(), "DiodeAName: %s, DiodeBName: %s", DiodeA.name, DiodeB.name);
 	}
 
+	
+}
+
+void PowerMerge::UpdateFlow(double dt)
+{
 	//Reset power load before the next timestep
-	power_load = 0.0;
+	//power_load = 0.0;
 	PowerA = 0.0;
 	PowerB = 0.0;
+	Power1 = 0.0;
+	Power2 = 0.0;
+	e_object::UpdateFlow(dt);
 }
 
 //

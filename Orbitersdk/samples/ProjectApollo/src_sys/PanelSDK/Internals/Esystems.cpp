@@ -1698,7 +1698,7 @@ double Diode::Voltage()
 
 double Diode::Current()
 {
-	if (SRC && SRC->IsEnabled() && enabled)
+	if (SRC && SRC->IsEnabled())
 	{
 		return Amperes;
 	}
@@ -1708,21 +1708,28 @@ double Diode::Current()
 
 void Diode::DrawPower(double watts)
 {
-	if (SRC && enabled && watts > 0)
+	if (SRC && SRC->IsEnabled())
+	{
 		SRC->DrawPower(watts);
+		power_load += watts;
+	}
 }
 
 void Diode::refresh(double dt)
 {	
-	Enable();
-	Volts = 0;
-
-	if (SRC && enabled)
+	if (SRC && SRC->IsEnabled())
 	{
-		Volts = SRC->Voltage()-(kT_q*log((Amperes + 1) / Is));
+		Volts = SRC->Voltage();	
+	}
+	else
+	{
+		Volts = 0;
+	}
 
-		if (Volts < 0)
-			Volts = 0.0;
+	if (Volts <= 0)
+	{
+		Volts = 0.0;
+		Disable();
 	}
 
 	if (!strcmp(name, "Instrumentation-Power-FeederDiodeA"))
@@ -1734,20 +1741,21 @@ void Diode::refresh(double dt)
 	{
 		Amperes = power_load / Volts;
 	}
-
-	if (power_load < -(Is*Volts))
+	else
 	{
 		Disable();
-		Volts = 0;
 	}
 
-	if (output)
+	if (power_load < 0.0)
 	{
-		if (Volts < output->Voltage())
-		{
-			Disable();
-		}
+		Disable();
 	}
+	else
+	{
+		Enable();
+	}
+
+	power_load = 0;
 }
 
 

@@ -156,6 +156,7 @@ public:
 	void DrawPower(double watts);
 	double Voltage();
 	double Current();
+	void refresh(double dt);
 	void UpdateFlow(double dt);
 
 	//PowerMerge methods

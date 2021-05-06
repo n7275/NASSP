@@ -47,7 +47,7 @@
 
 
 
-IMU::IMU(ApolloGuidance & comp, PanelSDK &p) : agc(comp), DCPower(0, p), DCHeaterPower(0, p)
+IMU::IMU(ApolloGuidance & comp, PanelSDK &p) : agc(comp), DCPower("IMUPower", p), DCHeaterPower("IMUHeaterPower", p)
 
 {
 	Init();
