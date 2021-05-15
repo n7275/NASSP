@@ -356,6 +356,7 @@ void FCell::Reaction(double dt)
 	H2_flowPerSecond = H2_flow / dt;
 	O2_flowPerSecond = O2_flow / dt;
 	reaction = (H2_flow + O2_flow) / reactant; // % of reaction
+
 	
 	// flow from sources
 	if (H2_SRC->parent->space.composition[SUBSTANCE_H2].mass > 0.0) 
@@ -408,7 +409,7 @@ void FCell::Reaction(double dt)
 	*/
 }
 
-void FCell::UpdateFlow(double dt) 
+void FCell::UpdateFlow(double dt)
 {
 
 	//
@@ -448,22 +449,33 @@ void FCell::UpdateFlow(double dt)
 	if (Temp < 422.0) {
 		tempTooLowCount++;
 		if (tempTooLowCount > 100 || status == 1) {
-			status = 2;	
+			status = 2;
 			tempTooLowCount = 0;
 		}
-	} 
+	}
 	else
 	{
 		tempTooLowCount = 0;
 
-		if(status == 2) //this will allow us to start if heating up for the first time from ambient temperature
+		if (status == 2) //this will allow us to start if heating up for the first time from ambient temperature
 		{
 			status = 0;
 		}
 	}
 
-	switch (status) {
+	//simple fix for Apollo 13 improve with better voltage drop code later.
+	if (O2_SRC->parent->space.Press < 68948)
+	{
+		status = 2;
+	}
 
+	if (!strcmp(name, "FUELCELL2"))
+	{
+		sprintf(oapiDebugString(), "O2_SRC Press %0.10f", O2_SRC->parent->space.Press);
+	}
+
+
+	switch (status){
 	case 2: //stopped, not much to do
 		Volts = 0; Amperes = 0;
 		reaction *= 0.2;
@@ -486,7 +498,8 @@ void FCell::UpdateFlow(double dt)
 		if (reaction > 0.3) {
 			Volts = 31.0 * reaction;
 			Amperes = (power_load / Volts);
-		} else {
+		}
+		else {
 			Volts = 0;
 			Amperes = 0;
 		}
@@ -496,8 +509,6 @@ void FCell::UpdateFlow(double dt)
 	case 3: // O2 purging
 	case 4: // H2 purging
 	case 0: // normal running
-
-		running = 0; //0 = running
 		
 		//coefficients for 5th order approximation of fuel cell performance, taken from:
 		//CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-10
