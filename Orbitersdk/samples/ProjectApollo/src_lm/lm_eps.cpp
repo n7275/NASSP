@@ -118,6 +118,8 @@ LEM_ECABatMonitor::LEM_ECABatMonitor()
 {
 	batt = NULL;
 	chan = NULL;
+	OC = false;
+	RC = false;
 }
 
 void LEM_ECABatMonitor::Init(Battery *b, LEM_ECAch *c, PowerMerge *p)
@@ -421,12 +423,12 @@ void LEM_XLBControl::UpdateFlow(double dt) {
 	}
 	// Handle switchery
 	switch (lem->CSMToLEMPowerConnector.csm_power_latch) {
-	case 1:
+	case 1:			//FIXME: The LM PWR CSM switch should only send a command to disable LV / HV taps, and not keep them from being switched back on in the LM
 		// If the CSM latch is set, keep the descent ECAs off
 		lem->ECA_1a.input = 0; lem->ECA_1b.input = 0;
 		lem->ECA_2a.input = 0; lem->ECA_2b.input = 0;
 		break;
-	case -1:
+	case -1: 		//FIXME: The LM PWR CSM switch in RESET should only send a command to enable LV taps
 		// If the CSM latch is reset, turn on the LV taps on batteries 1 and 4.
 		// And reset the latch to zero
 		lem->ECA_1a.input = 2; lem->ECA_1b.input = 2;

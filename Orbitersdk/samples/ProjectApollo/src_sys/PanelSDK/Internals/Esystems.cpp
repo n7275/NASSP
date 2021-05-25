@@ -1545,6 +1545,12 @@ void Boiler::refresh(double dt)
 			if ((tank->space.Press > valueMax) && (pumping))
 				pumping = 0;
 		}
+		else if (type == 2) { // CHILLER
+			if ((target->Temp > valueMin) && (!pumping))
+				pumping = 1;
+			if ((target->Temp < valueMax) && (pumping))
+				pumping = 0;
+		}
 	} else if (h_pump < 0)
 		pumping = 1; //force manual on
 	else
@@ -1556,7 +1562,11 @@ void Boiler::refresh(double dt)
 			return;
 		}
 		SRC->DrawPower(boiler_electrical_power);
-		target->thermic(boiler_power * dt); //1 joule = 1 watt * dt
+		if (type == 2) {
+			target->thermic(-boiler_power * dt); //cooling (1 joule = 1 watt * dt)
+		}
+		else
+			target->thermic(boiler_power * dt); //heating (1 joule = 1 watt * dt)
 	} else {
 		pumping = 0;
 	}
