@@ -252,6 +252,8 @@ public:
 	double outputImpedance;
 	double voltsLastTimestep;
 	double ampsLastTimestep;
+	double H2Press[2];
+	double O2Press[2];
 
 	double H2_clogging;
 	double O2_clogging;

@@ -291,6 +291,11 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	H2_flowPerSecond = 0;
 	O2_flowPerSecond = 0;
 	h2o_volume.Void();
+
+	H2Press[0] = 100000;
+	H2Press[1] = 100000;
+	O2Press[0] = 100000;
+	O2Press[1] = 100000;
 }
 
 void FCell::DrawPower(double watts) 
@@ -463,15 +468,24 @@ void FCell::UpdateFlow(double dt)
 		}
 	}
 
+	H2Press[1] = H2Press[0];
+	H2Press[0] = H2_SRC->parent->space.Press;
+
+	O2Press[1] = O2Press[0];
+	O2Press[0] = O2_SRC->parent->space.Press;
+
+	double AverageH2Press = (H2Press[0] + H2Press[1]) / 2;
+	double AverageO2Press = (O2Press[0] + O2Press[1]) / 2;
+
 	//simple fix for Apollo 13 improve with better voltage drop code later.
-	if (O2_SRC->parent->space.Press < 68948)
+	if (AverageO2Press < 505000)
 	{
 		status = 2;
 	}
 
 	if (!strcmp(name, "FUELCELL2"))
 	{
-		sprintf(oapiDebugString(), "O2_SRC Press %0.10f", O2_SRC->parent->space.Press);
+		sprintf(oapiDebugString(), "O2_SRC Press %0.10f", AverageO2Press);
 	}
 
 
