@@ -201,6 +201,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_rtccmfd\GeneralPurposeManeuver.h">
+    <ClInclude Include="RTCC_Telemetry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
