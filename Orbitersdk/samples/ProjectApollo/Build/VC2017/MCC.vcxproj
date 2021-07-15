@@ -207,6 +207,7 @@
     <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_sys\thread.h" />
+    <ClInclude Include="RTCC_Telemetry.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="PanelSDK.vcxproj">
