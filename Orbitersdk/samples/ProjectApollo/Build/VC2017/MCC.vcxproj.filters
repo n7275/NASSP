@@ -121,6 +121,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_rtccmfd\GeneralPurposeManeuver.cpp">
+    <ClCompile Include="RTCC_Telemetry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

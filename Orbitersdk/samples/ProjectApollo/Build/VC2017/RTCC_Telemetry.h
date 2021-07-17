@@ -1,6 +1,6 @@
 /***************************************************************************
   This file is part of Project Apollo - NASSP
-  Copyright 2020
+  Copyright 2021
 
   MCC/RTCC Telemetry Classes
 
@@ -24,22 +24,112 @@
   **************************************************************************/
 #pragma once
 
+#include <vector>
 
-class NASCOM
+class RTCC;
+struct GroundStation;
+
+namespace RTCC_Telemetry
 {
-	
-};
 
-class TelemetryProcessor
-{
+	class NASCOM
+	{
+		GroundStation* ActiveStation;
+		double SignalStrength;
+	};
 
-};
+	enum status
+	{
+		Missing,
+		OffScaleHigh,
+		OffscaleLow,
+		Dead,
+		Static,
+		Nochange,
+		Limit
+	};
 
-class IntermediateDataArray
-{	
-private:
-	unsigned int vehicleIdentCode;
-};
+	enum TelemetryMeasurementTypes
+	{
+		TLM_A,
+		TLM_DP,
+		TLM_DS,
+		TLM_E,
+		TLM_SRC
+	};
+
+	enum TelemetryParameterUnits
+	{
+		Percentage,
+		Sci,			// Revisit the validity of this one
+		PSIA,
+		PSIG,
+		TempF,
+		Volts,
+		Amperes,
+		PPH,
+		DBM,
+		degrees,
+		G
+	};
+
+	struct ParameterAndStatus
+	{
+		char name[64];
+		double parameter;
+		bool parameterBit;
+		status ParameterStatus;
+	};
+
+	struct DownlistParameter
+	{
+		char name[64];
+		TelemetryMeasurementTypes Type;
+		unsigned int channel;
+		unsigned int ccode;
+		TelemetryParameterUnits Unit;
+		double low;
+		double high;
+	};
+
+	class DownlistFormat
+	{
+	public:
+		void InitParameter(char* name, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high);
+	private:
+		std::vector<DownlistParameter> Parameters;
+	};
+
+	class IntermediateDataArray
+	{
+	public:
+		IntermediateDataArray(unsigned int VEHCode, DownlistFormat* Format);
+		double GetParameter(char* name);
+		double GetStatus(char* name);
+	private:
+		unsigned int vehicleIdentCode;
+		GroundStation* TelemetrySite;
+		bool live;
+		bool highBit;
+		double GMTA;
+		double GMTR;
+
+		std::vector<ParameterAndStatus> Data;
+	};
+
+	class TelemetryProcessor
+	{
+		TelemetryProcessor();
+		~TelemetryProcessor();
+		void WinsockInit();
+		void ConnectToHosts();
+		RTCC* rtcc;
+		std::vector<IntermediateDataArray*> IntermediateDataArrays;
+		unsigned int sockets[64];
+	};
+}
+
+
 
 /*
 	Sources
