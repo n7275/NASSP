@@ -41,6 +41,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/RTCC_EMSMISS.h"
 #include "../src_rtccmfd/RTCCSystemParameters.h"
 #include "../src_rtccmfd/GeneralPurposeManeuver.h"
+#include "RTCC_Telemetry.h"
 #include "MCCPADForms.h"
 
 class Saturn;
@@ -384,7 +385,7 @@ struct EarthEntryOpt
 	double TIGguess; //Initial estimate for the TIG
 	double ReA = 0; //Reentry angle at entry interface, 0 starts iteration to find reentry angle
 	double lng; //Longitude of the desired splashdown coordinates
-	bool nominal; //Calculates minimum DV deorbit or nominal 31.7° line deorbit
+	bool nominal; //Calculates minimum DV deorbit or nominal 31.7ï¿½ line deorbit
 	int enginetype = RTCC_ENGINETYPE_CSMSPS;		//Engine type used for the maneuver
 	bool entrylongmanual; //Targeting a landing zone or a manual landing longitude
 	bool useSV = false;		//true if state vector is to be used
@@ -655,7 +656,7 @@ struct SkyRendOpt
 	double GETbase;		//usually MJD at launch
 	int man;			//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
 	bool PCManeuver;	//0 = NC1 is setting up NPC, 1 = NC2 is setting up NPC
-	bool NPCOption;		//0 = NC1 or NC2 with out-of-plane component, setting up a NPC maneuver 90° later
+	bool NPCOption;		//0 = NC1 or NC2 with out-of-plane component, setting up a NPC maneuver 90ï¿½ later
 	double TPIGuess;	//Estimate for the TPI time
 	double t_TPI;		//Time of TPI
 	double E_L;			//Elevation angle at TPI
@@ -692,7 +693,7 @@ struct LunarLiftoffTimeOpt
 	LunarLiftoffTimeOpt();
 
 	//Flag that controls at which time CSI is done
-	//0: CSI is done 90° from insertion
+	//0: CSI is done 90ï¿½ from insertion
 	//1: CSI is done at an input elapsed time from insertion
 	//2: CSI is done at LM apocynthion
 	int I_BURN;
@@ -895,7 +896,7 @@ struct SPQOpt //Coelliptic Sequence Processor
 	bool N_PC = false;
 	//Plane change threshold
 	double T_BNPC = 0.0;
-	//Initial phase angle (0 = -180° to 180°, 1 = 0 to 180°, 2 = -180° to 0)
+	//Initial phase angle (0 = -180ï¿½ to 180ï¿½, 1 = 0 to 180ï¿½, 2 = -180ï¿½ to 0)
 	int I_Theta = 0;
 	//0 = CDH not scheduled, 1 = CDH scheduled
 	bool CDH = true;
@@ -2975,6 +2976,9 @@ public:
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
 
+	//TELEMETRY PROCESSOR(via tcp)
+	RTCC_Telemetry::TelemetryProcessor telemetryprocessor;
+
 	MCC *mcc;
 	struct calculationParameters calcParams;
 	char MissionFileName[64];
@@ -3133,7 +3137,7 @@ public:
 		int Chaser = 3;
 		double CSMVectorTime = 0.0;
 		double ThresholdTime = 0.0;
-		//CSI Flag: 0 = CSI done 90° from insertion, negative: CSI at LM apocynthion, positive: CSI done at a delta time from insertion
+		//CSI Flag: 0 = CSI done 90ï¿½ from insertion, negative: CSI at LM apocynthion, positive: CSI done at a delta time from insertion
 		double CSI_Flag = -1.0;
 		//CDH Flag: 0 = CDH done at upcoming apsis after CSI, positive: CDH is done at N/2 after CSI, must be odd number
 		int CDH_Flag = 1;
@@ -3777,7 +3781,7 @@ public:
 		//Block 38
 		double ActualWedgeAngle;
 		//Block 40
-		double LDPPAzimuth = 0.0; //Greater or equal to zero, lower than 360°. If 0, LDPP will compute azimuth
+		double LDPPAzimuth = 0.0; //Greater or equal to zero, lower than 360ï¿½. If 0, LDPP will compute azimuth
 		//Block 41
 		double LDPPHeightofPDI = 50000.0*0.3048;
 		//Block 42 1st word

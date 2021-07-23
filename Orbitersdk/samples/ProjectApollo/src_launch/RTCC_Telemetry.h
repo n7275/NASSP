@@ -51,11 +51,11 @@ namespace RTCC_Telemetry
 
 	enum TelemetryMeasurementTypes
 	{
-		TLM_A,
-		TLM_DP,
-		TLM_DS,
-		TLM_E,
-		TLM_SRC
+		RTCC_TLM_A,
+		RTCC_TLM_DP,
+		RTCC_TLM_DS,
+		RTCC_TLM_E,
+		RTCC_TLM_SRC
 	};
 
 	enum TelemetryParameterUnits
@@ -117,13 +117,24 @@ namespace RTCC_Telemetry
 		std::vector<ParameterAndStatus> Data;
 	};
 
+	class TelemetryWorker
+	{
+	public:
+		void InitWorker();
+		void CommThread();
+	private:
+		int SYNCWORDS[3];
+		int LBRSYNC;
+		int HBRSYNC;
+	};
+
 	class TelemetryProcessor
 	{
-		TelemetryProcessor();
-		~TelemetryProcessor();
+	public:
 		void WinsockInit();
-		void ConnectToHosts();
-		RTCC* rtcc;
+		void ConnectToHost();
+	private:
+		std::vector<TelemetryWorker> Workers;
 		std::vector<IntermediateDataArray*> IntermediateDataArrays;
 		unsigned int sockets[64];
 	};

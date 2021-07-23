@@ -164,6 +164,7 @@
     <ClCompile Include="..\..\src_launch\RTCC_Mission_D.cpp" />
     <ClCompile Include="..\..\src_launch\RTCC_Mission_F.cpp" />
     <ClCompile Include="..\..\src_launch\RTCC_Mission_G.cpp" />
+    <ClCompile Include="..\..\src_launch\RTCC_Telemetry.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CoastNumericalIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EnckeIntegrator.cpp" />
@@ -185,7 +186,6 @@
     <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
     <ClCompile Include="..\..\src_sys\thread.cpp" />
     <ClCompile Include="..\..\src_launch\mccvc.cpp" />
-    <ClCompile Include="RTCC_Telemetry.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\mccvessel.h" />
@@ -196,6 +196,7 @@
     <ClInclude Include="..\..\src_launch\MCC_Mission_F.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_G.h" />
     <ClInclude Include="..\..\src_launch\rtcc.h" />
+    <ClInclude Include="..\..\src_launch\RTCC_Telemetry.h" />
     <ClInclude Include="..\..\src_rtccmfd\CoastNumericalIntegrator.h" />
     <ClInclude Include="..\..\src_rtccmfd\CSMLMGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\EnckeIntegrator.h" />
@@ -214,7 +215,6 @@
     <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_sys\thread.h" />
-    <ClInclude Include="RTCC_Telemetry.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="PanelSDK.vcxproj">

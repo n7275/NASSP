@@ -36,5 +36,36 @@ void RTCC_Telemetry::DownlistFormat::InitParameter(char * name, TelemetryMeasure
 	TempParameter.low = low;
 	TempParameter.high = high;
 
-	this->Parameters.push_back(Temp);
+	this->Parameters.push_back(TempParameter);
+}
+
+void RTCC_Telemetry::TelemetryProcessor::WinsockInit()
+{
+}
+
+void RTCC_Telemetry::TelemetryProcessor::ConnectToHost()
+{
+}
+
+
+void RTCC_Telemetry::TelemetryWorker::InitWorker()
+{
+}
+
+void RTCC_Telemetry::TelemetryWorker::CommThread()
+{
+}
+
+RTCC_Telemetry::IntermediateDataArray::IntermediateDataArray(unsigned int VEHCode, DownlistFormat * Format)
+{
+}
+
+double RTCC_Telemetry::IntermediateDataArray::GetParameter(char * name)
+{
+	return 0.0;
+}
+
+double RTCC_Telemetry::IntermediateDataArray::GetStatus(char * name)
+{
+	return 0.0;
 }
