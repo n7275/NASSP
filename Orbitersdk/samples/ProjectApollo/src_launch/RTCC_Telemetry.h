@@ -25,6 +25,10 @@
 #pragma once
 
 #include <vector>
+#include "Windows.h"
+
+#define RTCC_TLM_START_STRING	"TLM_RTCC_BEGIN"
+#define RTCC_TLM_END_STRING	    "TLM_RTCC_END"
 
 class RTCC;
 struct GroundStation;
@@ -34,6 +38,10 @@ namespace RTCC_Telemetry
 
 	class NASCOM
 	{
+	public:
+		void refresh(double dt);
+		inline void setActStation(GroundStation* station) { ActiveStation = station; };
+	private:
 		GroundStation* ActiveStation;
 		double SignalStrength;
 	};
@@ -84,6 +92,7 @@ namespace RTCC_Telemetry
 	struct DownlistParameter
 	{
 		char name[64];
+		unsigned int offset;
 		TelemetryMeasurementTypes Type;
 		unsigned int channel;
 		unsigned int ccode;
@@ -95,7 +104,7 @@ namespace RTCC_Telemetry
 	class DownlistFormat
 	{
 	public:
-		void InitParameter(char* name, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high);
+		void InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high);
 	private:
 		std::vector<DownlistParameter> Parameters;
 	};
@@ -120,12 +129,31 @@ namespace RTCC_Telemetry
 	class TelemetryWorker
 	{
 	public:
+		int lock_type;	
+		int frame_addr;
+		int framect;
+		int agc_lock_type;
+		int agc_frame_addr;
+		int agc_framect;
+
+		// Winsock
+		WSADATA wsaData;
+		SOCKET m_socket;
+		sockaddr_in clientService;
+		int conn_status;
+
 		void InitWorker();
 		void CommThread();
+		void parse_lbr(uint8_t recvdWord, int offset);
+		void parse_hbr(uint8_t recvdWord, int offset);
 	private:
 		int SYNCWORDS[3];
 		int LBRSYNC;
 		int HBRSYNC;
+		int LBRWORDCOUNT;
+		int LBRFRAMECOUNT;
+		int HBRWORDCOUNT;
+		int HBRFRAMECOUNT;
 	};
 
 	class TelemetryProcessor

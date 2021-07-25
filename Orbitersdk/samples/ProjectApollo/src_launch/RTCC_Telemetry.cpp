@@ -24,7 +24,7 @@
   **************************************************************************/
 #include "RTCC_Telemetry.h"
 
-void RTCC_Telemetry::DownlistFormat::InitParameter(char * name, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high)
+   void RTCC_Telemetry::DownlistFormat::InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high)
 {
 	RTCC_Telemetry::DownlistParameter TempParameter;
 
@@ -53,6 +53,118 @@ void RTCC_Telemetry::TelemetryWorker::InitWorker()
 }
 
 void RTCC_Telemetry::TelemetryWorker::CommThread()
+{
+	int bytesRecv = SOCKET_ERROR;
+	uint8_t recvbuf[1024];
+	int die = 0;
+
+	int frame_count = 0;
+	int word_addr = 0;
+	int byte_offset = 0;
+	int bytect = 0;
+
+	lock_type = 0;   agc_lock_type = 0;
+	frame_addr = 0;	 agc_frame_addr = 0;
+	framect = 0;     agc_framect = 0;
+	
+	while (!die)
+	{
+		bytesRecv = recv(m_socket, (char *)recvbuf, 1024, 0);
+		if (bytesRecv == SOCKET_ERROR)
+		{
+			closesocket(m_socket);
+			conn_status = 0;
+			return;
+		}
+		else
+		{
+			byte_offset = 0;
+			while (byte_offset < bytesRecv)
+			{
+				switch (lock_type)
+				{
+					case 0: // OUT SYNC 0
+						bytect = 0;
+						if (recvbuf[byte_offset] == SYNCWORDS[0])  // Sync char 1 recieved
+						{
+							lock_type = 1;
+						}
+						break;
+
+					case 1: // OUT SYNC 1
+						if (recvbuf[byte_offset] == SYNCWORDS[1]) // Sync char 2 recieved
+						{
+							lock_type = 2;
+						}
+						else
+						{
+							lock_type = 0;
+						}
+						break;
+
+					case 2: // OUT SYNC 2
+						if (recvbuf[byte_offset] == SYNCWORDS[2]) // Sync char 3 recieved
+						{
+							lock_type = 3;
+						}
+						else
+						{
+							lock_type = 0;
+						}
+						break;
+					case 3: // OUT SYNC 3
+						framect = recvbuf[byte_offset] & 077;
+						lock_type++;
+						break;
+					case 4: // OUT SYNC 4 & CHECK FOR HBR OR LBR
+						if (recvbuf[byte_offset] == LBRSYNC) // LBR Sync char 4 recieved
+						{
+							lock_type = 10;
+							bytect = 5;
+						}
+						else if (recvbuf[byte_offset] == HBRSYNC)
+						{
+							lock_type = 20;
+							bytect = 5;
+						}
+						else
+						{
+							lock_type = 0;
+						}
+						break;
+					case 10: //LBR SYNC
+						parse_lbr(recvbuf[byte_offset], bytect);
+						bytect++;
+						if (bytect > LBRWORDCOUNT-1)
+						{
+							bytect = 0;
+						}
+						break;
+					case 20: // HBR
+						parse_hbr(recvbuf[byte_offset], bytect);
+						bytect++;
+						if (bytect > HBRWORDCOUNT-1)
+						{
+							bytect = 0;
+							frame_addr++;
+							if (frame_addr > HBRFRAMECOUNT-1)
+							{
+								frame_addr = 0;
+							}
+						}
+						break;
+				}
+				byte_offset++;
+			}
+		}
+	}
+}
+
+void RTCC_Telemetry::TelemetryWorker::parse_lbr(uint8_t recvdWord, int offset)
+{
+}
+
+void RTCC_Telemetry::TelemetryWorker::parse_hbr(uint8_t recvdWord, int offset)
 {
 }
 
