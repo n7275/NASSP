@@ -24,7 +24,7 @@
   **************************************************************************/
 #include "RTCC_Telemetry.h"
 
-   void RTCC_Telemetry::DownlistFormat::InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high)
+void RTCC_Telemetry::DownlistFormat::InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high)
 {
 	RTCC_Telemetry::DownlistParameter TempParameter;
 
