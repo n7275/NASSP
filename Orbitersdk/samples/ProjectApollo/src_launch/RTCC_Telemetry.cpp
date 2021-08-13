@@ -23,6 +23,7 @@
 
   **************************************************************************/
 #include "RTCC_Telemetry.h"
+#include "OrbiterAPI.h"
 
 void RTCC_Telemetry::DownlistFormat::InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high)
 {
@@ -39,16 +40,51 @@ void RTCC_Telemetry::DownlistFormat::InitParameter(char* name, unsigned int offs
 	this->Parameters.push_back(TempParameter);
 }
 
-void RTCC_Telemetry::TelemetryProcessor::WinsockInit()
+RTCC_Telemetry::TelemetryWorker::TelemetryWorker()
 {
+	lock_type = 0;
+	frame_addr = 0;
+	framect = 0;
+	agc_lock_type = 0;
+	agc_frame_addr = 0;
+	agc_framect = 0;
+
+	SYNCWORDS[0] = 0;
+	SYNCWORDS[1] = 0;
+	SYNCWORDS[2] = 0;
+	LBRSYNC = 0;
+	HBRSYNC = 0;
+	LBRWORDCOUNT = 0;
+	LBRFRAMECOUNT = 0;
+	HBRWORDCOUNT = 0;
+	HBRFRAMECOUNT = 0;
 }
 
-void RTCC_Telemetry::TelemetryProcessor::ConnectToHost()
+RTCC_Telemetry::TelemetryWorker::~TelemetryWorker()
 {
+	conn_status = 0;
+	shutdown(m_socket, 2);
+	closesocket(m_socket);
 }
 
+void RTCC_Telemetry::TelemetryWorker::WinsockInit()
+{
+	char errorBuffer[64];
 
-void RTCC_Telemetry::TelemetryWorker::InitWorker()
+	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (iResult != NO_ERROR)
+	{
+		sprintf(errorBuffer,"Error at WSAStartup()");
+	}
+	else
+	{
+		sprintf(errorBuffer, "Winsock Ready");
+	}
+
+	oapiWriteLog(errorBuffer);
+}
+
+void RTCC_Telemetry::TelemetryWorker::ConnectToHost()
 {
 }
 
@@ -180,4 +216,10 @@ double RTCC_Telemetry::IntermediateDataArray::GetParameter(char * name)
 double RTCC_Telemetry::IntermediateDataArray::GetStatus(char * name)
 {
 	return 0.0;
+}
+
+void RTCC_Telemetry::TelemetryProcessor::InitWorkers()
+{
+	Workers.push_back({});
+	Workers[0].WinsockInit();
 }

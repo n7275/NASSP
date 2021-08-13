@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\MCCPADForms.h" />
     <ClInclude Include="..\..\src_launch\rtcc.h" />
+    <ClInclude Include="..\..\src_launch\RTCC_Telemetry.h" />
     <ClInclude Include="..\..\src_rtccmfd\ApollomfdButtons.h" />
     <ClInclude Include="..\..\src_rtccmfd\ApolloRTCCMFD.h" />
     <ClInclude Include="..\..\src_rtccmfd\ARCore.h" />
@@ -39,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_launch\rtcc.cpp" />
+    <ClCompile Include="..\..\src_launch\RTCC_Telemetry.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ApollomfdButtons.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD_Display.cpp" />

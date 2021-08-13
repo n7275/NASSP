@@ -129,6 +129,9 @@ namespace RTCC_Telemetry
 	class TelemetryWorker
 	{
 	public:
+		TelemetryWorker();
+		~TelemetryWorker();
+
 		int lock_type;	
 		int frame_addr;
 		int framect;
@@ -142,7 +145,8 @@ namespace RTCC_Telemetry
 		sockaddr_in clientService;
 		int conn_status;
 
-		void InitWorker();
+		void WinsockInit();
+		void ConnectToHost();
 		void CommThread();
 		void parse_lbr(uint8_t recvdWord, int offset);
 		void parse_hbr(uint8_t recvdWord, int offset);
@@ -159,11 +163,10 @@ namespace RTCC_Telemetry
 	class TelemetryProcessor
 	{
 	public:
-		void WinsockInit();
-		void ConnectToHost();
+		void InitWorkers();
 	private:
 		std::vector<TelemetryWorker> Workers;
-		std::vector<IntermediateDataArray*> IntermediateDataArrays;
+		std::vector<IntermediateDataArray> IntermediateDataArrays;
 		unsigned int sockets[64];
 	};
 }
