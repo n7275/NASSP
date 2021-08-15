@@ -2978,6 +2978,7 @@ public:
 
 	//TELEMETRY PROCESSOR(via tcp)
 	RTCC_Telemetry::TelemetryProcessor telemetryprocessor;
+	RTCC_Telemetry::RTCC_TCP_TLM_Config TCPtlmConfig;
 
 	MCC *mcc;
 	struct calculationParameters calcParams;

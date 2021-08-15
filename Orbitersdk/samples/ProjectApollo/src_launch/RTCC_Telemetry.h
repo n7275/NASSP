@@ -35,6 +35,24 @@ struct GroundStation;
 
 namespace RTCC_Telemetry
 {
+	struct RTCC_TCP_TLM_Config
+	{
+		int CSM_PORT;
+		int LEM_PORT; 
+		int SIVbIU_PORT; 
+
+		char* CSMDescriptorTable;
+		char* CMCDescriptorTable;
+		char* AMDDescriptorTable;
+
+		char* LMDescriptorTable;
+		char* LGCDescriptorTable;
+		char* AGSDescriptorTable;
+
+		char* SIVbIUDescriptorTable;
+		char* SIIDescriptorTable;
+		char* SICDescriptorTable;
+	};
 
 	class NASCOM
 	{
@@ -129,7 +147,7 @@ namespace RTCC_Telemetry
 	class TelemetryWorker
 	{
 	public:
-		TelemetryWorker();
+		TelemetryWorker(unsigned int WorkerSocket);
 		~TelemetryWorker();
 
 		int lock_type;	

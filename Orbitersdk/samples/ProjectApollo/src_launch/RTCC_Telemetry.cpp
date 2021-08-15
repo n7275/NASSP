@@ -40,7 +40,7 @@ void RTCC_Telemetry::DownlistFormat::InitParameter(char* name, unsigned int offs
 	this->Parameters.push_back(TempParameter);
 }
 
-RTCC_Telemetry::TelemetryWorker::TelemetryWorker()
+RTCC_Telemetry::TelemetryWorker::TelemetryWorker(unsigned int WorkerSocket)
 {
 	lock_type = 0;
 	frame_addr = 0;
@@ -220,6 +220,9 @@ double RTCC_Telemetry::IntermediateDataArray::GetStatus(char * name)
 
 void RTCC_Telemetry::TelemetryProcessor::InitWorkers()
 {
-	Workers.push_back({});
+	unsigned int A = 3;
+	DownlistFormat B;
+	IntermediateDataArrays.push_back({A,&B});
+	Workers.push_back({14242});
 	Workers[0].WinsockInit();
 }

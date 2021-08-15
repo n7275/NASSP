@@ -247,6 +247,37 @@ bool papiReadConfigFile_CGTable(char *line, char *item, double *WeightTable, VEC
 	return false;
 }
 
+bool papiReadConfigFile_TCP_Telemetry(char *line, RTCC_Telemetry::RTCC_TCP_TLM_Config &TCPtlmConfig)
+{
+	char buffer[256];
+
+	if (sscanf(line, "%s %d %d %d %s %s %s %s %s %s %s %s %s", &buffer,
+
+		&TCPtlmConfig.CSM_PORT,
+		&TCPtlmConfig.LEM_PORT,
+		&TCPtlmConfig.SIVbIU_PORT,
+
+		TCPtlmConfig.CSMDescriptorTable,
+		TCPtlmConfig.CMCDescriptorTable,
+		TCPtlmConfig.AMDDescriptorTable,
+
+		TCPtlmConfig.LMDescriptorTable,
+		TCPtlmConfig.LGCDescriptorTable,
+		TCPtlmConfig.AGSDescriptorTable,
+
+		TCPtlmConfig.SIVbIUDescriptorTable,
+		TCPtlmConfig.SIIDescriptorTable,
+		TCPtlmConfig.SICDescriptorTable) > 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+
+	}
+}
+
 FIDOOrbitDigitals::FIDOOrbitDigitals()
 {
 	A = 0.0;
@@ -1919,12 +1950,19 @@ void RTCC::LoadMissionConstantsFile(char *file)
 					PZREAP.ATPCoordinates[itemp][i] = darrtemp[i];
 				}
 			}
+<<<<<<< HEAD
 			papiReadConfigFile_CGTable(Buff, "MHVCCG", SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG);
 			papiReadScenario_int(Buff, "MHVCCG_N", SystemParameters.MHVCCG.N);
 			papiReadConfigFile_CGTable(Buff, "MHVLCG", SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG);
 			papiReadScenario_int(Buff, "MHVLCG_N", SystemParameters.MHVLCG.N);
 			papiReadConfigFile_CGTable(Buff, "MHVACG", SystemParameters.MHVACG.Weight, SystemParameters.MHVACG.CG);
 			papiReadScenario_int(Buff, "MHVACG_N", SystemParameters.MHVACG.N);
+=======
+			else if (papiReadConfigFile_TCP_Telemetry(Buff, TCPtlmConfig))
+			{
+				//load data array formats here;
+			}
+>>>>>>> 3feb6a36b (add functionality for loading telemetry config lines)
 		}
 	}
 }
@@ -5022,7 +5060,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	}
 	else if (opt->REFSMMATopt == 4)
 	{
-		//For now a default LC-39A, 72° launch
+		//For now a default LC-39A, 72ï¿½ launch
 		return OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, opt->GETbase, 72 * RAD);
 	}
 	else if (opt->REFSMMATopt == 6)
@@ -7151,7 +7189,7 @@ void RTCC::GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 
 
 bool RTCC::REFSMMATDecision(VECTOR3 Att)
 {
-	if (cos(Att.z) > 0.5) //Yaw between 300° and 60°
+	if (cos(Att.z) > 0.5) //Yaw between 300ï¿½ and 60ï¿½
 	{
 		return true;
 	}
