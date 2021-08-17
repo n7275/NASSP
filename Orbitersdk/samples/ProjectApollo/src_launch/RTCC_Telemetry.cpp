@@ -25,9 +25,9 @@
 #include "RTCC_Telemetry.h"
 #include "OrbiterAPI.h"
 
-void RTCC_Telemetry::DownlistFormat::InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high)
+void RTCC_Telemetry::DescriptorTableFormat::InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high)
 {
-	RTCC_Telemetry::DownlistParameter TempParameter;
+	RTCC_Telemetry::DescriptorTableParameter TempParameter;
 
 	strcpy(TempParameter.name, name);
 	TempParameter.Type = Type;
@@ -40,7 +40,7 @@ void RTCC_Telemetry::DownlistFormat::InitParameter(char* name, unsigned int offs
 	this->Parameters.push_back(TempParameter);
 }
 
-RTCC_Telemetry::TelemetryWorker::TelemetryWorker(unsigned int WorkerSocket)
+RTCC_Telemetry::TelemetryWorker::TelemetryWorker(const unsigned int WorkerSocket, const unsigned int VEHCode)
 {
 	lock_type = 0;
 	frame_addr = 0;
@@ -204,7 +204,7 @@ void RTCC_Telemetry::TelemetryWorker::parse_hbr(uint8_t recvdWord, int offset)
 {
 }
 
-RTCC_Telemetry::IntermediateDataArray::IntermediateDataArray(unsigned int VEHCode, DownlistFormat * Format)
+RTCC_Telemetry::IntermediateDataArray::IntermediateDataArray(unsigned int VEHCode, DescriptorTableFormat * Format)
 {
 }
 
@@ -218,11 +218,20 @@ double RTCC_Telemetry::IntermediateDataArray::GetStatus(char * name)
 	return 0.0;
 }
 
-void RTCC_Telemetry::TelemetryProcessor::InitWorkers()
+void RTCC_Telemetry::TelemetryProcessor::Init(MCC * M, RTCC * R)
 {
-	unsigned int A = 3;
-	DownlistFormat B;
-	IntermediateDataArrays.push_back({A,&B});
-	Workers.push_back({14242});
-	Workers[0].WinsockInit();
+	mcc = M;
+	rtcc = R;
+}
+
+void RTCC_Telemetry::TelemetryProcessor::InitWorker(const unsigned int WorkerSocket, const unsigned int VEHCode)
+{
+	TelemetryWorker TempWorker(WorkerSocket, VEHCode);
+
+	Workers.push_back(TempWorker);
+}
+
+bool RTCC_Telemetry::readDescriptorTableFormat(char* file, DescriptorTableFormat &Format)
+{
+	return false;
 }

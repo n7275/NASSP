@@ -201,7 +201,6 @@ bool papiReadConfigFile_ATPSite(char *line, char *item, std::string &ATPSite, do
 	return false;
 }
 
-bool papiReadConfigFile_PTPSite(char *line, char *item, std::string &PTPSite, double *PTPCoordinates, int &num)
 {
 	char buffer[256];
 
@@ -247,35 +246,35 @@ bool papiReadConfigFile_CGTable(char *line, char *item, double *WeightTable, VEC
 	return false;
 }
 
-bool papiReadConfigFile_TCP_Telemetry(char *line, RTCC_Telemetry::RTCC_TCP_TLM_Config &TCPtlmConfig)
-{
+bool papiReadConfigFile_TCP_Telemetry(char *line, char* item, RTCC_Telemetry::RTCC_TCP_TLM_Config &TCPtlmConfig)
 	char buffer[256];
-
-	if (sscanf(line, "%s %d %d %d %s %s %s %s %s %s %s %s %s", &buffer,
-
-		&TCPtlmConfig.CSM_PORT,
-		&TCPtlmConfig.LEM_PORT,
-		&TCPtlmConfig.SIVbIU_PORT,
-
-		TCPtlmConfig.CSMDescriptorTable,
-		TCPtlmConfig.CMCDescriptorTable,
-		TCPtlmConfig.AMDDescriptorTable,
-
-		TCPtlmConfig.LMDescriptorTable,
-		TCPtlmConfig.LGCDescriptorTable,
-		TCPtlmConfig.AGSDescriptorTable,
-
-		TCPtlmConfig.SIVbIUDescriptorTable,
-		TCPtlmConfig.SIIDescriptorTable,
-		TCPtlmConfig.SICDescriptorTable) > 0)
+	if (sscanf(line, "%s", buffer) == 1)
 	{
-		return true;
-	}
-	else
-	{
-		return false;
+		if (!strcmp(buffer, item)) //"RTCC_TLM_CFG"
+		{
+			if (sscanf(line, "%s %d %d %d %s %s %s %s %s %s %s %s %s", &buffer,
 
+				&TCPtlmConfig.CSM_PORT,
+				&TCPtlmConfig.LEM_PORT,
+				&TCPtlmConfig.SIVbIU_PORT,
+
+				TCPtlmConfig.CSMDescriptorTable,
+				TCPtlmConfig.CMCDescriptorTable,
+				TCPtlmConfig.AMDDescriptorTable,
+
+				TCPtlmConfig.LMDescriptorTable,
+				TCPtlmConfig.LGCDescriptorTable,
+				TCPtlmConfig.AGSDescriptorTable,
+
+				TCPtlmConfig.SIVbIUDescriptorTable,
+				TCPtlmConfig.SIIDescriptorTable,
+				TCPtlmConfig.SICDescriptorTable) > 0)
+			{
+				return true;
+			}
+		}
 	}
+	return false;
 }
 
 FIDOOrbitDigitals::FIDOOrbitDigitals()
@@ -1951,6 +1950,7 @@ void RTCC::LoadMissionConstantsFile(char *file)
 				}
 			}
 <<<<<<< HEAD
+<<<<<<< HEAD
 			papiReadConfigFile_CGTable(Buff, "MHVCCG", SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG);
 			papiReadScenario_int(Buff, "MHVCCG_N", SystemParameters.MHVCCG.N);
 			papiReadConfigFile_CGTable(Buff, "MHVLCG", SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG);
@@ -1959,8 +1959,12 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			papiReadScenario_int(Buff, "MHVACG_N", SystemParameters.MHVACG.N);
 =======
 			else if (papiReadConfigFile_TCP_Telemetry(Buff, TCPtlmConfig))
+=======
+			else if (papiReadConfigFile_TCP_Telemetry(Buff, "RTCC_TLM_CFG", TCPtlmConfig))
+>>>>>>> ebe3a98f9 (more work on initalization)
 			{
 				//load data array formats here;
+				//telemetryprocessor.InitWorkers();
 			}
 >>>>>>> 3feb6a36b (add functionality for loading telemetry config lines)
 		}

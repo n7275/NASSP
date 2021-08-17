@@ -31,6 +31,7 @@
 #define RTCC_TLM_END_STRING	    "TLM_RTCC_END"
 
 class RTCC;
+class MCC;
 struct GroundStation;
 
 namespace RTCC_Telemetry
@@ -107,7 +108,7 @@ namespace RTCC_Telemetry
 		status ParameterStatus;
 	};
 
-	struct DownlistParameter
+	struct DescriptorTableParameter
 	{
 		char name[64];
 		unsigned int offset;
@@ -119,18 +120,18 @@ namespace RTCC_Telemetry
 		double high;
 	};
 
-	class DownlistFormat
+	class DescriptorTableFormat
 	{
 	public:
 		void InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high);
 	private:
-		std::vector<DownlistParameter> Parameters;
+		std::vector<DescriptorTableParameter> Parameters;
 	};
 
 	class IntermediateDataArray
 	{
 	public:
-		IntermediateDataArray(unsigned int VEHCode, DownlistFormat* Format);
+		IntermediateDataArray(const unsigned int VEHCode, DescriptorTableFormat* Format);
 		double GetParameter(char* name);
 		double GetStatus(char* name);
 	private:
@@ -147,7 +148,7 @@ namespace RTCC_Telemetry
 	class TelemetryWorker
 	{
 	public:
-		TelemetryWorker(unsigned int WorkerSocket);
+		TelemetryWorker(const unsigned int WorkerSocket, const unsigned int VEHCode);
 		~TelemetryWorker();
 
 		int lock_type;	
@@ -181,12 +182,17 @@ namespace RTCC_Telemetry
 	class TelemetryProcessor
 	{
 	public:
-		void InitWorkers();
+		void Init(MCC *M, RTCC *R);
+		void InitWorker(const unsigned int WorkerSocket, const unsigned int VEHCode);
 	private:
+		MCC *mcc;
+		RTCC *rtcc;
 		std::vector<TelemetryWorker> Workers;
 		std::vector<IntermediateDataArray> IntermediateDataArrays;
 		unsigned int sockets[64];
 	};
+
+	static inline bool readDescriptorTableFormat(char* file, DescriptorTableFormat &Format);
 }
 
 

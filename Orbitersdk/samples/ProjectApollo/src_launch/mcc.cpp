@@ -150,7 +150,7 @@ void MCC::Init(){
 	rtcc->Init(this);
 
 	//Initalize Telemetry Workers
-	rtcc->telemetryprocessor.InitWorkers();
+	rtcc->telemetryprocessor.Init(this,rtcc);
 
 	// Obtain Earth and Moon pointers
 	Earth = oapiGetGbodyByName("Earth");
