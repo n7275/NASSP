@@ -1964,7 +1964,20 @@ void RTCC::LoadMissionConstantsFile(char *file)
 >>>>>>> ebe3a98f9 (more work on initalization)
 			{
 				//load data array formats here;
-				//telemetryprocessor.InitWorkers();
+				if (TCPtlmConfig.CSM_PORT != 0)
+				{
+					telemetryprocessor.InitWorker(TCPtlmConfig.CSM_PORT, TCPtlmConfig.CSMDescriptorTable, TCPtlmConfig.CMCDescriptorTable, TCPtlmConfig.AMDDescriptorTable);
+				}
+
+				if (TCPtlmConfig.LEM_PORT != 0)
+				{
+					telemetryprocessor.InitWorker(TCPtlmConfig.LEM_PORT, TCPtlmConfig.LMDescriptorTable, TCPtlmConfig.LGCDescriptorTable, TCPtlmConfig.AGSDescriptorTable);
+				}
+
+				if (TCPtlmConfig.SIVbIU_PORT != 0)
+				{
+					telemetryprocessor.InitWorker(TCPtlmConfig.LEM_PORT, TCPtlmConfig.SIVbIUDescriptorTable, TCPtlmConfig.SIIDescriptorTable, TCPtlmConfig.SICDescriptorTable);
+				}
 			}
 >>>>>>> 3feb6a36b (add functionality for loading telemetry config lines)
 		}

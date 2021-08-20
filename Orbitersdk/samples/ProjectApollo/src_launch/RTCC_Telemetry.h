@@ -158,6 +158,8 @@ namespace RTCC_Telemetry
 		int agc_frame_addr;
 		int agc_framect;
 
+		IntermediateDataArray * intermediatedataarrays[3];
+
 		// Winsock
 		WSADATA wsaData;
 		SOCKET m_socket;
@@ -183,7 +185,7 @@ namespace RTCC_Telemetry
 	{
 	public:
 		void Init(MCC *M, RTCC *R);
-		void InitWorker(const unsigned int WorkerSocket, const unsigned int VEHCode);
+		void InitWorker(const unsigned int WorkerSocket, const char* DescriptorTableFile1, const char* DescriptorTableFile2, const char* DescriptorTableFile3);
 	private:
 		MCC *mcc;
 		RTCC *rtcc;

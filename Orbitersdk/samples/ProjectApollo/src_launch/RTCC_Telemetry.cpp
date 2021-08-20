@@ -224,9 +224,9 @@ void RTCC_Telemetry::TelemetryProcessor::Init(MCC * M, RTCC * R)
 	rtcc = R;
 }
 
-void RTCC_Telemetry::TelemetryProcessor::InitWorker(const unsigned int WorkerSocket, const unsigned int VEHCode)
+void RTCC_Telemetry::TelemetryProcessor::InitWorker(const unsigned int WorkerSocket, const char* DescriptorTableFile1, const char* DescriptorTableFile2, const char* DescriptorTableFile3)
 {
-	TelemetryWorker TempWorker(WorkerSocket, VEHCode);
+	TelemetryWorker TempWorker(WorkerSocket, 1);
 
 	Workers.push_back(TempWorker);
 }
