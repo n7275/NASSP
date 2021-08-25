@@ -40,6 +40,18 @@ void RTCC_Telemetry::DescriptorTableFormat::InitParameter(char* name, unsigned i
 	this->Parameters.push_back(TempParameter);
 }
 
+void RTCC_Telemetry::DescriptorTableFormat::ParseFormatFile(char * file)
+{
+	char Buff[256];
+	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\DescriptorTableFormats\\%s.txt", file);
+
+	std::ifstream TableFormatFile(Buff);
+	if (TableFormatFile.is_open())
+	{
+
+	}
+}
+
 RTCC_Telemetry::TelemetryWorker::TelemetryWorker(const unsigned int WorkerSocket, const unsigned int VEHCode)
 {
 	lock_type = 0;
@@ -229,9 +241,4 @@ void RTCC_Telemetry::TelemetryProcessor::InitWorker(const unsigned int WorkerSoc
 	TelemetryWorker TempWorker(WorkerSocket, 1);
 
 	Workers.push_back(TempWorker);
-}
-
-bool RTCC_Telemetry::readDescriptorTableFormat(char* file, DescriptorTableFormat &Format)
-{
-	return false;
 }

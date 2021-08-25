@@ -25,6 +25,7 @@
 #pragma once
 
 #include <vector>
+#include <fstream>
 #include "Windows.h"
 
 #define RTCC_TLM_START_STRING	"TLM_RTCC_BEGIN"
@@ -123,7 +124,8 @@ namespace RTCC_Telemetry
 	class DescriptorTableFormat
 	{
 	public:
-		void InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high);
+		void InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high); //might make this a private member later...
+		void ParseFormatFile(char *file);
 	private:
 		std::vector<DescriptorTableParameter> Parameters;
 	};
@@ -191,10 +193,9 @@ namespace RTCC_Telemetry
 		RTCC *rtcc;
 		std::vector<TelemetryWorker> Workers;
 		std::vector<IntermediateDataArray> IntermediateDataArrays;
+		std::vector<DescriptorTableFormat> DescriptorTableFormats;
 		unsigned int sockets[64];
 	};
-
-	static inline bool readDescriptorTableFormat(char* file, DescriptorTableFormat &Format);
 }
 
 
