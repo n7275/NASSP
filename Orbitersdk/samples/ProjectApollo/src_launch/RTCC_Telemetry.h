@@ -198,7 +198,7 @@ namespace RTCC_Telemetry
 	};
 }
 
-
+bool papiReadTCPTelemetryConfigFile(char *line, char* item, RTCC_Telemetry::RTCC_TCP_TLM_Config &TCPtlmConfig);
 
 /*
 	Sources

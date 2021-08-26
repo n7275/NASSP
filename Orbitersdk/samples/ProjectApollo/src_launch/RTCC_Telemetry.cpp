@@ -25,6 +25,39 @@
 #include "RTCC_Telemetry.h"
 #include "OrbiterAPI.h"
 
+bool papiReadTCPTelemetryConfigFile(char *line, char* item, RTCC_Telemetry::RTCC_TCP_TLM_Config &TCPtlmConfig)
+{
+	char buffer[256];
+
+	if (sscanf(line, "%s", buffer) == 1)
+	{
+		if (!strcmp(buffer, item)) //"RTCC_TLM_CFG"
+		{
+			if (sscanf(line, "%s %d %d %d %s %s %s %s %s %s %s %s %s", &buffer,
+
+				&TCPtlmConfig.CSM_PORT,
+				&TCPtlmConfig.LEM_PORT,
+				&TCPtlmConfig.SIVbIU_PORT,
+
+				TCPtlmConfig.CSMDescriptorTable,
+				TCPtlmConfig.CMCDescriptorTable,
+				TCPtlmConfig.AMDDescriptorTable,
+
+				TCPtlmConfig.LMDescriptorTable,
+				TCPtlmConfig.LGCDescriptorTable,
+				TCPtlmConfig.AGSDescriptorTable,
+
+				TCPtlmConfig.SIVbIUDescriptorTable,
+				TCPtlmConfig.SIIDescriptorTable,
+				TCPtlmConfig.SICDescriptorTable) > 0)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 void RTCC_Telemetry::DescriptorTableFormat::InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high)
 {
 	RTCC_Telemetry::DescriptorTableParameter TempParameter;
