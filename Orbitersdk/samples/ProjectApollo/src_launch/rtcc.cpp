@@ -201,6 +201,7 @@ bool papiReadConfigFile_ATPSite(char *line, char *item, std::string &ATPSite, do
 	return false;
 }
 
+bool papiReadTCPTelemetryConfigFile(char *line, char* item, RTCC_Telemetry::RTCC_TCP_TLM_Config &TCPtlmConfig)
 {
 	char buffer[256];
 
@@ -1951,6 +1952,7 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			}
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 			papiReadConfigFile_CGTable(Buff, "MHVCCG", SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG);
 			papiReadScenario_int(Buff, "MHVCCG_N", SystemParameters.MHVCCG.N);
 			papiReadConfigFile_CGTable(Buff, "MHVLCG", SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG);
@@ -1962,6 +1964,9 @@ void RTCC::LoadMissionConstantsFile(char *file)
 =======
 			else if (papiReadConfigFile_TCP_Telemetry(Buff, "RTCC_TLM_CFG", TCPtlmConfig))
 >>>>>>> ebe3a98f9 (more work on initalization)
+=======
+			else if (papiReadTCPTelemetryConfigFile(Buff, "RTCC_TLM_CFG", TCPtlmConfig))
+>>>>>>> a4dba672d (change function name to avoid merge conflict)
 			{
 				//load data array formats here;
 				if (TCPtlmConfig.CSM_PORT != 0)
