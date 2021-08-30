@@ -58,6 +58,10 @@ bool papiReadTCPTelemetryConfigFile(char *line, char* item, RTCC_Telemetry::RTCC
 	return false;
 }
 
+RTCC_Telemetry::DescriptorTableFormat::DescriptorTableFormat()
+{
+}
+
 void RTCC_Telemetry::DescriptorTableFormat::InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high)
 {
 	RTCC_Telemetry::DescriptorTableParameter TempParameter;
@@ -71,18 +75,6 @@ void RTCC_Telemetry::DescriptorTableFormat::InitParameter(char* name, unsigned i
 	TempParameter.high = high;
 
 	this->Parameters.push_back(TempParameter);
-}
-
-void RTCC_Telemetry::DescriptorTableFormat::ParseFormatFile(char * file)
-{
-	char Buff[256];
-	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\DescriptorTableFormats\\%s.txt", file);
-
-	std::ifstream TableFormatFile(Buff);
-	if (TableFormatFile.is_open())
-	{
-
-	}
 }
 
 RTCC_Telemetry::TelemetryWorker::TelemetryWorker(const unsigned int WorkerSocket, const unsigned int VEHCode)
@@ -263,6 +255,13 @@ double RTCC_Telemetry::IntermediateDataArray::GetStatus(char * name)
 	return 0.0;
 }
 
+RTCC_Telemetry::TelemetryProcessor::TelemetryProcessor()
+{
+	Workers.reserve(3);
+	IntermediateDataArrays.reserve(9);
+	DescriptorTableFormats.reserve(9);
+}
+
 void RTCC_Telemetry::TelemetryProcessor::Init(MCC * M, RTCC * R)
 {
 	mcc = M;
@@ -274,4 +273,40 @@ void RTCC_Telemetry::TelemetryProcessor::InitWorker(const unsigned int WorkerSoc
 	TelemetryWorker TempWorker(WorkerSocket, 1);
 
 	Workers.push_back(TempWorker);
+}
+
+void RTCC_Telemetry::TelemetryProcessor::ParseDescriptorTableFormatFile(char * file)
+{
+	char Buff[256];
+	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\DescriptorTableFormats\\%s.txt", file);
+
+	char* name = NULL;
+	unsigned int offset = 0;
+	TelemetryMeasurementTypes Type = RTCC_TLM_NULL;
+	unsigned int channel = 0;
+	unsigned int ccode;
+	TelemetryParameterUnits Unit = UnitsNULL;
+	double low = 0.0;
+	double high = 0.0;
+
+	std::ifstream TableFormatFile(Buff);
+	if (TableFormatFile.is_open())
+	{
+		DescriptorTableFormat TempLoadFormat;
+		std::string line;
+
+		while (getline(TableFormatFile, line))
+		{
+			//sprintf_s(Buff, line.c_str());
+
+			if (sscanf(line.c_str(), "%s %d %d %d %d %d %lf %lf", name, &offset, &Type, &channel, &ccode, &Unit, &low, &high))
+			{
+				TempLoadFormat.InitParameter(name, offset, Type, channel, ccode, Unit, low, high);
+			}
+		}
+
+		
+
+		DescriptorTableFormats.push_back(TempLoadFormat);
+	}
 }

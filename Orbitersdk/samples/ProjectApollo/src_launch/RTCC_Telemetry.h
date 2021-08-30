@@ -25,6 +25,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include <fstream>
 #include "Windows.h"
 
@@ -79,6 +80,7 @@ namespace RTCC_Telemetry
 
 	enum TelemetryMeasurementTypes
 	{
+		RTCC_TLM_NULL,
 		RTCC_TLM_A,
 		RTCC_TLM_DP,
 		RTCC_TLM_DS,
@@ -88,6 +90,7 @@ namespace RTCC_Telemetry
 
 	enum TelemetryParameterUnits
 	{
+		UnitsNULL,
 		Percentage,
 		Sci,			// Revisit the validity of this one
 		PSIA,
@@ -124,8 +127,8 @@ namespace RTCC_Telemetry
 	class DescriptorTableFormat
 	{
 	public:
+		DescriptorTableFormat();
 		void InitParameter(char* name, unsigned int offset, TelemetryMeasurementTypes Type, unsigned int channel, unsigned int ccode, TelemetryParameterUnits Unit, double low, double high); //might make this a private member later...
-		void ParseFormatFile(char *file);
 	private:
 		std::vector<DescriptorTableParameter> Parameters;
 	};
@@ -186,8 +189,10 @@ namespace RTCC_Telemetry
 	class TelemetryProcessor
 	{
 	public:
+		TelemetryProcessor();
 		void Init(MCC *M, RTCC *R);
 		void InitWorker(const unsigned int WorkerSocket, const char* DescriptorTableFile1, const char* DescriptorTableFile2, const char* DescriptorTableFile3);
+		void ParseDescriptorTableFormatFile(char *file);
 	private:
 		MCC *mcc;
 		RTCC *rtcc;
