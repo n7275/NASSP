@@ -148,6 +148,7 @@
     <None Include="..\..\Logo.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_launch\RTCC_Telemetry.h" />
     <ClInclude Include="..\..\src_mfd\MFDResource.h" />
     <ClInclude Include="..\..\src_mfd\ProjectApolloMFDButtons.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
@@ -166,6 +167,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_launch\RTCC_Telemetry.cpp" />
     <ClCompile Include="..\..\src_mfd\ProjectApolloMFDButtons.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_sys\connector.cpp" />
