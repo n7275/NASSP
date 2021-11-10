@@ -134,6 +134,10 @@ void Saturn::SystemsInit() {
 	FuelCellH2Manifold[1] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD");
 	FuelCellH2Manifold[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD");
 
+	FuelCellN2Blanket[0] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1BLANKET");
+	FuelCellN2Blanket[1] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2BLANKET");
+	FuelCellN2Blanket[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET");
+
 	//
 	// O2 tanks.
 	//
@@ -3268,6 +3272,7 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	fc.H2FlowLBH  = 0.0;
 	fc.O2PressurePSI = 0.0;
 	fc.O2FlowLBH = 0.0;
+	fc.N2PressurePSI = 0.0;
 	fc.TempF = 0.0;
 	fc.CondenserTempF = 0.0;
 	fc.CoolingTempF = 0.0;
@@ -3312,6 +3317,11 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	}
 	if (pFCCoolingTemp[index]) {
 		fc.CoolingTempF = KelvinToFahrenheit(*pFCCoolingTemp[index]);
+	}
+
+	if (FuelCellN2Blanket[index - 1])
+	{
+		fc.N2PressurePSI = FuelCellN2Blanket[index - 1]->space.Press * PSI;
 	}
 
 	fc.Voltage = FuelCells[index - 1]->Voltage();
