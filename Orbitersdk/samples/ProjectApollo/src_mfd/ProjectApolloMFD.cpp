@@ -59,19 +59,6 @@
 static HINSTANCE g_hDLL;
 static int g_MFDmode; // identifier for new MFD mode
 
-
-#define PROG_NONE		0
-#define PROG_GNC		1
-#define PROG_ECS		2
-#define PROG_IU			3
-#define PROG_TELE		4
-//This program displays info on the current telcom socket.  For debugging only.
-#define PROG_SOCK		5	
-#define PROG_DEBUG		6
-// This screen pulls data from the CMC to be used for initializing the LGC
-#define PROG_LGC		7
-#define PROG_FAIL		8
-
 #define SD_RECEIVE      0x00
 #define SD_SEND         0x01
 #define SD_BOTH         0x02
@@ -134,7 +121,7 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_MFDmode = oapiRegisterMFDMode (spec);
 	g_hDLL = hDLL;
 
-	g_Data.prog = PROG_NONE;
+	g_Data.prog = 0;
 	g_Data.progVessel = NULL;
 	g_Data.gorpVessel = NULL;
 	g_Data.uplinkLEM = 0;
@@ -303,6 +290,91 @@ void uplink_word(char *data)
 		send_agc_key(data[i]);
 	}
 	send_agc_key('E');
+}
+
+//LM Ascent Engine Arming Assembly (Apollo 9+10 only)
+void uplink_aeaa_cmd(bool arm, bool set)
+{
+	//arm: true = APS arming, false = AGS guidance
+	//set: true = set relays, false = reset relays
+	unsigned char cmdbuf[8];
+
+	//3 for LM, 4 for RTC A
+	cmdbuf[0] = 034;
+	cmdbuf[2] = 034;
+	cmdbuf[4] = 034;
+	cmdbuf[6] = 034;
+
+	if (arm)
+	{
+		if (set)
+		{
+			cmdbuf[1] = 0;
+			cmdbuf[3] = 2;
+			cmdbuf[5] = 4;
+			cmdbuf[7] = 6;
+		}
+		else
+		{
+			cmdbuf[1] = 1;
+			cmdbuf[3] = 3;
+			cmdbuf[5] = 5;
+			cmdbuf[7] = 7;
+		}
+	}
+	else
+	{
+		if (set)
+		{
+			cmdbuf[1] = 8;
+			cmdbuf[3] = 10;
+			cmdbuf[5] = 12;
+			cmdbuf[7] = 14;
+		}
+		else
+		{
+			cmdbuf[1] = 9;
+			cmdbuf[3] = 11;
+			cmdbuf[5] = 13;
+			cmdbuf[7] = 15;
+		}
+	}
+	for (int i = 0; i < 8; i++) {
+		g_Data.uplinkBuffer.push(cmdbuf[i]);
+	}
+
+	g_Data.uplinkDataReady = 3;
+	g_Data.connStatus = 1;
+}
+
+void UplinkLMRTC(bool arm, bool set)
+{
+	if (g_Data.connStatus == 0) {
+		int bytesRecv = SOCKET_ERROR;
+		char addr[256];
+		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (m_socket == INVALID_SOCKET) {
+			g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(addr, "127.0.0.1");
+		clientService.sin_family = AF_INET;
+		clientService.sin_addr.s_addr = inet_addr(addr);
+		if (g_Data.uplinkLEM > 0) { clientService.sin_port = htons(14243); }
+		else { clientService.sin_port = htons(14242); }
+		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+			g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(debugWinsock, "CONNECTED");
+		g_Data.uplinkState = 0;
+		uplink_aeaa_cmd(arm, set);
+		g_Data.connStatus = 1;
+	}
 }
 
 void UplinkData()
@@ -567,7 +639,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 	width = w;
 	height = h;
 	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
-	screen = PROG_NONE;
+	screen = 0;
 	debug_frozen = false;
 	char buffer[8];
 
@@ -712,7 +784,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 	LineTo (hDC, (int) (width * 0.95), (int) (height * 0.25));
 
 	// Draw GNC
-	if (screen == PROG_GNC) {
+	if (screen == m_buttonPages.page.GNC) {
 		TextOut(hDC, width / 2, (int) (height * 0.3), "Guidance, Navigation & Control", 30);
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.4), "Velocity:", 9);
@@ -785,16 +857,10 @@ void ProjectApolloMFD::Update (HDC hDC)
 			SetTextAlign (hDC, TA_CENTER);
 			TextOut(hDC, width / 2, (int) (height * 0.9), "*** KILL ROTATION ACTIVE ***", 28);
 		}
+	}
 
-	//Draw Socket details.
-	}
-	else if (screen == PROG_SOCK) {
-		TextOut(hDC, width / 2, (int) (height * 0.3), "Socket details", 14);
-		sprintf(buffer, "Socket: %i", close_Socket);
-		TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
-	}
 	// Draw ECS
-	else if (screen == PROG_ECS) {
+	else if (screen == m_buttonPages.page.ECS) {
 		TextOut(hDC, width / 2, (int) (height * 0.3), "Environmental Control System", 28);
 
 		if (saturn)
@@ -834,6 +900,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.65), "Actual:", 7);
 			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.7), "Test:", 5);
 			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.8), "Total:", 6);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.9), "CSM O2 Hose:", 12);
 
 			SetTextAlign(hDC, TA_CENTER);
 			sprintf(buffer, "%.0lfW", ecs.PrimECSHeating);
@@ -851,6 +918,15 @@ void ProjectApolloMFD::Update (HDC hDC)
 
 			MoveToEx(hDC, (int)(width * 0.5), (int)(height * 0.775), 0);
 			LineTo(hDC, (int)(width * 0.9), (int)(height * 0.775));
+
+			if (ecs.CSMO2HoseConnected)
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.9), "Connected", 9);
+			}
+			else
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.9), "Disconnected", 12);
+			}
 
 		}
 		else if (lem)
@@ -922,7 +998,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 			TextOut(hDC, width / 2, (int)(height * 0.4), "Unsupported vehicle", 19);
 		}
 	// Draw IMFD
-	} else if (screen == PROG_IU) {
+	} else if (screen == m_buttonPages.page.IU) {
 		TextOut(hDC, width / 2, (int) (height * 0.3), "IU Uplink Data", 14);
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.35), "Type:", 5);
@@ -975,10 +1051,10 @@ void ProjectApolloMFD::Update (HDC hDC)
 			SetTextAlign(hDC, TA_CENTER);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "LM Abort (Apollo 5)", 19);
 		}
-		else if (g_Data.iuUplinkType == DCSUPLINK_INHIBIT_MANEUVER)
+		else if (g_Data.iuUplinkType == DCSUPLINK_TDE_ENABLE)
 		{
 			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Inhibit Maneuver", 16);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "TD&E Enable", 11);
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_RESTART_MANEUVER_ENABLE)
 		{
@@ -993,7 +1069,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		else if (g_Data.iuUplinkType == DCSUPLINK_EVASIVE_MANEUVER_ENABLE)
 		{
 			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Evasive Maneuver Enable", 23);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Evasive Yaw Mnvr Enable", 23);
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_EXECUTE_COMM_MANEUVER)
 		{
@@ -1020,6 +1096,11 @@ void ProjectApolloMFD::Update (HDC hDC)
 			sprintf(buffer, "%.01f°", g_Data.iuUplinkYaw*DEG);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.6), buffer, strlen(buffer));
 		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_REMOVE_INHIBIT_MANEUVER4)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Remove Inhibit Mnv. 4", 21);
+		}
 
 		SetTextAlign (hDC, TA_CENTER);
 		TextOut(hDC, width / 2, (int) (height * 0.75), "IU Uplink Result", 16);
@@ -1045,11 +1126,15 @@ void ProjectApolloMFD::Update (HDC hDC)
 		if (g_Data.iuVessel)
 		{
 			oapiGetObjectName(g_Data.iuVessel->GetHandle(), buffer, 100);
-			TextOut(hDC, (int)(width * 0.05), (int)(height * 0.95), buffer, strlen(buffer));
 		}
+		else
+		{
+			sprintf(buffer, "No Target!");
+		}
+		TextOut(hDC, (int)(width * 0.05), (int)(height * 0.95), buffer, strlen(buffer));
 	}
 	//Draw Telemetry
-	else if (screen == PROG_TELE) {
+	else if (screen == m_buttonPages.page.TELE) {
 		SetTextAlign (hDC, TA_LEFT);
 		sprintf(buffer, "Telemetry: %s", debugWinsock);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.30), "Telemetry:", 10);
@@ -1132,6 +1217,16 @@ void ProjectApolloMFD::Update (HDC hDC)
 				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			}
 		}
+		else if (g_Data.uplinkDataReady == 3)
+		{
+			SetTextAlign(hDC, TA_LEFT);
+
+			if (g_Data.uplinkBuffer.size() > 0)
+			{
+				sprintf(buffer, "Uplink word: %d", g_Data.uplinkBuffer.front());
+				TextOut(hDC, (int)(width * 0.1), (int)(height * 0.4), buffer, strlen(buffer));
+			}
+		}
 		SetTextAlign (hDC, TA_LEFT);
 		SetTextColor (hDC, RGB(128, 128, 128));
 		oapiGetObjectName(g_Data.vessel->GetHandle(), buffer, 100);
@@ -1148,7 +1243,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.95), (int) (height * 0.95), buffer, strlen(buffer));
 
 	}
-	else if (screen == PROG_DEBUG)
+	else if (screen == m_buttonPages.page.Debug)
 	{
 
 		if ((strcmp(debugString,debugStringBuffer)!= 0) && (strlen(debugStringBuffer) != 0) && !debug_frozen)
@@ -1180,7 +1275,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		else TextOut(hDC, width / 2, (int) (height * 0.4), debugString, strlen(debugString));
 	}
 	// Draw LGC Setup screen
-	else if (screen == PROG_LGC) {
+	else if (screen == m_buttonPages.page.LGC) {
 		OBJHANDLE object;
 		VESSEL *vessel;
 		TextOut(hDC, width / 2, (int) (height * 0.3), "LGC Docked Init Data", 20);
@@ -1251,9 +1346,9 @@ void ProjectApolloMFD::Update (HDC hDC)
 						sprintf(buffer,"TEPHEM: %05o %05o %05o",tephem[0],tephem[1],tephem[2]);
 						TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
 						// Format gimbal angles and print them
-						sprintf(buffer, "CSM O/I/M: %3.2f %3.2f %3.2f", CMattitude.x*DEG, CMattitude.y*DEG, CMattitude.z*DEG);
+						sprintf(buffer, "CSM O/I/M: %+07.2f %+07.2f %+07.2f", CMattitude.x*DEG, CMattitude.y*DEG, CMattitude.z*DEG);
 						TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
-						sprintf(buffer, "LM O/I/M: %3.2f %3.2f %3.2f", LMattitude.x*DEG, LMattitude.y*DEG, LMattitude.z*DEG);
+						sprintf(buffer, "LM O/I/M: %+07.2f %+07.2f %+07.2f", LMattitude.x*DEG, LMattitude.y*DEG, LMattitude.z*DEG);
 						TextOut(hDC, width / 2, (int) (height * 0.5), buffer, strlen(buffer));
 
 						//Docked IMU Fine Alignment
@@ -1282,7 +1377,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
 		*/
 	}
-	else if (screen == PROG_FAIL)
+	else if (screen == m_buttonPages.page.Failures)
 	{
 		if (saturn)
 		{
@@ -1998,6 +2093,12 @@ void ProjectApolloMFD::SetRandomFailures(double FailureMultiplier)
 	}
 }
 
+void ProjectApolloMFD::SetAEAACommands(int arm, int set)
+{
+	g_Data.uplinkLEM = 1;
+	UplinkLMRTC(arm == 1, set == 1);
+}
+
 void ProjectApolloMFD::GetCSM()
 {
 	OBJHANDLE object;
@@ -2103,13 +2204,13 @@ void ProjectApolloMFD::menuVoid(){}
 
 void ProjectApolloMFD::menuSetMainPage()
 {
-	screen = PROG_NONE;
+	screen = m_buttonPages.page.None;
 	m_buttonPages.SelectPage(this, screen);
 }
 
 void ProjectApolloMFD::menuSetGNCPage()
 {
-	screen = PROG_GNC;
+	screen = m_buttonPages.page.GNC;
 	m_buttonPages.SelectPage(this, screen);
 }
 
@@ -2117,7 +2218,7 @@ void ProjectApolloMFD::menuSetECSPage()
 {
 	if (saturn != NULL || lem != NULL)
 	{
-		screen = PROG_ECS;
+		screen = m_buttonPages.page.ECS;
 		m_buttonPages.SelectPage(this, screen);
 	}
 }
@@ -2126,38 +2227,32 @@ void ProjectApolloMFD::menuSetIUPage()
 {
 	if (saturn != NULL || lem != NULL)
 	{
-		screen = PROG_IU;
+		screen = m_buttonPages.page.IU;
 		m_buttonPages.SelectPage(this, screen);
 	}
 }
 
 void ProjectApolloMFD::menuSetTELEPage()
 {
-	screen = PROG_TELE;
+	screen = m_buttonPages.page.TELE;
 	m_buttonPages.SelectPage(this, screen);
 }
 
 void ProjectApolloMFD::menuSetLGCPage()
 {
-	screen = PROG_LGC;
+	screen = m_buttonPages.page.LGC;
 	m_buttonPages.SelectPage(this, screen);
 }
 
 void ProjectApolloMFD::menuSetFailuresPage()
 {
-	screen = PROG_FAIL;
-	m_buttonPages.SelectPage(this, screen);
-}
-
-void ProjectApolloMFD::menuSetSOCKPage()
-{
-	screen = PROG_SOCK;
+	screen = m_buttonPages.page.Failures;
 	m_buttonPages.SelectPage(this, screen);
 }
 
 void ProjectApolloMFD::menuSetDebugPage()
 {
-	screen = PROG_DEBUG;
+	screen = m_buttonPages.page.Debug;
 	m_buttonPages.SelectPage(this, screen);
 }
 
@@ -2210,6 +2305,27 @@ void ProjectApolloMFD::menuStartEVA()
 	}
 }
 
+void ProjectApolloMFD::menuConnectCSMO2Hose()
+{
+	if (saturn)
+	{
+		ECSStatus ecs;
+		saturn->GetECSStatus(ecs);
+
+		if (ecs.CSMO2HoseConnected)
+		{
+			saturn->lemECSConnector.DisconnectCSMO2Hose();
+		}
+		else
+		{
+			if (saturn->ForwardHatch.IsOpen()) //TBD: Require LM hatch to be open as well
+			{
+				saturn->lemECSConnector.ConnectCSMO2Hose();
+			}
+		}
+	}
+}
+
 void ProjectApolloMFD::menuSetPrimECSTestHeaterPower()
 {
 	if (saturn != NULL)
@@ -2231,7 +2347,7 @@ void ProjectApolloMFD::menuSetSecECSTestHeaterPower()
 void ProjectApolloMFD::menuAbortUplink()
 {
 	if (g_Data.uplinkDataReady == 0 && g_Data.updateClockReady == 0) {
-		screen = PROG_NONE;
+		screen = m_buttonPages.page.None;
 		m_buttonPages.SelectPage(this, screen);
 	}
 	else {
@@ -2288,6 +2404,14 @@ void ProjectApolloMFD::menuSunburstCOI()
 	}
 }
 
+void ProjectApolloMFD::menuAEAACommands()
+{
+	if (g_Data.uplinkDataReady == 0) {
+		bool AEAACommandsInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Ascent Engine Arming Assembly. Input: X X. First digit: 1 = Arm APS, 2 = AGS guidance control. Second digit: 1 = set, 2 = reset", AEAACommandsInput, 0, 20, (void*)this);
+	}
+}
+
 void ProjectApolloMFD::menuSetSource()
 {
 	if (g_Data.uplinkDataReady == 0) {
@@ -2337,7 +2461,7 @@ void ProjectApolloMFD::menuSetIUSource()
 
 void ProjectApolloMFD::menuCycleIUUplinkType()
 {
-	if (g_Data.iuUplinkType < 8)
+	if (g_Data.iuUplinkType < 9)
 	{
 		g_Data.iuUplinkType++;
 	}
@@ -2542,11 +2666,12 @@ void ProjectApolloMFD::menuIUUplink()
 	}
 	break;
 	case DCSUPLINK_LM_ABORT:
-	case DCSUPLINK_INHIBIT_MANEUVER:
+	case DCSUPLINK_TDE_ENABLE:
 	case DCSUPLINK_RESTART_MANEUVER_ENABLE:
 	case DCSUPLINK_TIMEBASE_8_ENABLE:
 	case DCSUPLINK_EVASIVE_MANEUVER_ENABLE:
 	case DCSUPLINK_EXECUTE_COMM_MANEUVER:
+	case DCSUPLINK_REMOVE_INHIBIT_MANEUVER4:
 	{
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
 	}
@@ -2746,14 +2871,18 @@ bool RandomFailuresInput(void *id, char *str, void *data)
 	return false;
 }
 
-ProjectApolloMFD::ScreenData ProjectApolloMFD::screenData = {PROG_NONE};
-
-
-DLLCLBK bool pacDefineSocket(SOCKET sockettoclose)
+bool AEAACommandsInput(void *id, char *str, void *data)
 {
-	close_Socket = sockettoclose;
-	return true;
+	int arm, set;
+	if (sscanf(str, "%d %d", &arm, &set) == 2)
+	{
+		((ProjectApolloMFD*)data)->SetAEAACommands(arm, set);
+		return true;
+	}
+	return false;
 }
+
+ProjectApolloMFD::ScreenData ProjectApolloMFD::screenData = {0};
 
 DLLCLBK char *pacMFDGetDebugString()
 {

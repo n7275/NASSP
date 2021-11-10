@@ -326,18 +326,37 @@ void h_substance::operator -=(h_substance add) {
 	}
 }
 
+double h_substance::VAPENTH() const
+{
+	if(Temp > CRITICAL_T[subst_type] || Temp <= 0.0) return 0.0;
+
+	
+	return (R_CONST/1000*CRITICAL_T[subst_type]*
+		(7.08*pow((1-Temp/CRITICAL_T[subst_type]),0.354) +
+			10.95 * ACENTRIC[subst_type] * pow((1 - Temp / CRITICAL_T[subst_type]), 0.456)))/ MMASS[subst_type]; //[1]
+
+
+	//[1] [29] G.F. Carruth, R. Kobayashi, Extension to low reduced temperatures of three-parameter corresponding states: vapor pressures,
+	//enthalpies and entropies of vaporization, and liquid fugacity coefficients, Industrial & Engineering Chemistry Fundamentals, 11 (1972) 509-517.
+
+}
+
 double h_substance::Condense(double dt) {
+
+	double vapenth_temporary = VAPENTH();
 
 	if (vapor_mass < dt)
 		dt = vapor_mass;
 
 	vapor_mass -= dt;
-	Q += VAPENTH[subst_type] * dt;
+	Q += vapenth_temporary * dt;
 
-	return VAPENTH[subst_type] * dt;
+	return vapenth_temporary * dt;
 }
 
 double h_substance::Boil(double dt) {
+
+	double vapenth_temporary = VAPENTH();
 
 	if (vapor_mass + dt > mass - 1.0)
 		dt = mass - 1.0 - vapor_mass;
@@ -345,12 +364,12 @@ double h_substance::Boil(double dt) {
 	if (dt < 0)
 		return 0;
 
-	if (Q < VAPENTH[subst_type] * dt)
-		dt = Q / VAPENTH[subst_type];
+	if (Q < vapenth_temporary * dt)
+		dt = Q / vapenth_temporary;
 
 	vapor_mass += dt;
-	Q -= VAPENTH[subst_type] * dt;
-	return -VAPENTH[subst_type] * dt;
+	Q -= vapenth_temporary * dt;
+	return -vapenth_temporary * dt;
 }
 
 double h_substance::BoilAll() {
@@ -532,7 +551,13 @@ void h_volume::ThermalComps(double dt) {
 
 	for (i = 0; i < MAX_SUB; i++) {
 		//recompute the vapor press
-		vap_press = VAPPRESS[composition[i].subst_type] - (273.0 - Temp) * VAPGRAD[composition[i].subst_type];  //this is vapor pressure of current substance
+
+		if (Temp <= 0.0) {
+			vap_press = 0.0;
+		}
+		else {
+			vap_press = exp(ANTIONE_A[composition[i].subst_type] - (ANTIONE_B[composition[i].subst_type] / Temp))*1E5; //this is vapor pressure of current substance
+		}
 		//need to boil material if vapor pressure > pressure, otherwise condense
 		if (vap_press > Press)
 		{
@@ -955,6 +980,7 @@ void h_Pipe::refresh(double dt) {
 		// conductive heat transfer should depend on valve-size
 		// as a "quick hack" it's proportional to the minimum size,
 		// but this has to be improved
+
 		double minSize = __min(in->size, out->size);
 		trQ = trQ * minSize;
 
@@ -1029,6 +1055,10 @@ h_Radiator::h_Radiator(char *i_name,vector3 i_pi,double i_size,double i_rad) {
 	pos = i_pi;
 	size = i_size;
 	rad = i_rad;
+	AirHeatTransferCoefficient = 10; //Watts/m^2K
+	Qc = 0;
+	Qr = 0;
+	AirTemp = 0;
 }
 
 h_Radiator::~h_Radiator() {
@@ -1037,39 +1067,18 @@ h_Radiator::~h_Radiator() {
 
 void h_Radiator::refresh(double dt) 
 {
-	const double AirHeatTransferCoefficient = 10.0; //Watts/m^2K 
-
-	double Qc = 0.0;
-	double Qr = 0.0;
-
-	double AirTemp = parent->Vessel->GetAtmTemperature();
-
-	Qc = AirHeatTransferCoefficient* size * (AirTemp - Temp) * dt; //convective heat transfer, useful for preventing the radiators from cooling to 0K on the pad
-	Qc *= parent->Vessel->GetAtmDensity() / 1.225; //simple model for correcting for density
-
-	thermic(Qc);
+	Qr = rad * size * 5.67e-8 * dt * pow(Temp - 2.7, 4); //Stefanï¿½Boltzmann law
+	Qc = rad * (100 * size * (Temp - parent->Vessel->GetAtmTemperature()))*(parent->Vessel->GetAtmDensity() / 1.225)*dt; //convective heat transfer, useful for preventing the radiators from cooling to 0K on the pad
 	
-	if (parent->Vessel->GetAtmDensity() < 0.001)
-	{
-		Qr = rad * size * 5.67e-8 * dt * pow(Temp, 4); //Stefan–Boltzmann law 
-	}
-	else if (parent->Vessel->GetAtmDensity() < 1.0)
-	{
-		Qr = rad * size * 5.67e-8 * dt * pow(Temp, 4); //Stefan–Boltzmann law 
-		Qr -= Qr * (parent->Vessel->GetAtmDensity() / 1.225);
-	}
-	else
-	{
-		Qr = 0.0;
-	}
+	//if (!strcmp(name, "ECSRADIATOR1"))
+		//sprintf(oapiDebugString(), "Qr = %lf, Qc = %lf, Temp = %lf, Air Temp = %lf, Air Density = %lf, rad %lf, size %lf, %lf %lf", Qr/dt, Qc/dt, Temp, parent->Vessel->GetAtmTemperature(), parent->Vessel->GetAtmDensity(), rad, size, Qr, Qc);
 	
+	
+	
+	thermic(-(Qc+Qr));
+
 	// if (!strcmp(name, "LEM-LR-Antenna")) 
-		//sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
-
-	/*if (!strcmp(name, "FUELCELLRADIATOR1")) 
-		sprintf(oapiDebugString(), "Temp=%lf K, Qc=%lf, Qr=%lf",Temp, Qc/dt, Qr/dt);*/
-
-	thermic(-Qr);
+	//sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
 }
 
 void h_Radiator::Save(FILEHANDLE scn) {
@@ -1219,7 +1228,7 @@ void h_Evaporator::refresh(double dt) {  //Need to look at these values (-0.11, 
 			// evaporate liquid
 			if (flow - vapor_flow > 0)
 			{
-				double Q = VAPENTH[SUBSTANCE_H2O] * (flow - vapor_flow);
+				double Q = 2260.0 * (flow - vapor_flow); //FIXME the evaporator needs an overhaul. this line used to use VAPENTH[SUBSTANCE_H2O] before that was upgraded to the VAPENTH() function
 
 				if (target->energy < Q)
 					Q = 0;
@@ -1314,7 +1323,7 @@ h_crew::h_crew(char *i_name, int nr, h_Tank *i_src) {
 
 void h_crew::refresh(double dt) {
 
-	double oxygen = 0.00949 * number * dt; //grams of O2	
+	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)	
 	if (SRC) {
 		double srcTemp = SRC->GetTemp();
 		therm_obj *t = SRC->GetThermalInterface();
@@ -1325,12 +1334,12 @@ void h_crew::refresh(double dt) {
 		SRC->space.composition[SUBSTANCE_O2].vapor_mass -= oxygen;
 		SRC->space.composition[SUBSTANCE_O2].SetTemp(srcTemp);
 
-		double co2 = 0.01013 * number * dt; //grams of CO2
+		double co2 = 0.01013 * number * dt; //grams of CO2 (0.096 to 0.146 LB/Man Hour (43.54 to 66.22 g/Man Hour) per LM-8 Systems Handbook)
 		SRC->space.composition[SUBSTANCE_CO2].mass += co2;
 		SRC->space.composition[SUBSTANCE_CO2].vapor_mass += co2;
 		SRC->space.composition[SUBSTANCE_CO2].SetTemp(srcTemp);
 
-		double h2o = 0.0264 * number * dt;  // grams of H2O water vapor
+		double h2o = 0.0264 * number * dt;  // grams of H2O water vapor (need a source for this)
 		SRC->space.composition[SUBSTANCE_H2O].mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].vapor_mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].SetTemp(srcTemp);
@@ -1338,8 +1347,7 @@ void h_crew::refresh(double dt) {
 		SRC->space.GetQ();
 		SRC->space.GetMass();
 			
-		//double heat = 138.72 * number * dt;  //heat 1420 btu/hr (416.16092 W) total from CSM data book (Watts * number of crew * seconds = J/crew member/s)
-		double heat = 30.0 * number * dt;  //heat
+		double heat = 30.0 * number * dt;  //heat (400 to 760 BTU/Man Hour (117.23 to 222.73 Watts) per LM-8 Systems Handbook)
 		t->thermic(heat);
 	}
 }
@@ -1485,11 +1493,11 @@ void h_WaterSeparator::refresh(double dt) {
 	drpmcmd = rpmcmd - RPM;
 	if (drpmcmd >= 0.0)
 	{
-		delay = 7.0;	// Gives delay for WS spool up RPM/sec
+		delay = 7.0;	// Gives delay for WS spool up RPM/sec, approximately 2 minutes
 	}
 	else
 	{
-		delay = 28.0;	// Gives delay for WS spin down RPM/sec
+		delay = 30.0;	// Gives delay for WS spin down RPM/sec, approximately 1 minute
 	}
 	if (abs(drpmcmd) > delay*dt)
 	{
@@ -1531,4 +1539,33 @@ void h_HeatLoad::refresh(double dt)
 
 		heat_load = 0.0;
 	}
+}
+
+h_Accumulator::h_Accumulator(char* i_name, vector3 i_p, double i_vol) : h_Tank(i_name, i_p, i_vol)
+{
+	space.Void();
+	parent = NULL;
+}
+
+void h_Accumulator::refresh(double dt)
+{
+	h_Tank::refresh(dt);
+	/*
+	if (space.Volume <= Original_volume * 0.8 || space.Volume >= Original_volume * 0.05)
+	{
+
+		while (space.Press >= 8.0 * PSI)
+		{
+			(space.Volume + 0.001)* dt;
+		}
+		
+		while (space.Press <= 5.6 * PSI)
+		{
+			(space.Volume - 0.001)* dt;
+		}
+		
+	}
+	*/
+
+	//sprintf(oapiDebugString(), "Volume %lf Pressure %lf Original Volume %lf", space.Volume, space.Press*PSI, Original_volume);
 }

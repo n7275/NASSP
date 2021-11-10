@@ -49,6 +49,11 @@
 
 extern GDIParams g_Param;
 
+// CSM Optics base direction, as given in the Colossus code CSM_GEOMETRY.agc
+// All flown Colossus versions use these values
+#define OPTICS_BASE_COS  0.8431756920
+#define OPTICS_BASE_SIN  0.5376381241
+
 void BaseInit() 
 
 {
@@ -62,176 +67,190 @@ void BaseInit()
 	g_Param.col[5] = oapiGetColour(255, 0, 255);
 }
 
-//
-//Needle function by Rob Conley from Mercury code
-//
+double ReticleDigit0[9][2]  = { {0,1}, {0,7}, {1,8}, {4,8}, {5,7}, {5,1}, {4,0}, {1,0}, {0,1} };
+double ReticleDigit1[3][2]  = { {0,5}, {3,8}, {3,0} };
+double ReticleDigit2[9][2]  = { {5,0}, {0,0}, {0,1}, {5,5}, {5,6}, {4,8}, {1,8}, {0,6}, {0,5} };
+double ReticleDigit3[11][2] = { {0,1}, {1,0}, {4,0}, {5,1}, {5,3}, {3,4}, {5,5}, {5,7}, {4,8}, {1,8}, {0,7} };
+double ReticleDigit4[4][2]  = { {4,0} , {4,8}, {0,3}, {5,3} };
+double ReticleDigit5[9][2] = { {0,1}, {2,0}, {3,0}, {5,1}, {5,4}, {3,5}, {0,5}, {0,8}, {5,8} };
+int ReticleDigitLen[6] = { 9, 3, 9, 11, 4, 9 };
 
-void DrawNeedle (HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPEN pen1)
-{
-	double dx = rad * cos(angle), dy = rad * sin(angle);
+#define reticleDrawLine(fromX, fromY, toX, toY) {\
+	line.emplace_back(tan(RAD*fromX), tan(RAD*fromY));\
+	line.emplace_back(tan(RAD*toX), tan(RAD*toY));\
+	linelen.push_back(2);\
+}
+
+#define reticleDrawNumber(number, Y) {\
+	double offsx=tan(RAD*3.0), offsy=tan(RAD*Y);\
+	for(int i=0; i<2; i++){\
+		char c=(number)[i];\
+		if (c >= '0' && c <= '5'){\
+			int npt=ReticleDigitLen[c-'0'];\
+			for (int k = 0; k < npt; k++) {\
+				double* digpt; \
+				switch(c){\
+				case '0': digpt=ReticleDigit0[k]; break;\
+				case '1': digpt=ReticleDigit1[k]; break;\
+				case '2': digpt=ReticleDigit2[k]; break;\
+				case '3': digpt=ReticleDigit3[k]; break;\
+				case '4': digpt=ReticleDigit4[k]; break;\
+				case '5': digpt=ReticleDigit5[k]; break;\
+				default: break;\
+				}\
+				line.emplace_back(offsx+0.1*RAD*(digpt[0]+8.0*i), offsy+0.1*RAD*(digpt[1]-4.0));\
+			}\
+			linelen.push_back(npt);\
+		}\
+	}\
+}
+void Saturn::InitReticle() {
+	std::vector<std::tuple<double, double>> line;
+	std::vector<int> linelen;
+	ReticleLineMaxLen = 0;
+
+	//SCT
+
+	// Outer Crosshair (30 deg range)
+	reticleDrawLine(0.0, 1.0, 0.0, 30.0);
+	reticleDrawLine(0.0, -1.0, 0.0, -24.0);
+	reticleDrawLine(0.0, -26.0, 0.0, -30.0);
+	reticleDrawLine(1.0, 0.0, 30.0, 0.0);
+	reticleDrawLine(-1.0, 0.0, -30.0, 0.0);
+
+	// Inner Crosshair (0.5 deg range)
+	reticleDrawLine(0.0, 4.0/60.0, 0.0, 0.5);
+	reticleDrawLine(0.0, -4.0 / 60.0, 0.0, -0.5);
+	reticleDrawLine(4.0 / 60.0, 0.0, 0.5, 0.0);
+	reticleDrawLine(-4.0 / 60.0, 0.0, -0.5, 0.0);
+
+	// Ticks on the right side of vertical line...
+	for (int i = 1; i <= 5; i++) {
+		reticleDrawLine(1.0, 5.0*i, 2.0, 5.0*i);
+		reticleDrawLine(1.0, -5.0*i, 2.0, -5.0*i);
+	}
+	// ...and one tick at 0 deg mark on the left side
+	reticleDrawLine(-1.0, -25.0, -2.0, -25.0);
+
+	// Ticks on the horizontal line (100', 200', 300', 400', 10deg, 15deg, 20deg, 25deg)
+	double x = 0.0;
+	for (int i = 1; i <= 7; i++) {
+		double height1= 4.0 / 60.0, height2=1.0;
+		if (i <= 4) {
+			x = x + (5.0 / 3.0);
+			height2 = 0.5;
+		}
+		else if (i == 5)
+			x = x + (10.0 / 3.0);
+		else
+			x = x + 5.0;
+
+		reticleDrawLine(x, height1, x, height2);
+		reticleDrawLine(-x, height1, -x, height2);
+		reticleDrawLine(x, -height1, x, -height2);
+		reticleDrawLine(-x, -height1, -x, -height2);
+
+	}
+
+	// Degree numbers
+	reticleDrawNumber("0 ", -25.0);
+	reticleDrawNumber("5 ", -20.0);
+	reticleDrawNumber("10", -15.0);
+	reticleDrawNumber("15", -10.0);
+	reticleDrawNumber("20", -5.0);
+	reticleDrawNumber("30", 5.0);
+	reticleDrawNumber("35", 10.0);
+	reticleDrawNumber("40", 15.0);
+	reticleDrawNumber("45", 20.0);
+	reticleDrawNumber("50", 25.0);
+
+	int cnt = linelen.size(), ptcnt= line.size();
+
+	ReticleLineCnt[0] = cnt;
+	ReticleLineLen[0] = new int[cnt];
+	ReticleLine[0][0] = new double[ptcnt];
+	ReticleLine[0][1] = new double[ptcnt];
+
+	for (int i = 0; i < cnt; i++) {
+		ReticleLineLen[0][i] = linelen[i];
+		if (linelen[i] > ReticleLineMaxLen)  ReticleLineMaxLen = linelen[i];
+	}
+
+	for (int i = 0; i < ptcnt; i++) {
+		ReticleLine[0][0][i] = std::get<0>(line[i]);
+		ReticleLine[0][1][i] = std::get<1>(line[i]);
+	}
+
+	//SXT
+	line.clear();
+	linelen.clear();
+
+	reticleDrawLine(0.5, -125.0 / 3600.0, 0.5, 125.0 / 3600.0); //30` right, vertically from -2'5'' to 2'5''
+	reticleDrawLine(-0.5, -125.0 / 3600.0, -0.5, 125.0 / 3600.0); //30` left, vertically from -2'5'' to 2'5''
+
+	reticleDrawLine(25.0 / 3600.0, 37.5 / 3600.0, 25.0 / 3600.0, 337.5 / 3600.0);   //Up ||, left-right 25'', horizontally 37.5'' to 5'37.5''
+	reticleDrawLine(-25.0 / 3600.0, 37.5 / 3600.0, -25.0 / 3600.0, 337.5 / 3600.0);
+
+	reticleDrawLine(0.0, -37.5 / 3600.0, 0.0, -337.5 / 3600.0); //Down |, horizontally middle, down from 37.5'' to 5'37.5''
+
+	reticleDrawLine(-37.5 / 3600.0, 25.0 / 3600.0, -337.5 / 3600.0, 25.0 / 3600.0);   //Left =, Up-down 25'', horizontally 37.5'' to 5'37.5''
+	reticleDrawLine(-37.5 / 3600.0, -25.0 / 3600.0, -337.5 / 3600.0, -25.0 / 3600.0);
+
+	reticleDrawLine(37.5 / 3600.0, 0.0, 337.5 / 3600.0, 0.0); //Right -, vertically middle, right from 37.5'' to 5'37.5''
+
+	cnt = linelen.size(), ptcnt = line.size();
+
+	ReticleLineCnt[1] = cnt;
+	ReticleLineLen[1] = new int[cnt];
+	ReticleLine[1][0] = new double[ptcnt];
+	ReticleLine[1][1] = new double[ptcnt];
+
+	for (int i = 0; i < cnt; i++) {
+		ReticleLineLen[1][i] = linelen[i];
+		if (linelen[i] > ReticleLineMaxLen)  ReticleLineMaxLen = linelen[i];
+	}
+
+	for (int i = 0; i < ptcnt; i++) {
+		ReticleLine[1][0][i] = std::get<0>(line[i]);
+		ReticleLine[1][1][i] = std::get<1>(line[i]);
+	}
+
+	ReticlePoint = new POINT[ReticleLineMaxLen];
+	//printf("RetMaxlen:%d\n", ReticleLineMaxLen);
+}
+
+void drawReticle(SURFHANDLE surf, double shaft, double panelPixelHeight, int reticleLineCnt, int reticleLineLen[], double **reticleLine, POINT ptbuf[]) {
 	HGDIOBJ oldObj;
-
-	oldObj = SelectObject (hDC, pen1);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(0.85*dx+0.5), y - (int)(0.85*dy+0.5));
-	SelectObject (hDC, oldObj);
-	oldObj = SelectObject (hDC, pen0);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(dx+0.5), y - (int)(dy+0.5));
-	SelectObject (hDC, oldObj);
+	HDC hDC = oapiGetDC(surf);
+	HPEN pen = CreatePen(PS_SOLID, 1, RGB(211, 171, 23));
+	oldObj = SelectObject(hDC, pen);
+	double reticleMul = 0.5*panelPixelHeight / tan(oapiCameraAperture());
+	double cosShaft = cos(shaft), sinShaft = sin(shaft);
+	int idx = 0;
+	for (int i = 0; i < reticleLineCnt; i++) {
+		for (int k = 0; k < reticleLineLen[i]; k++) {
+			double xorig = reticleLine[0][idx], yorig = reticleLine[1][idx];
+			ptbuf[k].x = 268L + (LONG (reticleMul*(cosShaft*xorig + sinShaft*yorig)));
+			ptbuf[k].y = 268L - (LONG (reticleMul*(-sinShaft*xorig + cosShaft*yorig)));
+			idx++;
+		}
+		Polyline(hDC, ptbuf, reticleLineLen[i]);
+	}
+	SelectObject(hDC, oldObj);
+	DeleteObject(pen);
+	oapiReleaseDC(surf, hDC);
 }
 
-//
-// Altimeter Needle function by Rob Conley from Mercury code, Heavily modified to have non linear gauge range... :):)
-//
-
-void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
-{
-	double alpha;
-	double range;
-	double press;
-
-	press = GetAtmPressure();
-	alpha = GetAltitude();
-	alpha = alpha / 0.3048;
-
-#define ALTIMETER_X_CENTER	68
-#define ALTIMETER_Y_CENTER	69
-#define ALTIMETER_RADIUS	55.0
-
-	//sprintf(oapiDebugString(), "altitude %f", alpha);
-	if (alpha > 55000 || press < 1000.0) alpha = 55000;
-
-	if (alpha < 4001){
-		range = 120 * RAD;
-		range = range / 4000;
-		alpha = 4000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+150*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	else if (alpha > 4001 && alpha < 6001){
-		range = 35 * RAD;
-		range = range / 2000;
-		alpha = 2000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+185*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	else if (alpha > 6001 && alpha < 8001){
-		range = 25 * RAD;
-		range = range / 2000;
-		alpha = 2000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+165*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	else if (alpha > 8001 && alpha < 10001){
-		range = 30 * RAD;
-		range = range / 2000;
-		alpha = 2000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+180*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	else if (alpha > 10001 && alpha < 20001){
-		range = 45 * RAD;
-		range = range / 10000;
-		alpha = 10000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+60*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	else if (alpha > 20001 && alpha < 40001){
-		range = 65 * RAD;
-		range = range / 20000;
-		alpha = 20000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+15*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	else {
-		range = 20 * RAD;
-		range = range / 10000;
-		alpha = 10000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+10*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	oapiBlt(surf, srf[SRF_ALTIMETER], 0, 0, 0, 0, 137, 137, SURF_PREDEF_CK);
+void setCameraLOS(double shaft, double trunnion) {
+	double cosShaft = cos(shaft), sinShaft = sin(shaft);
+	double cosTrun = cos(trunnion), sinTrun = sin(trunnion);
+	double uzx = cosShaft*sinTrun, uzy = sinShaft*sinTrun, uzz = cosTrun;
+	double azimuth = 0.5*PI - acos(uzx), polar =-atan2(uzy, uzz);
+	//double oldAz = oapiCameraAzimuth(), oldPol= oapiCameraPolar();
+	oapiCameraSetCockpitDir(polar, azimuth, false);
+	//sprintf(oapiDebugString(), "Shaft:%lf Trunnion:%lf Polar:%lf Azimuth:%lf OldPolar:%lf OldAzimuth:%lf", shaft, trunnion, polar, azimuth ,oldAz, oldPol);
 }
 
-void Saturn::RedrawPanel_Alt2 (SURFHANDLE surf)
-{
-	double alpha;
-	double range;
-
-	alpha = GetAltitude();
-	alpha = alpha / 0.305;
-
-#define ALTIMETER2_X_CENTER	80
-#define ALTIMETER2_Y_CENTER	80
-#define ALTIMETER2_RADIUS	70.0
-
-	//sprintf(oapiDebugString(), "altitude %f", alpha);
-	if (alpha > 50000) alpha = 50000;
-
-	if (alpha < 4001){
-		range = 120 * RAD;
-		range = range / 4000;
-		alpha = 4000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+150*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	else if (alpha > 4001 && alpha < 6001){
-		range = 35 * RAD;
-		range = range / 2000;
-		alpha = 2000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+185*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	else if (alpha > 6001 && alpha < 8001){
-		range = 25 * RAD;
-		range = range / 2000;
-		alpha = 2000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+165*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	else if (alpha > 8001 && alpha < 10001){
-		range = 20 * RAD;
-		range = range / 2000;
-		alpha = 2000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+150*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	else if (alpha > 10001 && alpha < 20001){
-		range = 55 * RAD;
-		range = range / 10000;
-		alpha = 10000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+70*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	else if (alpha > 20001 && alpha < 40001){
-		range = 65 * RAD;
-		range = range / 20000;
-		alpha = 20000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+15*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	else {
-		range = 20 * RAD;
-		range = range / 10000;
-		alpha = 10000 - alpha;
-		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+10*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
-		oapiReleaseDC (surf, hDC);
-	}
-	oapiBlt(surf, srf[SRF_ALTIMETER2], 0, 0, 0, 0, 161, 161, SURF_PREDEF_CK);
-}
 
 void Saturn::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist) {
 
@@ -1101,6 +1120,9 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 		oapiSetPanelNeighbours(-1, SATPANEL_LEFT_RNDZ_WINDOW, -1, SATPANEL_MAIN);
 
+		//If a panel has no panel area at all then Orbiter doesn't get rid of the panel areas from the previous panel when the new one is loaded. Orbiter bug?
+		oapiRegisterPanelArea(AID_DUMMY_PANEL_AREA, _R(10, 10, 20, 20), PANEL_REDRAW_NEVER, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+
 		SetCameraDefaultDirection(_V(0.0, 0.5254716511, 0.8508111094));
 		oapiCameraSetCockpitDir(0, 0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1362,20 +1384,31 @@ bool Saturn::clbkLoadPanel (int id) {
 	if (id == SATPANEL_SEXTANT) { // Sextant
 
 		int offset1 = 0, offset2 = 0;
+		double panelw, panelh = 768;
 		if (renderViewportIsWideScreen == 1) {
 			offset1 = 103;
 			offset2 = 205;
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT_WIDE));
+			panelw = 1229;
 		} else if (renderViewportIsWideScreen == 2) {
 			offset1 = 171;
 			offset2 = 342;
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT_16_9));
+			panelw = 1366;
 		} else {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT));
+			panelw = 1024;
 		}
 		if ( !hBmp ) {
 			return false;
 		}
+
+		double panelscale = oapiGetPanelScale(), hscale = panelscale, vscale = panelscale;
+		DWORD screenw, screenh;
+		oapiGetViewportSize(&screenw, &screenh);
+		if (screenw > panelw*panelscale) hscale = ((double)screenw) / panelw;
+		if (screenh > panelh*panelscale) vscale = ((double)screenh) / panelh;
+		PanelPixelHeight = ((double)screenh) / (min(hscale, vscale));
 
 		oapiSetPanelNeighbours(-1, SATPANEL_TELESCOPE, SATPANEL_GN, SATPANEL_GN);
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
@@ -1392,27 +1425,39 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea (AID_OPTICSCLKAREASEXT,			_R(0, 0, 10, 10),								PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(0.0, 0.53765284, 0.84316631));
+		SetCameraDefaultDirection(_V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN));
 		oapiCameraSetCockpitDir(0,0);
+		SetCameraCatchAngle(0.0);
 		SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);
 	}
 
 	if (id == SATPANEL_TELESCOPE) { // Telescope
 		int offset1 = 0, offset2 = 0;
+		double panelw, panelh = 768;
 		if (renderViewportIsWideScreen == 1) {
 			offset1 = 103;
 			offset2 = 205;
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE_WIDE));
+			panelw = 1229;
 		} else if (renderViewportIsWideScreen == 2) {
 			offset1 = 171;
 			offset2 = 342;
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE_16_9));
+			panelw = 1366;
 		} else {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE));
+			panelw = 1024;
 		}
 		if ( !hBmp ) {
 			return false;
 		}
+
+		double panelscale = oapiGetPanelScale(), hscale = panelscale, vscale = panelscale;
+		DWORD screenw, screenh;
+		oapiGetViewportSize(&screenw, &screenh);
+		if (screenw > panelw*panelscale) hscale = ((double)screenw) / panelw;
+		if (screenh > panelh*panelscale) vscale = ((double)screenh) / panelh;
+		PanelPixelHeight = ((double)screenh) / (min(hscale, vscale));
 
 		oapiSetPanelNeighbours(SATPANEL_SEXTANT, -1, SATPANEL_GN, SATPANEL_GN);
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
@@ -1429,10 +1474,14 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea (AID_OPTICSCLKAREATELE,			_R(0, 0, 10, 10),								PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(0.0, 0.53765284, 0.84316631));
+		SetCameraDefaultDirection(_V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN));
 		oapiCameraSetCockpitDir(0,0);
-		SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);			
+		SetCameraCatchAngle(0.0);
+		SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);
 	}
+
+	if (id != SATPANEL_SEXTANT && id != SATPANEL_TELESCOPE)
+		SetCameraCatchAngle(5.0*RAD);
 
 	InitPanel (id);
 
@@ -1727,6 +1776,9 @@ void Saturn::SetSwitches(int panel) {
 	//
 	// SATPANEL_MAIN
 	//
+
+	fdaiLeft.Init(this);
+	fdaiRight.Init(this);
 
 	MasterAlarmSwitchRow.Init(0, MainPanel);
 	MasterAlarmSwitch.Init(&cws);
@@ -2760,7 +2812,7 @@ void Saturn::SetSwitches(int panel) {
 	VHFStationAudioLCB.Init		(170, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightPostLandingBus, 5.0);
 	VHFStationAudioCTRCB.Init	(170, 354, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightPostLandingBus, 5.0);
 	VHFStationAudioRCB.Init		(170, 313, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightPostLandingBus, 5.0);
-	UDLCB.Init					(170, 272, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	UDLCB.Init					(170, 272, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
 	HGAFLTBus1CB.Init			(170, 231, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
 	HGAGroup2CB.Init			(171, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &TelcomGroup2Switch, 2.0);
 	SBandFMXMTRFLTBusCB.Init	(171,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
@@ -2849,9 +2901,9 @@ void Saturn::SetSwitches(int panel) {
 	PyroASeqACircuitBraker.Init				( 55, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, PyroBatteryA, 20.0);
 	BatBusBToPyroBusTieCircuitBraker.Init	(115, 0, 29, 29, srf[SRF_CIRCUITBRAKER_YELLOW], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatteryBusB, 20.0);
 	PyroBSeqBCircuitBraker.Init				(170, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, PyroBatteryB, 20.0);
-	BatAPWRCircuitBraker.Init				(246, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, EntryBatteryA, 80.0);
-	BatBPWRCircuitBraker.Init				(304, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, EntryBatteryB, 80.0);
-	BatCPWRCircuitBraker.Init				(362, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, EntryBatteryC, 80.0);
+	BatAPWRCircuitBraker.Init				(246, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, DiodeBatA, 80.0);
+	BatBPWRCircuitBraker.Init				(304, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, DiodeBatB, 80.0);
+	BatCPWRCircuitBraker.Init				(362, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, DiodeBatC, 80.0);
 	BatCtoBatBusACircuitBraker.Init			(420, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatCPWRCircuitBraker, 80.0);
 	BatCtoBatBusBCircuitBraker.Init			(478, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatCPWRCircuitBraker, 80.0);
 	BatCCHRGCircuitBraker.Init				(526, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatCPWRCircuitBraker, 10.0);
@@ -2946,7 +2998,7 @@ void Saturn::SetSwitches(int panel) {
 	//
 
 	LeftCOASPowerSwitchRow.Init(AID_LEFTCOASSWITCH, MainPanel);
-	LeftCOASPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20LEFT], srf[SRF_BORDER_34x31], LeftCOASPowerSwitchRow);
+	LeftCOASPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20LEFT], srf[SRF_BORDER_34x31], LeftCOASPowerSwitchRow, this);
 
 	LeftUtilityPowerSwitchRow.Init(AID_LEFTTUTILITYPOWERSWITCH, MainPanel);
 	LeftUtilityPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20LEFT], srf[SRF_BORDER_34x31], LeftUtilityPowerSwitchRow);
@@ -3065,8 +3117,8 @@ void Saturn::SetSwitches(int panel) {
 	FloodFixedSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FloodFixedSwitchRow);
 
 	ReactionControlSystemCircuitBrakerRow.Init(AID_REACTIONCONTROLSYSTEMCIRCUITBREAKERS, MainPanel);
-	CMHeater1MnACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnAGroup5CircuitBraker);
-	CMHeater2MnBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnBGroup5CircuitBraker);
+	CMHeater1MnACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnAGroup5CircuitBraker, 20.0);
+	CMHeater2MnBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnBGroup5CircuitBraker, 20.0);
 	SMHeatersAMnBCircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnBGroup3CircuitBraker, 7.5);
 	SMHeatersCMnBCircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnBGroup1CircuitBraker, 7.5);
 	SMHeatersBMnACircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnAGroup3CircuitBraker, 7.5);
@@ -3374,7 +3426,7 @@ void Saturn::SetSwitches(int panel) {
 	PLVCSwitch.Init(0, 0, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], PLVCSwitchRow); 
 
 	///////////////
-	// Panel 252 //
+	// Panel 352 //
 	///////////////
 	
 	WaterControlPanelRow.Init(AID_PANEL_352, MainPanel);
@@ -3506,6 +3558,8 @@ void Saturn::SetSwitches(int panel) {
 	ASCPRollSwitch.Init(GDCAlignButtonRow, this, 0); 	// dummy switch/display for checklist controller, GDCAlignButtonRow is arbitrary
 	ASCPPitchSwitch.Init(GDCAlignButtonRow, this, 1);
 	ASCPYawSwitch.Init(GDCAlignButtonRow, this, 2);
+
+	Altimeter.Init(srf[SRF_ALTIMETER], srf[SRF_ALTIMETER2], this);
 }
 
 void SetupgParam(HINSTANCE hModule) {
@@ -4004,22 +4058,22 @@ void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 	}
 	//Reaction valves for Apollo 13 and before were wired in series with the indicators so both valves had to close before the talkback would barberpole
 	else if (s == &FuelCellReactants1Indicator) {
-		if ((*(int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:IN:ISOPEN") == 0) &&
-			(*(int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN:ISOPEN") == 0) &&
+		if ((FuelCellH2Manifold[0]->IN_valve.open == 0) &&
+			(FuelCellO2Manifold[0]->IN_valve.open == 0) &&
 			FuelCell1BusContCB.IsPowered()) FuelCellReactants1Indicator.SetState(0);
 		else FuelCellReactants1Indicator.SetState(1);
 
 	}
 	else if (s == &FuelCellReactants2Indicator) {
-		if ((*(int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:IN:ISOPEN") == 0) &&
-			(*(int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:IN:ISOPEN") == 0) &&
+		if ((FuelCellH2Manifold[1]->IN_valve.open == 0) &&
+			(FuelCellO2Manifold[1]->IN_valve.open == 0) &&
 			FuelCell2BusContCB.IsPowered()) FuelCellReactants2Indicator.SetState(0);
 		else FuelCellReactants2Indicator.SetState(1);
 
 	}
 	else if (s == &FuelCellReactants3Indicator) {
-		if ((*(int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:IN:ISOPEN") == 0) &&
-			(*(int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN:ISOPEN") == 0) &&
+		if ((FuelCellH2Manifold[2]->IN_valve.open == 0) &&
+			(FuelCellO2Manifold[2]->IN_valve.open == 0) &&
 			FuelCell3BusContCB.IsPowered()) FuelCellReactants3Indicator.SetState(0);
 		else FuelCellReactants3Indicator.SetState(1);
 
@@ -4507,6 +4561,9 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		if (optics.OpticsCovered && stage >= LAUNCH_STAGE_ONE) {
 			oapiBlt(surf,srf[SRF_CSM_TELESCOPECOVER], 0, 0, 0, 0, 536, 535);
 		}
+
+		drawReticle(surf, optics.TeleShaft, PanelPixelHeight, ReticleLineCnt[0], ReticleLineLen[0], ReticleLine[0], ReticlePoint);
+
 		return true;
 
 	case AID_CSM_SEXTANTCOVER:
@@ -4514,6 +4571,9 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		if (optics.OpticsCovered && stage >= LAUNCH_STAGE_ONE) {
 			oapiBlt(surf,srf[SRF_CSM_SEXTANTCOVER], 0, 0, 0, 0, 535, 535);
 		}
+
+		drawReticle(surf, optics.SextShaft, PanelPixelHeight, ReticleLineCnt[1], ReticleLineLen[1], ReticleLine[1], ReticlePoint);
+
 		return true;
 
 	case AID_DSKY_LIGHTS:
@@ -4568,36 +4628,32 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_FDAI_LEFT:
 		if (!fdaiDisabled){  // Is this FDAI enabled?
 			VECTOR3 euler_rates;
-			VECTOR3 attitude;
 			VECTOR3 errors;
 
 			euler_rates = eda.GetFDAI1AttitudeRate();
-			attitude = eda.GetFDAI1Attitude();
 			errors = eda.GetFDAI1AttitudeError();
 
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiLeft.PaintMe(attitude, 0, euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
+			fdaiLeft.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
 		}
 		return true;
 
 	case AID_FDAI_RIGHT:
 		if (!fdaiDisabled){  // Is this FDAI enabled?
 			VECTOR3 euler_rates;
-			VECTOR3 attitude;
 			VECTOR3 errors;
 
 			euler_rates = eda.GetFDAI2AttitudeRate();
-			attitude = eda.GetFDAI2Attitude();
 			errors = eda.GetFDAI2AttitudeError();
 
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiRight.PaintMe(attitude, 0, euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiRight.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 
@@ -4610,7 +4666,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_ABORT_LIGHT:
-		if ((secs.AbortLightPowerA() && ((cws.UplinkTestState & 001) != 0)) || ((secs.AbortLightPowerB() && ((cws.UplinkTestState & 002) != 0))) || (iuCommandConnector.GetAbortLight())) {
+		if ((secs.AbortLightPowerA() && udl.GetAbortLightA()) || ((secs.AbortLightPowerB() && udl.GetAbortLightB())) || (iuCommandConnector.GetAbortLight())) {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 62, 0, 62, 31);
 		} else {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 0, 0, 62, 31);
@@ -4714,18 +4770,18 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	// OPTICS
 	case AID_OPTICSCLKAREASEXT:
 		if (optics.SextDualView && optics.SextDVLOSTog){
-			oapiCameraSetCockpitDir (-optics.OpticsShaft,-PI/2.,true); //when both are true show fixed line of sight
+			setCameraLOS(optics.SextShaft, 0.0);
 		}
 		else
 		{
-			oapiCameraSetCockpitDir (-optics.OpticsShaft, optics.SextTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
+			setCameraLOS(optics.SextShaft, optics.SextTrunion);
 		}
 		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft/RAD, optics.SextTrunion/RAD);
 		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft, optics.SextTrunion);
 		return true;
 
 	case AID_OPTICSCLKAREATELE:
-		oapiCameraSetCockpitDir (-optics.OpticsShaft, optics.TeleTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
+		setCameraLOS(optics.TeleShaft, optics.TeleTrunion);
 		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft/RAD, optics.TeleTrunion/RAD);
 		return true;
 
@@ -4754,11 +4810,11 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_ALTIMETER:
-		RedrawPanel_Alt(surf);
+		Altimeter.RedrawPanel_Alt(surf);
 		return true;
 
 	case AID_ALTIMETER2:
-		RedrawPanel_Alt2(surf);
+		Altimeter.RedrawPanel_Alt2(surf);
 		return true;
 
 	case AID_MASTER_ALARM:

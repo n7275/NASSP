@@ -35,13 +35,44 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 {
 	char uplinkdata[1024 * 3];
 
-	double AGCEpoch = 39856.0;
 	MATRIX3 REFSMMAT = _M(0.749669954748883, -0.141831590016531, 0.646435425251580, 0.318362144838044, 0.933611208066774, -0.16436435, -0.580207293715727, 0.329019622888181, 0.74505405);
-	REFSMMAT = mul(REFSMMAT, OrbMech::J2000EclToBRCS(AGCEpoch));
+	REFSMMAT = mul(REFSMMAT, SystemParameters.MAT_J2000_BRCS);
 
 	switch (fcn)
 	{
-	case 1: //RCS BURN 1 ATTITUDE
+	case 1: //MISSION INITIALIZATION
+	{
+		char Buff[128];
+
+		//P80 MED: mission initialization
+		sprintf_s(Buff, "P80,1,LEM,%d,%d,%d;", GZGENCSN.MonthofLiftoff, GZGENCSN.DayofLiftoff, GZGENCSN.Year);
+		GMGMED(Buff);
+
+		//P10 MED: Enter actual liftoff time
+		int hh, mm;
+		double ss;
+
+		hh = 22;
+		mm = 48;
+		ss = 9.0;
+
+		sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hh, mm, ss); //TBD: Should be LEM
+		GMGMED(Buff);
+
+		//P15: CMC, LGC and AGS clock zero
+		sprintf_s(Buff, "P15,LGC,%d:%d:%.2lf;", hh, mm, ss);
+		GMGMED(Buff);
+
+		//P12: IU GRR and Azimuth
+		double Azi = 72.0;
+		hh = 22;
+		mm = 47;
+		ss = 52.0;
+		sprintf_s(Buff, "P12,IU1,%d:%d:%.2lf,%.2lf;", hh, mm, ss, Azi);
+		GMGMED(Buff);
+	}
+	break;
+	case 2: //RCS BURN 1 ATTITUDE
 	{
 		AP11LMManPADOpt opt;
 		AP11LMMNV manpad;
@@ -71,7 +102,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 2: //CONFIGURE FOR SYSTEM B DEPLETION
+	case 3: //CONFIGURE FOR SYSTEM B DEPLETION
 	{
 		char buffer1[1000];
 		char buffer2[1000];
@@ -87,7 +118,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 3: //PLUS X TRANSLATION ON
+	case 4: //PLUS X TRANSLATION ON
 	{
 		char buffer1[1000];
 
@@ -101,7 +132,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 4: //PLUS X TRANSLATION OFF
+	case 5: //PLUS X TRANSLATION OFF
 	{
 		char buffer1[1000];
 
@@ -115,7 +146,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 5: //CONFIGURE FOR NORMAL RCS A OPERATION
+	case 6: //CONFIGURE FOR NORMAL RCS A OPERATION
 	{
 		char buffer1[1000];
 		char buffer2[1000];
@@ -131,7 +162,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 6: //RCS BURN 2 ATTITUDE
+	case 7: //RCS BURN 2 ATTITUDE
 	{
 		AP11LMManPADOpt opt;
 		AP11LMMNV manpad;
@@ -161,7 +192,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 7: //X-FEED OPEN
+	case 8: //X-FEED OPEN
 	{
 		char buffer1[1000];
 		SunburstLMPCommand(buffer1, 252);
@@ -174,7 +205,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 8: //ERRONEOUS LM WEIGHT
+	case 9: //ERRONEOUS LM WEIGHT
 	{
 		char buffer1[1000];
 		SunburstMassUpdate(buffer1, 4716.0);
@@ -187,7 +218,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 9: //RCS BURN 5 ATTITUDE
+	case 10: //RCS BURN 5 ATTITUDE
 	{
 		AP11LMManPADOpt opt;
 		AP11LMMNV manpad;

@@ -39,7 +39,8 @@
 #include "saturn.h"
 #include "ioChannels.h"
 #include "papi.h"
-#include "thread.h"
+#include <thread>
+#include <mutex>
 
 CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) :
 	ApolloGuidance(s, display, im, sc, tc, p), dsky2(display2)
@@ -111,7 +112,7 @@ void CSMcomputer::Run ()
 		{
 			timeStepEvent.Wait();
 			{
-				Lock lock(agcCycleMutex);
+				std::lock_guard<std::mutex> guard(agcCycleMutex);
 				agcTimestep(thread_simt,thread_simdt);
 			}
 		}
@@ -177,10 +178,12 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// Turn on EL display and CMC Light (DSKYWarn).
 			vagc.DskyChannel163 = 1;
 			SetOutputChannel(0163, 1);
-			// Light OSCILLATOR FAILURE to signify power transient, and be forceful about it.
+			// Light OSCILLATOR FAILURE and VOLTAGE FAIL to signify power transient, and be forceful about it.
 			vagc.InputChannel[033] &= 037777;
 			OutputChannel[033] &= 037777;
-			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
+			vagc.InputChannel[077] |= 040;
+			OutputChannel[077] |= 040;
+			// Also turn off STBY and RESTART light while power is off.
 			// The RESTART light will come on as soon as the AGC receives power again.
 			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 			vagc.RestartLight = 1;
@@ -211,7 +214,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
 			vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
 
-			if (ProgramName == "Colossus237" || ProgramName == "Colossus249" || ProgramName == "Comanche055NBY69")
+			if (ProgramName == "Colossus237" || ProgramName == "Colossus249" || ProgramName == "Manche45R2")
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
@@ -286,14 +289,14 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		//
 		if(sat->IsMultiThread && oapiGetTimeAcceleration() > 1.0)
 		{
-			
-			Lock lock(agcCycleMutex);
+			std::lock_guard<std::mutex> guard(agcCycleMutex);
 			thread_simt = simt;
 			thread_simdt = simdt;
 			timeStepEvent.Raise();
+		} else {
+			std::lock_guard<std::mutex> guard(agcCycleMutex);
+			agcTimestep(simt, simdt);
 		}
-		else
-			agcTimestep(simt,simdt);
 
 		//
 		// Check nonspherical gravity sources
@@ -591,9 +594,12 @@ VESSEL *CSMcomputer::GetLM()
 CMOptics::CMOptics() {
 
 	sat = NULL;
-	OpticsShaft = 0.0;
+	SextShaft = 0.0;
+	TeleShaft = 0.0;
 	SextTrunion = 0.0;
 	TeleTrunion = 0.0;
+	TeleShaftRate = 0.0;
+	TeleTrunionRate = 0.0;
 	dTrunion = 0.0;
 	dShaft = 0.0;
 	OpticsManualMovement = 0;
@@ -644,36 +650,49 @@ void CMOptics::SystemTimestep(double simdt) {
 // The counters are mechanically connected to the telescope, so it is assumed to be decimal degrees.
 
 bool CMOptics::PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits){
-	int value = (int)(OpticsShaft*100.0*DEG);
+	int value = (int)(TeleShaft*100.0*DEG);
 	if (value < 0) { value += 36000; }
 	return PaintDisplay(surf, digits, value);
 }
 
 bool CMOptics::PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits){
-	int value = (int)(TeleTrunion*1000.0*DEG);
+	int value = (int)(TeleTrunion*100.0*DEG);
 	if (value < 0) { value += 36000; }
 	return PaintDisplay(surf, digits, value);
 }
 
 bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value){
 	int srx, sry, digit[5];
-	int x=value;	
+	int x=value;
 	digit[0] = (x%10);
 	digit[1] = (x%100)/10;
 	digit[2] = (x%1000)/100;
 	digit[3] = (x%10000)/1000;
 	digit[4] = x/10000;
-	sry = (int)(digit[0] * 1.2);
+
 	srx = 8 + (digit[4] * 25);
-	oapiBlt(surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	if (digit[4])
+		sry = 33;
+	else
+		sry = 22;
+	oapiBlt(surf, digits, 0, 0, srx, sry, 9, 12, SURF_PREDEF_CK);
+
 	srx = 8 + (digit[3] * 25);
-	oapiBlt(surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	if (digit[4] || digit[3])
+		sry = 33;
+	else
+		sry = 22;
+	oapiBlt(surf, digits, 10, 0, srx, sry, 9, 12, SURF_PREDEF_CK);
+
 	srx = 8 + (digit[2] * 25);
 	oapiBlt(surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
 	srx = 8 + (digit[1] * 25);
 	oapiBlt(surf, digits, 30, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
 	srx = 8 + (digit[0] * 25);
+	sry = (int)(digit[0] * 1.2);
 	oapiBlt(surf, digits, 40, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+
+	oapiColourFill(surf, oapiGetColour(255, 255, 255), 29, 5, 1, 2);
 	return true;
 }
 
@@ -710,7 +729,7 @@ void CMOptics::TimeStep(double simdt) {
 
 	// Optics cover handling
 	if (OpticsCovered && sat->GetStage() >= STAGE_ORBIT_SIVB) {
-		if (OpticsShaft > 150. * RAD) {
+		if (TeleShaft > 150. * RAD) {
 			OpticsCovered = false;			
 			sat->SetOpticsCoverMesh();
 			sat->JettisonOpticsCover();
@@ -723,7 +742,7 @@ void CMOptics::TimeStep(double simdt) {
 	if (sat->OpticsZeroSwitch.IsUp())
 	{
 		//Optics zero speed is twice the angle, limit to max drive rate
-		ShaftRate = min(abs(2.0*OpticsShaft), 19.5*RAD);
+		ShaftRate = min(abs(2.0*SextShaft), 19.5*RAD);
 		TrunRate = min(abs(2.0*SextTrunion), 10.0*RAD);
 	}
 	else
@@ -751,7 +770,7 @@ void CMOptics::TimeStep(double simdt) {
 	//ZERO OPTICS
 	if (sat->OpticsZeroSwitch.IsUp())
 	{
-		if (OpticsShaft > 0)
+		if (SextShaft > 0)
 		{
 			dShaft = -ShaftRate * simdt;
 		}
@@ -799,8 +818,8 @@ void CMOptics::TimeStep(double simdt) {
 			// RESOLVED
 			else
 			{
-				dShaft += (A_s_dot*cos(OpticsShaft) - A_t_dot * sin(OpticsShaft)) / max(sin(10.0*RAD), sin(SextTrunion));
-				dTrunion += A_s_dot * sin(OpticsShaft) + A_t_dot * cos(OpticsShaft);
+				dShaft += (A_s_dot*cos(SextShaft) - A_t_dot * sin(SextShaft)) / max(sin(10.0*RAD), sin(SextTrunion));
+				dTrunion += A_s_dot * sin(SextShaft) + A_t_dot * cos(SextShaft);
 			}
 		}
 
@@ -815,21 +834,21 @@ void CMOptics::TimeStep(double simdt) {
 		//sprintf(oapiDebugString(), "Trun: %lf %d Shaft: %lf %d", dTrunion / simdt * DEG, sat->tcdu.GetErrorCounter(), dShaft / simdt * DEG, sat->scdu.GetErrorCounter());
 	}
 
-	OpticsShaft += dShaft;
+	SextShaft += dShaft;
 	SextTrunion += dTrunion;
 
 	//Limits
-	if (OpticsShaft > 270.0*RAD)
+	if (SextShaft > 270.0*RAD)
 	{
-		OpticsShaft = 270.0*RAD;
+		SextShaft = 270.0*RAD;
 	}
-	if (OpticsShaft < -270.0*RAD)
+	if (SextShaft < -270.0*RAD)
 	{
-		OpticsShaft = -270.0*RAD;
+		SextShaft = -270.0*RAD;
 	}
-	if (SextTrunion < 0.0)
+	if (SextTrunion < -59.0*RAD)
 	{
-		SextTrunion = 0.0;
+		SextTrunion = -59.0*RAD;
 	}
 	if (SextTrunion > 59.0*RAD)
 	{
@@ -837,7 +856,7 @@ void CMOptics::TimeStep(double simdt) {
 	}
 
 	sat->tcdu.SetReadCounter(SextTrunion * 4.0);
-	sat->scdu.SetReadCounter(OpticsShaft);
+	sat->scdu.SetReadCounter(SextShaft);
 
 	//sprintf(oapiDebugString(), "%d %d", sat->tcdu.GetErrorCounter(), sat->scdu.GetErrorCounter());
 
@@ -854,15 +873,56 @@ void CMOptics::TimeStep(double simdt) {
 			TeleTrunionTarget = 0;
 			break;
 		case THREEPOSSWITCH_DOWN:		// OFFSET 25 DEG
-			TeleTrunionTarget = SextTrunion + 0.218166156; // Add 12.5 degrees to sextant angle
+			TeleTrunionTarget = SextTrunion + 25.0*RAD;
 			break;
 	}
 
-	//Roughly from the transfer function (Apollo 15 Delco manual)
-	TeleTrunion += (TeleTrunionTarget - TeleTrunion)*2.0*simdt;
+	//Telescope Servo Drive
+	TelescopeServoDrive(simdt, TeleTrunionTarget, TeleTrunion, TeleTrunionRate);
+	TelescopeServoDrive(simdt, SextShaft, TeleShaft, TeleShaftRate);
+	//sprintf(oapiDebugString(), "TA %lf %lf %lf SH %lf %lf %lf", TeleTrunionTarget*DEG, TeleTrunion*DEG, TeleTrunionRate*DEG, SextShaft*DEG, TeleShaft*DEG, TeleShaftRate*DEG);
+
+	//Limits
+	if (TeleShaft > 270.0*RAD)
+	{
+		TeleShaft = 270.0*RAD;
+		TeleShaftRate = 0.0;
+	}
+	if (TeleShaft < -270.0*RAD)
+	{
+		TeleShaft = -270.0*RAD;
+		TeleShaftRate = 0.0;
+	}
+	if (TeleTrunion < -59.0*RAD)
+	{
+		TeleTrunion = -59.0*RAD;
+		TeleTrunionRate = 0.0;
+	}
+	if (TeleTrunion > 59.0*RAD)
+	{
+		TeleTrunion = 59.0*RAD;
+		TeleTrunionRate = 0.0;
+	}
 
 	//sprintf(oapiDebugString(), "Optics Shaft %.2f, Sext Trunion %.2f, Tele Trunion %.2f", OpticsShaft/RAD, SextTrunion/RAD, TeleTrunion/RAD);
 	//sprintf(oapiDebugString(), "Sext Trunion EMEM %o", sat->agc.vagc.Erasable[0][RegOPTY]);
+}
+
+void CMOptics::TelescopeServoDrive(double dt, double sxt_angle, double &sct_angle, double &sct_rate)
+{
+	//Direct solution of the transfer function in the Apollo 15 Delco manual
+	double C1, C2, TEMP1, TEMP2, TEMP3;
+	static const double SCT_SERVO_CONST1 = 1.98673;
+	static const double SCT_SERVO_CONST2 = 1.77;
+
+	C2 = sct_angle - sxt_angle;
+	C1 = (sct_rate + SCT_SERVO_CONST2 * C2) / SCT_SERVO_CONST1;
+	TEMP3 = exp(-SCT_SERVO_CONST2 * dt);
+	TEMP1 = TEMP3 * sin(SCT_SERVO_CONST1*dt);
+	TEMP2 = TEMP3 * cos(SCT_SERVO_CONST1*dt);
+
+	sct_rate = -SCT_SERVO_CONST2 * C1*TEMP1 + SCT_SERVO_CONST1 * C1*TEMP2 - SCT_SERVO_CONST1 * C2*TEMP1 - SCT_SERVO_CONST2 * C2*TEMP2;
+	sct_angle = sxt_angle + C1 * TEMP1 + C2 * TEMP2;
 }
 
 void CMOptics::SaveState(FILEHANDLE scn) {
@@ -870,8 +930,9 @@ void CMOptics::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, CMOPTICS_START_STRING);
 	oapiWriteScenario_int(scn, "POWERED", Powered);
 	oapiWriteScenario_int(scn, "OPTICSMANUALMOVEMENT", OpticsManualMovement);
-	papiWriteScenario_double(scn, "OPTICSSHAFT", OpticsShaft);
+	papiWriteScenario_double(scn, "OPTICSSHAFT", SextShaft); //Keep it named OPTICSSHAFT for backwards compatibility
 	papiWriteScenario_double(scn, "SEXTTRUNION", SextTrunion);
+	papiWriteScenario_double(scn, "TELESHAFT", TeleShaft);
 	papiWriteScenario_double(scn, "TELETRUNION", TeleTrunion);
 	papiWriteScenario_bool(scn, "OPTICSCOVERED", OpticsCovered); 
 	oapiWriteLine(scn, CMOPTICS_END_STRING);
@@ -891,10 +952,13 @@ void CMOptics::LoadState(FILEHANDLE scn) {
 			sscanf (line+20, "%d", &OpticsManualMovement);
 		}
 		else if (!strnicmp (line, "OPTICSSHAFT", 11)) {
-			sscanf (line+11, "%lf", &OpticsShaft);
+			sscanf (line+11, "%lf", &SextShaft);
 		}
 		else if (!strnicmp (line, "SEXTTRUNION", 11)) {
 			sscanf (line+11, "%lf", &SextTrunion);
+		}
+		else if (!strnicmp(line, "TELESHAFT", 9)) {
+			sscanf(line + 9, "%lf", &TeleShaft);
 		}
 		else if (!strnicmp (line, "TELETRUNION", 11)) {
 			sscanf (line+11, "%lf", &TeleTrunion);

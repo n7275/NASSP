@@ -759,7 +759,7 @@ void LEM::InitSwitches() {
 	LMPBatteryFeedTieCB2.Register(PSH, "LMPBatteryFeedTieCB2", 1);
 
 	LEMCoas1Enabled = false;
-	LEMCoas2Enabled = true;
+	LEMCoas2Enabled = false;
 	ordealEnabled = false;
 
 	RRGyroSelSwitch.Register(PSH,"RRGyroSelSwitch",THREEPOSSWITCH_UP);
@@ -1158,17 +1158,6 @@ void DrawNeedle (HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPE
 	SelectObject (hDC, oldObj);
 }
 
-void LEM::RedrawPanel_Thrust (SURFHANDLE surf)
-
-{
-	double DispValue;
-
-	DispValue = GetEngineLevel(ENGINE_HOVER);
-
-	oapiBlt(surf,srf[SRF_NEEDLE],1,(int)(67-(DispValue)*67),0,0,7,7, SURF_PREDEF_CK);//
-	oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
-}
-
 void LEM::RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf) {
 
 	int ix, iy;
@@ -1228,15 +1217,6 @@ void LEM::ReleaseSurfaces ()
 	for (int i = 0; i < nsurf; i++)
 		if (srf[i]) {
 			oapiDestroySurface (srf[i]);
-			srf[i] = 0;
-		}
-}
-
-void LEM::ReleaseSurfacesVC()
-{
-	for (int i = 0; i < nsurfvc; i++)
-		if (srf[i]) {
-			oapiDestroySurface(srf[i]);
 			srf[i] = 0;
 		}
 }
@@ -1493,33 +1473,6 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_286x197], g_Param.col[4]);
 
     SetSwitches(panel);
-}
-
-void LEM::InitPanelVC() {
-
-	// LM VC surfaces
-
-	srf[SRF_VC_DIGITALDISP] = oapiLoadTexture("ProjectApollo/VC/digitaldisp.dds");
-	srf[SRF_VC_DIGITALDISP2] = oapiLoadTexture("ProjectApollo/VC/digitaldisp_2.dds");
-	srf[SRF_VC_DSKYDISP] = oapiLoadTexture("ProjectApollo/VC/dsky_disp.dds");
-	srf[SRF_VC_DSKY_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/dsky_lights.dds");
-	srf[SRF_VC_RADAR_TAPEA] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales_a.dds");
-	srf[SRF_VC_RADAR_TAPEB] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales_b.dds");
-	srf[SRF_VC_RADAR_TAPE2] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales2.dds");
-	srf[SFR_VC_CW_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/lem_cw_lights.dds");
-	srf[SRF_INDICATORVC] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
-	srf[SRF_INDICATORREDVC] = oapiLoadTexture("ProjectApollo/VC/IndicatorRed.dds");
-	srf[SRF_LEM_MASTERALARMVC] = oapiLoadTexture("ProjectApollo/VC/lem_master_alarm.dds");
-	srf[SRF_DEDA_LIGHTSVC] = oapiLoadTexture("ProjectApollo/VC/ags_lights.dds");
-
-	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP], g_Param.col[4]);
-	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP2], g_Param.col[4]);
-	oapiSetSurfaceColourKey(srf[SRF_VC_DSKYDISP], g_Param.col[4]);
-	oapiSetSurfaceColourKey(srf[SRF_VC_DSKY_LIGHTS], g_Param.col[4]);
-	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPEA], g_Param.col[4]);
-	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPEB], g_Param.col[4]);
-	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPE2], g_Param.col[4]);
-	oapiSetSurfaceColourKey(srf[SFR_VC_CW_LIGHTS], g_Param.col[4]);
 }
 
 bool LEM::clbkLoadPanel (int id) {
@@ -1958,6 +1911,9 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_DOCKVIEW: // LEM Docking View
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
+		//If a panel has no panel area at all then Orbiter doesn't get rid of the panel areas from the previous panel when the new one is loaded. Orbiter bug?
+		oapiRegisterPanelArea(AID_DUMMY_PANEL_AREA, _R(10, 10, 20, 20), PANEL_REDRAW_NEVER, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+
 		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
 		oapiCameraSetCockpitDir(0, 0);
 		break;
@@ -1973,6 +1929,9 @@ bool LEM::clbkLoadPanel (int id) {
 
 	case LMPANEL_LEFTZOOM: // LEM Left Window COAS View
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
+
+		//If a panel has no panel area at all then Orbiter doesn't get rid of the panel areas from the previous panel when the new one is loaded. Orbiter bug?
+		oapiRegisterPanelArea(AID_DUMMY_PANEL_AREA, _R(10, 10, 20, 20), PANEL_REDRAW_NEVER, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0, 0);
@@ -2042,6 +2001,9 @@ bool LEM::clbkLoadPanel (int id) {
 void LEM::SetSwitches(int panel) {
 
 	MainPanel.Init(0, this, &soundlib, this);
+
+	fdaiLeft.Init(this);
+	fdaiRight.Init(this);
 
 	MainPropOxidPercentRow.Init(AID_MPS_OXID_QUANTITY_INDICATOR, MainPanel);
 	DPSOxidPercentMeter.Init(srf[SRF_DIGITALDISP2], MainPropOxidPercentRow, this);
@@ -2228,7 +2190,7 @@ void LEM::SetSwitches(int panel) {
 
 	ModeControlSwitchesRow.Init(AID_MODECONTROL, MainPanel);
 
-	ModeControlPGNSSwitch.Init(0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeControlSwitchesRow, &agc);
+	ModeControlPGNSSwitch.Init(0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeControlSwitchesRow);
 	ModeControlAGSSwitch.Init(93, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeControlSwitchesRow);
 
 	IMUCageSwitch.Init(191, 0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], ModeControlSwitchesRow, &imu);
@@ -2454,25 +2416,25 @@ void LEM::SetSwitches(int panel) {
 	EPSMonitorSelectRotary.Init(117, 17, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], EPSLeftControlArea);
 
 	DSCHiVoltageSwitchRow.Init(AID_DSC_HIGH_VOLTAGE_SWITCHES, MainPanel);
-	DSCSEBat1HVSwitch.Init(0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this, &ECA_1a, 1, 0);
+	DSCSEBat1HVSwitch.Init(0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow);
 	DSCSEBat1HVSwitch.SetDelayTime(1);
-	DSCSEBat2HVSwitch.Init(69, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this, &ECA_1b, 1, 0);
+	DSCSEBat2HVSwitch.Init(69, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow);
 	DSCSEBat2HVSwitch.SetDelayTime(1);
-	DSCCDRBat3HVSwitch.Init(151, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this, &ECA_2a, 1, 0);
+	DSCCDRBat3HVSwitch.Init(151, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow);
 	DSCCDRBat3HVSwitch.SetDelayTime(1);
-	DSCCDRBat4HVSwitch.Init(220, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this, &ECA_2b, 1, 0);
+	DSCCDRBat4HVSwitch.Init(220, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow);
 	DSCCDRBat4HVSwitch.SetDelayTime(1);
-	DSCBattFeedSwitch.Init(291, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], DSCHiVoltageSwitchRow, this);
+	DSCBattFeedSwitch.Init(291, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], DSCHiVoltageSwitchRow);
 	DSCBattFeedSwitch.SetDelayTime(1);
 
 	DSCLoVoltageSwitchRow.Init(AID_DSC_LOW_VOLTAGE_SWITCHES, MainPanel);
-	DSCSEBat1LVSwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow, this, &ECA_1a, 2, 0);
+	DSCSEBat1LVSwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow);
 	DSCSEBat1LVSwitch.SetDelayTime(1);
-	DSCSEBat2LVSwitch.Init(69, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow, this, &ECA_1b, 2, 0);
+	DSCSEBat2LVSwitch.Init(69, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow);
 	DSCSEBat2LVSwitch.SetDelayTime(1);
-	DSCCDRBat3LVSwitch.Init(151, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow, this, &ECA_2a, 2, 0);
+	DSCCDRBat3LVSwitch.Init(151, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow);
 	DSCCDRBat3LVSwitch.SetDelayTime(1);
-	DSCCDRBat4LVSwitch.Init(220, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow, this, &ECA_2b, 2, 0);
+	DSCCDRBat4LVSwitch.Init(220, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow);
 	DSCCDRBat4LVSwitch.SetDelayTime(1);
 
 	DSCBatteryTBSwitchRow.Init(AID_DSC_BATTERY_TALKBACKS, MainPanel);
@@ -2489,13 +2451,13 @@ void LEM::SetSwitches(int panel) {
 	ASCBattery6BTB.Init(221, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 12), false);
 
 	ASCBatterySwitchRow.Init(AID_ASC_BATTERY_SWITCHES, MainPanel);
-	ASCBat5SESwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this, &ECA_3a, 1, 1);
+	ASCBat5SESwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow);
 	ASCBat5SESwitch.SetDelayTime(1);
-	ASCBat5CDRSwitch.Init(69, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this, &ECA_3b, 1, 1);
+	ASCBat5CDRSwitch.Init(69, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow);
 	ASCBat5CDRSwitch.SetDelayTime(1);
-	ASCBat6CDRSwitch.Init(138, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this, &ECA_4a, 1, 1);
+	ASCBat6CDRSwitch.Init(138, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow);
 	ASCBat6CDRSwitch.SetDelayTime(1);
-	ASCBat6SESwitch.Init(221, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this, &ECA_4b, 1, 1);
+	ASCBat6SESwitch.Init(221, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow);
 	ASCBat6SESwitch.SetDelayTime(1);
 	UpDataSquelchSwitch.Init(295, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ASCBatterySwitchRow);
 
@@ -2723,7 +2685,7 @@ void LEM::SetSwitches(int panel) {
 	CDRAudICSVol.Init(858, 91, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
 	CDRAudMasterVol.Init(963, 258, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
 	CDRAudVOXSens.Init(963, 158, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
-	CDRCOASSwitch.Init(1063, 266, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x29], Panel8SwitchRow);
+	CDRCOASSwitch.Init(1063, 266, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x29], Panel8SwitchRow, this);
 
 	ORDEALSwitchesRow.Init(AID_ORDEALSWITCHES, MainPanel);
 	ORDEALFDAI1Switch.Init(55, 43, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
@@ -2788,7 +2750,7 @@ void LEM::SetSwitches(int panel) {
 
     // Upper Hatch
     UpperHatchHandleSwitchRow.Init(AID_LEM_UPPER_HATCH_HANDLE, MainPanel);
-    UpperHatchHandle.Init(0, 0, 286, 197, srf[SRF_LEM_U_HATCH_HNDL], srf[SRF_BORDER_286x197], UpperHatchHandleSwitchRow, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"), &OverheadHatch);
+    UpperHatchHandle.Init(0, 0, 286, 197, srf[SRF_LEM_U_HATCH_HNDL], srf[SRF_BORDER_286x197], UpperHatchHandleSwitchRow, &OverheadHatch);
 
 	UpperHatchValveSwitchRow.Init(AID_LEM_UPPER_HATCH_VALVE, MainPanel);
 	UpperHatchReliefValve.Init(0, 0, 104, 106, srf[SRF_LEM_U_HATCH_REL_VLV], srf[SRF_BORDER_104x106], UpperHatchValveSwitchRow);
@@ -2799,7 +2761,7 @@ void LEM::SetSwitches(int panel) {
 
     // Forward Hatch
 	ForwardHatchHandleSwitchRow.Init(AID_LEM_FWD_HATCH_HANDLE, MainPanel);
-	ForwardHatchHandle.Init(0, 135, 360, 316, srf[SRF_LEM_F_HATCH_HNDL], srf[SRF_BORDER_360x316], ForwardHatchHandleSwitchRow, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), &ForwardHatch);
+	ForwardHatchHandle.Init(0, 135, 360, 316, srf[SRF_LEM_F_HATCH_HNDL], srf[SRF_BORDER_360x316], ForwardHatchHandleSwitchRow, &ForwardHatch);
 
 	ForwardHatchValveSwitchRow.Init(AID_LEM_FWD_HATCH_VALVE, MainPanel);
 	ForwardHatchReliefValve.Init(0, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], srf[SRF_BORDER_178x187], ForwardHatchValveSwitchRow);
@@ -3357,9 +3319,9 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_LEM_COAS2:
 		if (LEMCoas2Enabled) {
-			oapiBlt(surf, srf[SRF_LEM_COAS2], 0, 0, 0, 0, 540, 540, SURF_PREDEF_CK);
-		} else {
 			oapiBlt(surf, srf[SRF_LEM_COAS2], 0, 0, 0, 540, 540, 540, SURF_PREDEF_CK);
+		} else {
+			oapiBlt(surf, srf[SRF_LEM_COAS2], 0, 0, 0, 0, 540, 540, SURF_PREDEF_CK);
 		}
 		return true;
 
@@ -3415,7 +3377,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_H2OSEP_LIGHT:
-		if (lca.GetAnnunVoltage() > 2.25 && INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < (792.5 / 720.0) || LampToneTestRotary.GetState() == 6)) {
+		if (lca.GetAnnunVoltage() > 2.25 && (scera1.GetVoltage(5, 3) < (792.5 / 720.0) || LampToneTestRotary.GetState() == 6)) {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
@@ -3442,7 +3404,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_BAT_FAULT_LIGHT:
-		if (lca.GetAnnunVoltage() > 2.25 && (LampToneTestRotary.GetState() == 6)) {								//Needs control logic to indicate overcurrent, reverse current, or over temp of selected battery
+		if (lca.GetAnnunVoltage() > 2.25 && (LampToneTestRotary.GetState() == 6 || scera2.GetBatFaultLogic())) {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
@@ -3474,19 +3436,8 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_FDAI_LEFT:
 		if (!fdaiDisabled) {
-			VECTOR3 attitude;
 			VECTOR3 errors;
 			VECTOR3 rates;
-			int no_att = 0;
-
-			if (AttitudeMonSwitch.IsUp())	//PGNS
-			{
-				attitude = gasta.GetTotalAttitude();
-			}
-			else							//AGS
-			{
-				attitude = aea.GetTotalAttitude();
-			}
 
 			if (RateErrorMonSwitch.GetState() == 1)
 			{
@@ -3531,12 +3482,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 				}
 			}
 
-			// ORDEAL
-			if (!no_att) {
-				attitude.y += ordeal.GetFDAI1PitchAngle();
-				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
-			}
-
 			if (RateScaleSwitch.IsUp())
 			{
 				rates = rga.GetRates() / (25.0*RAD);
@@ -3553,25 +3498,14 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			else { if (errors.y < -41) { errors.y = -41; } }
 			if (errors.z > 41) { errors.z = 41; }
 			else { if (errors.z < -41) { errors.z = -41; } }
-			fdaiLeft.PaintMe(attitude, no_att, rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiLeft.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 
 	case AID_FDAI_RIGHT:
 		if (!fdaiDisabled){
-			VECTOR3 attitude;
 			VECTOR3 errors;
 			VECTOR3 rates;
-			int no_att = 0;
-
-			if (RightAttitudeMonSwitch.IsUp())	//PGNS
-			{
-				attitude = gasta.GetTotalAttitude();
-			}
-			else							//AGS
-			{
-				attitude = aea.GetTotalAttitude();
-			}
 
 			if (RightRateErrorMonSwitch.GetState() == 1)
 			{
@@ -3616,12 +3550,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 				}
 			}
 
-			// ORDEAL
-			if (!no_att) {
-				attitude.y += ordeal.GetFDAI2PitchAngle();
-				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
-			}
-
 			if (RateScaleSwitch.IsUp())
 			{
 				rates = rga.GetRates() / (25.0*RAD);
@@ -3638,7 +3566,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			else { if (errors.y < -41) { errors.y = -41; } }
 			if (errors.z > 41) { errors.z = 41; }
 			else { if (errors.z < -41) { errors.z = -41; } }
-			fdaiRight.PaintMe(attitude, no_att, rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiRight.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 
@@ -3648,44 +3576,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_EVENT_TIMER:
 		EventTimerDisplay.Render(surf, srf[SRF_DIGITALDISP2]);
-		return true;
-
-	case AID_ENG_THRUST:
-		RedrawPanel_Thrust(surf);
-		return true;
-
-	case AID_ENG_FUEL_TEMP:
-		double DispValue;
-
-		if(ph_Dsc){
-			DispValue = GetPropellantMass(ph_Dsc)/8165;
-		}else{
-				DispValue =0;
-		}
-		oapiBlt(surf,srf[SRF_NEEDLE],1,(int)(47-(DispValue)*47),0,0,7,7, SURF_PREDEF_CK);//
-		if(ph_Asc){
-		DispValue = GetPropellantMass(ph_Asc)/GetPropellantMaxMass(ph_Asc);
-		}else{
-			DispValue =1;
-		}
-
-		oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(47-(DispValue)*47),8,0,7,7, SURF_PREDEF_CK);//
-		return true;
-
-	case AID_ENG_FUEL_PRESS:
-		if(ph_Dsc){
-			DispValue = GetPropellantMass(ph_Dsc)/8165;
-		}else{
-				DispValue =0;
-		}
-		oapiBlt(surf,srf[SRF_NEEDLE],1,(int)(62-(DispValue)*62),0,0,7,7, SURF_PREDEF_CK);//
-		if(ph_Asc){
-		DispValue = GetPropellantMass(ph_Asc)/GetPropellantMaxMass(ph_Asc);
-		}else{
-			DispValue =1;
-		}
-
-		oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(62-(DispValue)*62),8,0,7,7, SURF_PREDEF_CK);//
 		return true;
 
 	case AID_AOT_RETICLE:

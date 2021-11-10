@@ -26,8 +26,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include <vector>
 #include "Orbitersdk.h"
 #include "RTCCTables.h"
-
-class RTCC;
+#include "RTCCModule.h"
 
 struct PMMRKJInputArray
 {
@@ -88,17 +87,18 @@ struct PMMRKJInputArray
 	bool ExtDVCoordInd;
 };
 
-class CSMLMPoweredFlightIntegration
+class CSMLMPoweredFlightIntegration : public RTCCModule
 {
 public:
-	CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInputArray &T, int &I, EphemerisDataTable *E, RTCCNIAuxOutputTable *A);
+	CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInputArray &T, int &I, EphemerisDataTable2 *E, RTCCNIAuxOutputTable *A);
 	void PMMRKJ();
 private:
 	void PCINIT();
-	void PCRUNG(EphemerisDataTable *E, std::vector<double> &W);
+	void PCRUNG(EphemerisDataTable2 *E, std::vector<double> &W);
 	void PCRDD();
 	void PCGUID();
 	void CalcBodyAttitude();
+	void AverageGRoutine();
 
 	//Current position vector
 	VECTOR3 R;
@@ -139,10 +139,13 @@ private:
 	double TE;
 	//Manuever phase
 	//1 = Ullage
-	//2 = Thrust buildup during ullage
-	//3 = Mainstage thrust during ullage
-	//7 = Max thrust phase
-	//8 = Tailoff
+	//2 = Thrust buildup during ullage (SPS, APS), Buildup to 10% during ullage (DPS)
+	//3 = Mainstage thrust during ullage (SPS, APS), Buildup to 10% from ullage end (DPS)
+	//4 = 10% FTP (DPS)
+	//5 = Buildup from 10% to FTP (DPS)
+	//6 = Max thrust phase
+	//7 = Tailoff
+	//8 = Ending
 	int MPHASE;
 	//Short maneuver test
 	int KGN;
@@ -184,7 +187,10 @@ private:
 	double SIGN;
 	//Area over mass ratio
 	double AOM;
-	double CD = 0.0;
+	//Coefficient of drag for Earth orbit
+	double CD;
+	//Drag factor
+	double CDFACT;
 	//Tailoff DV
 	double DVTO = 0.0;
 	//Tailoff DV along x-axis
@@ -207,6 +213,19 @@ private:
 	double DTMAN = 0.0;
 	//Input thrust unit vector
 	VECTOR3 A_T_in;
+	VECTOR3 U_Z;
+	VECTOR3 W_ES;
+	//Gravitational acceleration
+	VECTOR3 r_p_ddot;
+	//Altitude
+	double ALT;
+	//Density
+	double RHO;
+	//Speed of sound
+	double SOS;
+	VECTOR3 V_R;
+	double VRMAG;
+	double RHOP;
 
 	//Thrust and weight loss rate tables
 	//0 = Ullage
@@ -247,17 +266,16 @@ private:
 	double YGBI;
 	double DV_ul;
 	double DTMANE;
-	EphemerisData sv1, sv2, sv_ff;
+	EphemerisData2 sv1, sv2, sv_ff;
 	double WTENGON;
 	VECTOR3 VGN;
 	double DTTOC;
 	double RCSFUELUSED;
 	double MAINFUELUSED;
 
-	RTCC *rtcc;
 	PMMRKJInputArray &TArr;
 	int &IERR;
 	RTCCNIAuxOutputTable *Aux;
-	EphemerisDataTable *Eph;
+	EphemerisDataTable2 *Eph;
 	std::vector<double> WeightTable;
 };

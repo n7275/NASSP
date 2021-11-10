@@ -144,8 +144,8 @@ void LEMCrewStatus::Timestep(double simdt) {
 		} else {
 		SuitTemperatureTime = 12 * 3600;
 	}
-	// **Disabled for now until cabin temperatures are more stable
-	/*if ((lem->ecs.GetCabinTempF() > 113 || lem->ecs.GetCabinTempF() < 32) && lem->CrewInCabin->number > 0) {
+
+	if ((lem->ecs.GetCabinTempF() > 113 || lem->ecs.GetCabinTempF() < 32) && lem->CrewInCabin->number > 0) {
 		if (TemperatureTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play();
@@ -156,7 +156,7 @@ void LEMCrewStatus::Timestep(double simdt) {
 		}
 	} else {
 		TemperatureTime = 12 * 3600;
-	}*/
+	}
 
 	// Suit/Cabin CO2 above 10 mmHg for 30 minutes
 	if (lem->ecs.GetECSSensorCO2MMHg() > 10 && (lem->CrewInCabin->number > 0 || (lem->CDRSuited->number + lem->LMPSuited->number > 0))) {
@@ -228,16 +228,22 @@ LEMOverheadHatch::LEMOverheadHatch(Sound &opensound, Sound &closesound) :
 {
 	open = false;
 	ovhdHatchHandle = NULL;
+	ovhdReliefValve = NULL;
 	lem = NULL;
+	pipe = NULL;
 
 	ovhdhatch_state.SetOperatingSpeed(0.2);
 	anim_OvhdHatch = -1;
+	anim_OvhdHatchHandle = -1;
+	anim_OvhdHatchReliefValve = -1;
 }
 
-void LEMOverheadHatch::Init(LEM *l, ToggleSwitch *fhh)
+void LEMOverheadHatch::Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *orv, h_Pipe *p)
 {
 	lem = l;
 	ovhdHatchHandle = fhh;
+	ovhdReliefValve = orv;
+	pipe = p;
 }
 
 void LEMOverheadHatch::DefineAnimations(UINT idx)
@@ -257,15 +263,30 @@ void LEMOverheadHatch::DefineAnimations(UINT idx)
 void LEMOverheadHatch::DefineAnimationsVC(UINT idx)
 {
 	// Overhead Hatch Animations
-	ANIMATIONCOMPONENT_HANDLE ach_OvhdHatchVC;
+	ANIMATIONCOMPONENT_HANDLE ach_OvhdHatchVC, ach_OvhdHatchHandle, ach_OvhdHatchReliefValve;
 
-	static UINT	meshgroup_OvhdHatchVC = VC_GRP_UpperHatch;
-	static MGROUP_ROTATE mgt_OvhdHatchVC(idx, &meshgroup_OvhdHatchVC, 1, _V(0.00, 1.02873, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
+	const VECTOR3 UpperHatchHandleLocation = { -0.0021, 0.9917, 0.3372 };
+	const VECTOR3 UpperHatchReliefValveLocation = { 0.1467, 1.0035, 0.1677 };
+
+	static UINT	meshgroup_OvhdHatchVC[3] = { VC_GRP_UpperHatch, VC_GRP_UpperHatchHandleBase, VC_GRP_UpperHatchValveBase };
+	static UINT	meshgroup_OvhdHatchHandle = VC_GRP_UpperHatchHandle;
+	static UINT	meshgroup_OvhdHatchReliefValve = VC_GRP_UpperHatchReliefValve;
+
+	static MGROUP_ROTATE mgt_OvhdHatchVC(idx, meshgroup_OvhdHatchVC, 3, _V(0.00, 1.02873, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
+	static MGROUP_ROTATE mgt_OvhdHatchHandle(idx, &meshgroup_OvhdHatchHandle, 1, UpperHatchHandleLocation, _V(0.0, 1.0, 0.0), (float)(90.0*RAD));
+	static MGROUP_ROTATE mgt_OvhdHatchReliefValve(idx, &meshgroup_OvhdHatchReliefValve, 1, UpperHatchReliefValveLocation, _V(0.0, 0.0, 1.0), (float)(60.0*RAD));
 
 	anim_OvhdHatchVC = lem->CreateAnimation(0.0);
+	anim_OvhdHatchHandle = lem->CreateAnimation(0.0);
+	anim_OvhdHatchReliefValve = lem->CreateAnimation(0.5);
+
 	ach_OvhdHatchVC = lem->AddAnimationComponent(anim_OvhdHatchVC, 0.0f, 1.0f, &mgt_OvhdHatchVC);
+	ach_OvhdHatchHandle = lem->AddAnimationComponent(anim_OvhdHatchHandle, 0.0f, 1.0f, &mgt_OvhdHatchHandle, ach_OvhdHatchVC);
+	ach_OvhdHatchReliefValve = lem->AddAnimationComponent(anim_OvhdHatchReliefValve, 0.0f, 1.0f, &mgt_OvhdHatchReliefValve, ach_OvhdHatchVC);
 
 	lem->SetAnimation(anim_OvhdHatchVC, ovhdhatch_state.State());
+	lem->SetAnimation(anim_OvhdHatchHandle, 0.0);
+	lem->SetAnimation(anim_OvhdHatchReliefValve, 0.0);
 }
 
 void LEMOverheadHatch::Timestep(double simdt)
@@ -274,13 +295,27 @@ void LEMOverheadHatch::Timestep(double simdt)
 		lem->SetAnimation(anim_OvhdHatch, ovhdhatch_state.State());
 		lem->SetAnimation(anim_OvhdHatchVC, ovhdhatch_state.State());
 	}
+
+	if (ovhdHatchHandle->GetState() == 1) {
+		lem->SetAnimation(anim_OvhdHatchHandle, 1.0);
+	} else {
+		lem->SetAnimation(anim_OvhdHatchHandle, 0.0);
+	}
+
+	if (ovhdReliefValve->GetState() == 2) {
+		lem->SetAnimation(anim_OvhdHatchReliefValve, 1.0);
+	} else if (ovhdReliefValve->GetState() == 1) {
+		lem->SetAnimation(anim_OvhdHatchReliefValve, 0.5);
+	} else {
+		lem->SetAnimation(anim_OvhdHatchReliefValve, 0.0);
+	}
 }
 
 void LEMOverheadHatch::Toggle()
 {
 	if (open == false)
 	{
-		if (ovhdHatchHandle->GetState() == 1)
+		if (ovhdHatchHandle->GetState() == 1 && (pipe->in->parent->space.Press - pipe->out->parent->space.Press < 0.08 / PSI))
 		{
 			open = true;
 			OpenSound.play();
@@ -395,16 +430,23 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 {
 	open = false;
 	ForwardHatchHandle = NULL;
+	ForwardHatchReliefValve = NULL;
 	lem = NULL;
+	cabin = NULL;
 
 	hatch_state.SetOperatingSpeed(0.2);
 	anim_Hatch = -1;
+	anim_FwdHatchVC = -1;
+	anim_FwdHatchHandle = -1;
+	anim_FwdHatchReliefValve = -1;
 }
 
-void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh)
+void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab)
 {
 	lem = l;
 	ForwardHatchHandle = fhh;
+	ForwardHatchReliefValve = fhr;
+	cabin = cab;
 }
 
 void LEMForwardHatch::DefineAnimations(UINT idx)
@@ -421,19 +463,55 @@ void LEMForwardHatch::DefineAnimations(UINT idx)
 void LEMForwardHatch::DefineAnimationsVC(UINT idx)
 {
 	// Forward Hatch Animation
-	ANIMATIONCOMPONENT_HANDLE	ach_HatchVC;
-	static UINT	meshgroup_HatchVC = VC_GRP_FwdHatch;
-	static MGROUP_ROTATE	mgt_HatchVC(idx, &meshgroup_HatchVC, 1, _V(0.39366, -0.57839, 1.63386), _V(0.0, 1.0, 0.0), (float)(-85.0*RAD));
-	anim_HatchVC = lem->CreateAnimation(0.0);
-	ach_HatchVC = lem->AddAnimationComponent(anim_HatchVC, 0.0f, 1.0f, &mgt_HatchVC);
-	lem->SetAnimation(anim_HatchVC, hatch_state.State());
+	ANIMATIONCOMPONENT_HANDLE ach_FwdHatchVC, ach_FwdHatchHandle, ach_FwdHatchReliefValve;
+
+	const VECTOR3 FwdHatchHandleLocation = { -0.3440, -0.5710, 1.5847 };
+	const VECTOR3 FwdHatchReliefValveLocation = { 0.2370, -0.5113, 1.5987 };
+	const VECTOR3 FwdHatchReliefValveAxis = { 0.535150113246188, 0.844756980611935, 0.0 };
+
+	static UINT	meshgroup_FwdHatchVC[4] = { VC_GRP_FwdHatch, VC_GRP_FwdHatchInner, VC_GRP_FwdHatchHandleBase, VC_GRP_FwdHatchReliefValveBase };
+	static UINT	meshgroup_FwdHatchHandle = VC_GRP_FwdHatchHandle;
+	static UINT	meshgroup_FwdHatchReliefValve = VC_GRP_FwdHatchReliefValve;
+
+	static MGROUP_ROTATE mgt_FwdHatchVC(idx, meshgroup_FwdHatchVC, 4, _V(0.39366, -0.57839, 1.63386), _V(0.0, 1.0, 0.0), (float)(-85.0*RAD));
+	static MGROUP_ROTATE mgt_FwdHatchHandle(idx, &meshgroup_FwdHatchHandle, 1, FwdHatchHandleLocation, _V(0.0, 0.0, 1.0), (float)(-90.0*RAD));
+	static MGROUP_ROTATE mgt_FwdHatchReliefValve(idx, &meshgroup_FwdHatchReliefValve, 1, FwdHatchReliefValveLocation, FwdHatchReliefValveAxis, (float)(60.0*RAD));
+
+	anim_FwdHatchVC = lem->CreateAnimation(0.0);
+	anim_FwdHatchHandle = lem->CreateAnimation(0.0);
+	anim_FwdHatchReliefValve = lem->CreateAnimation(0.5);
+
+	ach_FwdHatchVC = lem->AddAnimationComponent(anim_FwdHatchVC, 0.0f, 1.0f, &mgt_FwdHatchVC);
+	ach_FwdHatchHandle = lem->AddAnimationComponent(anim_FwdHatchHandle, 0.0f, 1.0f, &mgt_FwdHatchHandle, ach_FwdHatchVC);
+	ach_FwdHatchReliefValve = lem->AddAnimationComponent(anim_FwdHatchReliefValve, 0.0f, 1.0f, &mgt_FwdHatchReliefValve, ach_FwdHatchVC);
+
+	lem->SetAnimation(anim_FwdHatchVC, hatch_state.State());
+	lem->SetAnimation(anim_FwdHatchHandle, 0.0);
+	lem->SetAnimation(anim_FwdHatchReliefValve, 0.0);
 }
 
 void LEMForwardHatch::Timestep(double simdt)
 {
 	if (hatch_state.Process(simdt)) {
 		lem->SetAnimation(anim_Hatch, hatch_state.State());
-		lem->SetAnimation(anim_HatchVC, hatch_state.State());
+		lem->SetAnimation(anim_FwdHatchVC, hatch_state.State());
+	}
+
+	if (ForwardHatchHandle->GetState() == 1) {
+		lem->SetAnimation(anim_FwdHatchHandle, 1.0);
+	}
+	else {
+		lem->SetAnimation(anim_FwdHatchHandle, 0.0);
+	}
+
+	if (ForwardHatchReliefValve->GetState() == 2) {
+		lem->SetAnimation(anim_FwdHatchReliefValve, 1.0);
+	}
+	else if (ForwardHatchReliefValve->GetState() == 1) {
+		lem->SetAnimation(anim_FwdHatchReliefValve, 0.5);
+	}
+	else {
+		lem->SetAnimation(anim_FwdHatchReliefValve, 0.0);
 	}
 }
 
@@ -441,7 +519,7 @@ void LEMForwardHatch::Toggle()
 {
 	if (open == false)
 	{
-		if (ForwardHatchHandle->GetState() == 1)
+		if (ForwardHatchHandle->GetState() == 1 && (cabin->space.Press < 0.08 / PSI))
 		{
 			open = true;
 			OpenSound.play();
@@ -675,7 +753,7 @@ void LEMSuitIsolValve::SystemTimestep(double simdt)
 	if (!suitisolvlv) return;
 
 	//Pressure Switch/Override Actuation (Suit Disconnect)
-	if (suitisolvlv->GetState() == 0 && lem->ECS_SUIT_FLOW_CONT_CB.IsPowered() && (actuatorovrdswitch->GetState() == 1 || lem->SuitPressureSwitch.GetPressureSwitch() != 0))
+	if (suitisolvlv->GetState() == 0 && ((actuatorovrdswitch->GetState() == 1) || (lem->ECS_SUIT_FLOW_CONT_CB.IsPowered() && lem->SuitPressureSwitch.GetPressureSwitch() != 0)))
 	{
 		suitisolvlv->SwitchTo(1); //Suit Disconnect
 	}
@@ -1071,7 +1149,7 @@ void LEMCabinFan::SystemTimestep(double simdt)
 	}
 
 	if (cabinFan->pumping) {
-		cabinFanHeat->GenerateHeat(36.5);
+		cabinFanHeat->GenerateHeat(36.5);  //Not sure about this heat load, seems very high. Value from LM-8 Systems Handbook
 	}
 }
 
@@ -1184,11 +1262,11 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	{
 		PressureSwitch = false;
 	}
-
+	
 	if (PressureSwitch && glycolRotary->GetState() == 1 && glycolPumpAutoTransferCB->IsPowered())
 	{
 		//To make this more stable with time acceleration and panel changes
-		if (AutoTransferCounter > 20)
+		if (AutoTransferCounter > 1)
 		{
 			GlycolAutoTransferRelay = true;
 		}
@@ -1220,7 +1298,6 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	if (glycolRotary->GetState() == 1 && !GlycolAutoTransferRelay && glycolPump1CB->IsPowered())
 	{
 		glycolPump1->SetPumpOn();
-		glycolPump1Heat->GenerateHeat(30.5);
 	}
 	else
 	{
@@ -1281,25 +1358,25 @@ void LEMPrimGlycolPumpController::SaveState(FILEHANDLE scn)
 
 LEMSuitFanDPSensor::LEMSuitFanDPSensor()
 {
-	suitFanManifoldTank = NULL;
-	suitCircuitHeatExchangerCoolingTank = NULL;
+	suitFanManifoldInTank = NULL;
+	suitFanManifoldOutTank = NULL;
 	suitFanDPCB = NULL;
 	SuitFanFailRelay = false;
 	PressureSwitch = false;
 }
 
-void LEMSuitFanDPSensor::Init(h_Tank *sfmt, h_Tank *schect, CircuitBrakerSwitch *sfdpcb)
+void LEMSuitFanDPSensor::Init(h_Tank *sfmint, h_Tank *sfmoutt, CircuitBrakerSwitch *sfdpcb)
 {
-	suitFanManifoldTank = sfmt;
-	suitCircuitHeatExchangerCoolingTank = schect;
+	suitFanManifoldInTank = sfmint;
+	suitFanManifoldOutTank = sfmoutt;
 	suitFanDPCB = sfdpcb;
 }
 
 void LEMSuitFanDPSensor::SystemTimestep(double simdt)
 {
-	if (!suitFanManifoldTank || !suitCircuitHeatExchangerCoolingTank) return;
+	if (!suitFanManifoldInTank || !suitFanManifoldOutTank) return;
 
-	double DPSensor = suitCircuitHeatExchangerCoolingTank->space.Press - suitFanManifoldTank->space.Press;
+	double DPSensor = suitFanManifoldOutTank->space.Press - suitFanManifoldInTank->space.Press;
 
 	if (PressureSwitch == false && DPSensor <=  6.0 / INH2O)
 	{

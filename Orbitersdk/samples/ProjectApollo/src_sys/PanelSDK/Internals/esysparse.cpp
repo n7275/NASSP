@@ -42,6 +42,8 @@ void E_system::Create_Boiler(char *line) {
 		type = 0;
 	else if (Compare(typeName, "PRESS"))
 		type = 1;
+	else if (Compare(typeName, "CHILLER"))
+		type = 2;
 
 	AddSystem(new Boiler(name, pump, src, watts, ewatts, type, valueMin, valueMax, t));
 }
@@ -167,14 +169,39 @@ void E_system::Create_Inverter(char *line)
 	ACInverter *new_dc = (ACInverter*) AddSystem(new ACInverter(name, voltage, SRC));
 }
 
+void E_system::Create_Diode(char *line)
+{
+	char name[100];
+	char source[100];
+	double NominalTemperature;
+	double SaturationCurrent;
+	sscanf(line + 7, "%s %s %lf %lf", name, source, &NominalTemperature, &SaturationCurrent);
+	e_object *Source = (e_object*)GetPointerByString(source);
+	AddSystem(new Diode(name, Source, NominalTemperature, SaturationCurrent));
+}
+
 void E_system::Create_Battery(char *line)
 {
 	char name[100];
-	double power, operating_voltage, resistance;
+	double power, operating_voltage, resistance, volume, isolation, mass, temp = 0;
+	vector3 pos;
 	char source[100];
-	sscanf(line+9,"%s %lf %lf %lf %s",name, &power, &operating_voltage, &resistance, source);
+
+	sscanf(line + 9, "%s %lf %lf %lf %s %lf <%lf %lf %lf> %lf %lf %lf", name, &power, &operating_voltage, &resistance, source, &temp, &pos.x, &pos.y, &pos.z, &volume, &isolation, &mass);
 	e_object* SRC=(e_object*)GetPointerByString(source);
 	Battery *new_b=(Battery*)AddSystem(new Battery(name, SRC, power, operating_voltage, resistance));
+
+	new_b->parent = this;
+
+	if (temp > 0)
+	{
+		P_thermal->AddThermalObject(new_b);
+		new_b->isolation = isolation;
+		new_b->mass = mass;
+		new_b->Area = (1.0 / 4.0 * volume);
+		new_b->pos = pos;
+		new_b->SetTemp(temp);
+	}
 } 
 
 void E_system::Create_FCell(char *line) {
@@ -227,6 +254,8 @@ void E_system::Build() {
 			Create_Boiler(line);
 		else if (Compare(line,"<PUMP>"))
 			Create_Pump(line);
+		else if (Compare(line, "<DIODE>"))
+			Create_Diode(line);
 
 		line =ReadConfigLine();
 	}
@@ -258,6 +287,11 @@ void* Battery::GetComponent(char *component_name) {
 	void *norm=e_object::GetComponent(component_name);
 	if (norm) return norm;
 
+	if (Compare(component_name, "TEMP"))
+		return (void*)&Temp;
+	if (Compare(component_name, "HEAT"))
+		return (void*)&batheat;
+
 	BuildError(2);
 	return NULL;
 }
@@ -278,7 +312,7 @@ void* FCell::GetComponent(char *component_name) {
 	if (Compare(component_name,"RUNNING"))
 		return (void*)&running;
 	if (Compare(component_name,"DPH"))
-		return (void*)&clogg;
+		return (void*)&cloggVoltageDrop;
 	if (Compare(component_name,"H2FLOW"))
 		return (void*)&H2_flowPerSecond;
 	if (Compare(component_name,"O2FLOW"))

@@ -176,7 +176,7 @@ class SCERA
 {
 public:
 	SCERA();
-	void Init(LEM *l, e_object *dc, h_HeatLoad *hl, h_HeatLoad *sechl);
+	void Init(LEM *l, e_object *dc, h_HeatLoad *hl);
 	virtual void Timestep() = 0;
 	virtual void SystemTimestep(double simdt) = 0;
 	virtual double GetVoltage(int sa, int chan) = 0;
@@ -188,7 +188,6 @@ public:
 protected:
 	LEM *lem;
 	h_HeatLoad *SCERAHeat;
-	h_HeatLoad *SCERASECHeat;
 	e_object *dcpower;
 	bool Operate;
 };
@@ -236,6 +235,7 @@ public:
 	void SystemTimestep(double simdt);
 	double GetVoltage(int sa, int chan);
 	SCEA_SolidStateSwitch* GetSwitch(int sa, int chan);
+	bool GetBatFaultLogic();
 protected:
 	SCEA_SA_5043 SA2;
 	SCEA_SA_5043 SA3;

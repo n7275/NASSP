@@ -25,6 +25,7 @@
 #pragma once
 
 #include <vector>
+#include <bitset>
 #include "Orbitersdk.h"
 
 struct EphemerisData
@@ -33,6 +34,13 @@ struct EphemerisData
 	VECTOR3 R = _V(0, 0, 0);
 	VECTOR3 V = _V(0, 0, 0);
 	int RBI = -1; //0 = Earth, 1 = Moon
+};
+
+struct EphemerisData2
+{
+	double GMT = 0.0;
+	VECTOR3 R = _V(0, 0, 0);
+	VECTOR3 V = _V(0, 0, 0);
 };
 
 struct EphemerisHeader
@@ -55,10 +63,10 @@ struct EphemerisHeader
 	double TR = 0.0;
 };
 
-struct EphemerisDataTable
+struct EphemerisDataTable2
 {
 	EphemerisHeader Header;
-	std::vector<EphemerisData> table;
+	std::vector<EphemerisData2> table;
 };
 
 struct RTCCNIInputTable
@@ -164,6 +172,10 @@ struct RTCCNIAuxOutputTable
 	double DV_cTO;
 	//Word 39, DV of pure ullage
 	double DV_U;
+	//Words 40-41: Open (CSM and LM weight?)
+	double W_CSM, W_LMA, W_LMD;
+	//Word 42: S-IVB weighr at maneuver initiation
+	double W_SIVB;
 	//Word 43, total configuration weight at maneuver initiation
 	double WTINIT;
 	//Word 45, weight at main engine on
@@ -184,7 +196,6 @@ struct RTCCNIAuxOutputTable
 	double RCSFuelUsed;
 	//Velocity-to-be-gained
 	VECTOR3 V_G;
-	double W_CSM, W_LMA, W_LMD, W_SIVB;
 	//SV at main engine on, without ullage (free flight)
 	EphemerisData sv_FF;
 	//Eccentricity of target conic (TLI)
@@ -207,4 +218,363 @@ struct RTCCNIAuxOutputTable
 	double Word68;
 	//Gravitational acceleration at maneuver burnout (TLI)
 	double Word69;
+};
+
+struct MANTIMESData
+{
+	MANTIMESData() { ManData[0] = 0.0;ManData[1] = 0.0; }
+	double ManData[2];
+};
+
+struct ManeuverTimesTable
+{
+	int TUP = 0;
+	std::vector<MANTIMESData> Table;
+};
+
+struct EMSMISSAuxOutputTable
+{
+	EphemerisData sv_cutoff;
+	bool landed;
+	//0 = no errors detected, 1 = input time cannot be referenced on sun/moon ephemeris, 2 = MPT is being updated, 3 = error from maneuver integrator
+	//5 = maneuver in interval maybe preventing the minimum number of points from being satisfied, 6 = ephemeris space filled before request was satisfied
+	int ErrorCode;
+	double InputArea;
+	double InputWeight;
+	double CutoffArea;
+	double CutoffWeight;
+	//1 = maximum time, 2 = radius, 3 = altitude, 4 = flight path angle, 5 = reference switch, 6 = beginning of maneuver, 7 = end of maneuver, 8 = ascending node
+	int TerminationCode;
+	//Maneuver number of last processed maneuver
+	unsigned ManeuverNumber;
+	double LunarStayBeginGMT;
+	double LunarStayEndGMT;
+};
+
+struct PLAWDTInput
+{
+	double T_UP;				//Option 1: Time of desired, areas/weights. Option 2: Time to stop adjustment
+	int Num = 0;				//Option 1: Maneuver number of last maneuver to be ignored (zero to consider all maneuvers). Option 2: Configuration code associated with input values (same format as MPT code)
+	bool KFactorOpt = false;	//0 = No K-factor desired, 1 = K-factor desired
+	int TableCode;		//1 = CSM, 3 = LM (MPT and Expandables Tables). Negative for option 2.
+	bool VentingOpt = false;	//0 = No venting, 1 = venting
+	double CSMArea;
+	double SIVBArea;
+	double LMAscArea;
+	double LMDscArea;
+	double CSMWeight;
+	double SIVBWeight;
+	double LMAscWeight;
+	double LMDscWeight;
+	//Time of input areas/weights
+	double T_IN;
+};
+
+struct PLAWDTOutput
+{
+	//0: No error
+	//1: Request time within a maneuver - previous maneuver values used
+	//2: Maneuver not current - last current values used
+	//3: Time to stop adjustment is before time of input areas/weights - input values returned as output
+	int Err;
+	std::bitset<4> CC;
+	double ConfigArea;
+	double ConfigWeight;
+	double CSMArea;
+	double SIVBArea;
+	double LMAscArea;
+	double LMDscArea;
+	double CSMWeight;
+	double SIVBWeight;
+	double LMAscWeight;
+	double LMDscWeight;
+	double KFactor;
+};
+
+struct EMSLSFInputTable
+{
+	bool ECIEphemerisIndicator = false;
+	bool ECTEphemerisIndicator = false;
+	bool MCIEphemerisIndicator = false;
+	bool MCTEphemerisIndicator = false;
+	//Left limit of ephemeris (time to begin ephemeris)
+	double EphemerisLeftLimitGMT;
+	//Right limit of ephemeris (time to end ephemeris)
+	double EphemerisRightLimitGMT;
+	EphemerisDataTable2 *ECIEphemTableIndicator = NULL;
+	EphemerisDataTable2 *ECTEphemTableIndicator = NULL;
+	EphemerisDataTable2 *MCIEphemTableIndicator = NULL;
+	EphemerisDataTable2 *MCTEphemTableIndicator = NULL;
+	//Storage interval for lunar surface ephemeris
+	double LunarEphemDT = 3.0*60.0;
+};
+
+struct ReferenceSwitchTable
+{
+	EphemerisData InputVector;
+	EphemerisData BeforeRefSwitchVector;
+	EphemerisData AfterRefSwitchVector;
+	EphemerisData LastVector;
+};
+
+struct EMSMISSInputTable
+{
+	EphemerisData AnchorVector;
+	bool landed = false;
+	//Desired value of stopping parameter relative to the Earth
+	double EarthRelStopParam = 0.0;
+	//Desired value of stopping parameter relative to the Moon
+	double MoonRelStopParam = 0.0;
+	//Maximum time of integration
+	double MaxIntegTime = 10.0*24.0*3600.0;
+	//Storage interval for maneuver ephemeris
+	double ManEphemDT = 10.0;
+	//Storage interval for lunar surface ephemeris
+	double LunarEphemDT = 3.0*60.0;
+	//Density multiplier value
+	double DensityMultiplier = 1.0;
+	//Left limit of ephemeris (time to begin ephemeris)
+	double EphemerisLeftLimitGMT;
+	//Right limit of ephemeris (time to end ephemeris)
+	double EphemerisRightLimitGMT;
+	//Minimum time between ephemeris points
+	double MinEphemDT;
+	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
+	int StopParamRefFrame = 2;
+	//Minimum number of points desired in ephemeris
+	unsigned MinNumEphemPoints = 9;
+	bool ECIEphemerisIndicator = false;
+	bool ECTEphemerisIndicator = false;
+	bool MCIEphemerisIndicator = false;
+	bool MCTEphemerisIndicator = false;
+	//Ephemeris build indicator
+	bool EphemerisBuildIndicator = false;
+	//Maneuver cut-off indicator (0 = cut at begin of maneuver, 1 = cut at end of maneuver, 2 = don't cut off)
+	int ManCutoffIndicator;
+	//Descent burn indicator
+	bool DescentBurnIndicator = false;
+	//Cut-off indicator (1 = Time, 2 = radial distance, 3 = altitude above Earth or moon, 4 = flight-path angle, 5 = first reference switch)
+	int CutoffIndicator = 1;
+	//Integration direction indicator (+X-forward, -X-backward)
+	double IsForwardIntegration = 1.0;
+	//Coordinate system indicator (Part of Anchor Vector)
+	//Maneuver indicator (true = consider maneuvers, false = don't consider maneuvers)
+	bool ManeuverIndicator = false;
+	//Vehicle code (1 = LEM, 3 = CSM)
+	int VehicleCode;
+	//Density multiplication override indicator
+	bool DensityMultOverrideIndicator = false;
+	//Table of ephemeris addresses indicator
+	EphemerisDataTable2 *ECIEphemTableIndicator = NULL;
+	EphemerisDataTable2 *ECTEphemTableIndicator = NULL;
+	EphemerisDataTable2 *MCIEphemTableIndicator = NULL;
+	EphemerisDataTable2 *MCTEphemTableIndicator = NULL;
+	//Reference switch table indicator
+	ReferenceSwitchTable *RefSwitchTabIndicator = NULL;
+	//Maneuver times table indicator
+	ManeuverTimesTable *ManTimesIndicator = NULL;
+	//Runge-Kutta auxiliary output table indicator
+	RTCCNIAuxOutputTable *AuxTableIndicator = NULL;
+	//Runge-Kutta dense ephemeris table indicator
+	//Update in process override indicator (true = override, false = don't override)
+	bool UIPOverrideIndicator = false;
+	//Maneuver number of last maneuver to be ignored
+	unsigned IgnoreManueverNumber = 10000U;
+	EMSMISSAuxOutputTable NIAuxOutputTable;
+	bool useInputWeights = false;
+	PLAWDTOutput *WeightsTable = NULL;
+};
+
+struct RMMYNIInputTable
+{
+	VECTOR3 R0, V0;
+	double GMT0;
+	double lat_T, lng_T;
+	//Backup mode G-level
+	double g_c_BU = 0.05;
+	//G&N mode G-level
+	double g_c_GN = 0.05;
+	double LAD = 0.27;
+	double LOD = 0.207;
+	double CGBIAS = 0.0;
+	//Initial bank angle for G&N simulation
+	double C10 = 0.0;
+	double CMWT;
+	double H_EMS = -1.0;
+	//Mode: 1 = Zero lift, 2 = Max Lift, 3 = G&N, 4 = Bank angle - time to reverse bank angle, 5 = Constant bank angle, 6 = Constant bank to G, then roll, 7 = Bank angle to G-level then maximum lift
+	//8 = Bank angle to a G-level then bank angle-time to reverse bank angle, 9 = Bank angle to a G-level then another bank angle to impact prediction, 10 = constant G
+	int KSWCH;
+	//Initial reentry bank angle
+	double K1;
+	//Second bank angle to be flown after g = g_c
+	double K2;
+	//Desired constant g level (m/s^2)
+	double D0 = 4.0*9.80665;
+	//Roll direction for the constant g mode
+	double RLDIR = 1.0;
+	//Time to reverse bank angle
+	double t_RB = 0.0;
+};
+
+struct RMMYNIOutputTable
+{
+	double lat_IP = 0.0;
+	double lng_IP = 0.0;
+	double t_drogue = 0.0;
+	double t_main = 0.0;
+	double t_lc = 0.0;
+	double t_05g = 0.0;
+	double t_2g = 0.0;
+	double t_gc = 0.0;
+	double gmax = 0.0;
+	double t_gmax = 0.0;
+	//1 = time limit, 2 = impact, 3 = skipout
+	int IEND;
+};
+
+struct ReentryConstraintsTable
+{
+	//R31
+	int Thruster = 33;		//1 = RCS+2, 2 = RCS+4, 3 = RCS-2, 4 = RCS-4, 33 = SPS
+	int GuidanceMode = 4;	//1 = Inertial, 4 = Guided (G&N)
+	int BurnMode = 3;		//1 = DV, 2 = DT, 3 = V, Gamma Target (only SPS)
+	double dt = 0.0;
+	double dv = 0.0;
+	int AttitudeMode = 2;	//1 = LVLH, 2 = 31.7° window line on horizon
+	VECTOR3 LVLHAttitude = _V(0.0, -48.5*RAD, PI);
+	double UllageTime = 15.0;
+	bool Use4UllageThrusters = true;	//0 = two thrusters, 1 = four thrusters
+	int REFSMMAT = 1;		//1 = CUR...
+	int GimbalIndicator = -1; //-1 = compute, 1 = use system parameters
+	double InitialBankAngle = 0.0;
+	double GLevel = 0.2;
+	double FinalBankAngle = 55.0*RAD;
+};
+
+struct RetrofireDisplayParametersTable
+{
+	//0 = good data, +1 = no data, -1 = bad data
+	int Indicator = 1;
+	//Ullage quad (2 or 4)
+	int UllageQuads;
+	std::string BurnCode;
+	std::string Area;
+	std::string RefsID;
+	double CSMWeightRetro;
+	double TrueAnomalyRetro;
+	VECTOR3 Att_LVLH;
+	VECTOR3 Att_IMU;
+	//Velocity counter - tailoff
+	double DVC;
+	double BurnTime;
+	//Total velocity + tailoff
+	double DVT;
+	double UllageDT;
+	double GMTI;
+	double GETI;
+	double RET400k;
+	double V400k;
+	double Gamma400k;
+	double BankAngle;
+	//Elapsed time from GETI to reverse bank angle
+	double RETRB;
+	//Maximum lift
+	double lat_ML, lng_ML;
+	//Target
+	double lat_T, lng_T;
+	//Impact point
+	double lat_IP, lng_IP;
+	//Zero lift
+	double lat_ZL, lng_ZL;
+	//Miss distance (NM)
+	double dlat_NM, dlng_NM;
+	//Height at retrofire above the oblate Earth
+	double H_Retro;
+	//Ballistic indicator
+	int Ballistic;
+	//Rev number of impact
+	int Rev_IP;
+	double P_G, Y_G;
+	MATRIX3 REFSMMAT;
+	double DV_TO;
+	double DT_TO;
+	//Biased and unbiased DV?
+	VECTOR3 VG_XDX;
+	VECTOR3 VGX_THR;
+	double H_apo, H_peri;
+};
+
+struct TimeConstraintsTable
+{
+	EphemerisData sv_present;
+	double a = 0.0;
+	double e = 0.0;
+	double i = 0.0;
+	double gamma = 0.0;
+	double lat = 0.0;
+	double lng = 0.0;
+	double h = 0.0;
+	double T0 = 0.0;
+	double TA = 0.0; //True anomaly
+	double MA = 0.0; //Mean anomaly
+	double V = 0.0;
+	double azi = 0.0;
+	double AoP = 0.0;
+	double RA = 0.0;
+	double l = 0.0;	//Semi-latus rectum
+	int OrbitNum = 0;
+	int RevNum = 0;
+	//EI time?
+	double GMTPI = 0.0;
+	std::string StationID;
+	int TUP = 0;
+	double h_a = 0.0;
+	double h_p = 0.0;
+};
+
+struct RetrofireTransferTableEntry
+{
+	double GMTI = 0.0;
+	VECTOR3 DeltaV = _V(0, 0, 0);
+	int Thruster = 33;
+	double dt_ullage = 0.0;
+	bool UllageThrusterOption = true;
+	double lat_T = 0.0;
+	double lng_T = 0.0;
+};
+
+struct RetrofireTransferTable
+{
+	RetrofireTransferTableEntry Primary;
+	RetrofireTransferTableEntry Manual;
+};
+
+struct SpacecraftSettingTable
+{
+	int Indicator = 1; //-1 = bad data, 0 = good data, 1 = no data
+	int EnryMode = 0;
+	int REFSMMATID = 0;
+	double GMTI = 0.0;
+	double lat_T = 0.0;
+	double lng_T = 0.0;
+};
+
+struct REFSMMATData
+{
+	MATRIX3 REFSMMAT;
+	int ID = 0;
+	double GMT = 0.0;
+};
+
+struct REFSMMATLocker
+{
+	REFSMMATData data[12];
+};
+
+struct StateVectorTableEntry
+{
+	EphemerisData Vector;
+	int ID = -1;
+	std::string VectorCode;
+	bool LandingSiteIndicator = false;
 };

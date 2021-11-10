@@ -214,16 +214,14 @@ SCERA::SCERA()
 	lem = NULL;
 	dcpower = NULL;
 	SCERAHeat = 0;
-	SCERASECHeat = 0;
 	Operate = false;
 }
 
-void SCERA::Init(LEM *l, e_object *dc, h_HeatLoad *hl, h_HeatLoad *sechl)
+void SCERA::Init(LEM *l, e_object *dc, h_HeatLoad *hl)
 {
 	lem = l;
 	dcpower = dc;
 	SCERAHeat = hl;
-	SCERASECHeat = sechl;
 }
 
 bool SCERA::IsPowered()
@@ -297,21 +295,21 @@ void SCERA1::Timestep()
 	double dval = 0.0;
 
 	//Jet Driver B2U Output (GH1426V)
-	SA2.SetOutput(1, lem->atca.jet_request[LMRCS_B2U] == 1);
+	SA2.SetOutput(1, lem->atca.jet_driver[LMRCS_B2U] == 1);
 	//Jet Driver A2D Output (GH1427V)
-	SA2.SetOutput(2, lem->atca.jet_request[LMRCS_A2D] == 1);
+	SA2.SetOutput(2, lem->atca.jet_driver[LMRCS_A2D] == 1);
 	//Jet Driver A2A Output (GH1428V)
-	SA2.SetOutput(3, lem->atca.jet_request[LMRCS_A2A] == 1);
+	SA2.SetOutput(3, lem->atca.jet_driver[LMRCS_A2A] == 1);
 	//Jet Driver B2L Output (GH1429V)
-	SA2.SetOutput(4, lem->atca.jet_request[LMRCS_B2L] == 1);
+	SA2.SetOutput(4, lem->atca.jet_driver[LMRCS_B2L] == 1);
 	//Jet Driver A1U Output (GH1430V)
-	SA2.SetOutput(5, lem->atca.jet_request[LMRCS_A1U] == 1);
+	SA2.SetOutput(5, lem->atca.jet_driver[LMRCS_A1U] == 1);
 	//Jet Driver B1D Output (GH1431V)
-	SA2.SetOutput(6, lem->atca.jet_request[LMRCS_B1D] == 1);
+	SA2.SetOutput(6, lem->atca.jet_driver[LMRCS_B1D] == 1);
 	//Jet Driver B1L Output (GH1433V)
-	SA2.SetOutput(7, lem->atca.jet_request[LMRCS_B1L] == 1);
+	SA2.SetOutput(7, lem->atca.jet_driver[LMRCS_B1L] == 1);
 	//Jet Driver A1F Output (GH1432V)
-	SA2.SetOutput(8, lem->atca.jet_request[LMRCS_A1F] == 1);
+	SA2.SetOutput(8, lem->atca.jet_driver[LMRCS_A1F] == 1);
 	//Abort Command (GY0050X)
 	SA2.SetOutput(9, lem->AbortSwitch.GetState() == 0 && lem->SCS_ENG_CONT_CB.IsPowered());
 	//Spare
@@ -321,17 +319,17 @@ void SCERA1::Timestep()
 	//Ascent engine arm (GH1230)
 	SA3.SetOutput(2, lem->EngineArmSwitch.IsUp() && lem->SCS_ENG_ARM_CB.IsPowered());
 	//RCS thrust chamber pressure A2A (GR5041)
-	SA3.SetOutput(3, lem->GetRCSThrusterLevel(LMRCS_A2A) > 0.5);
+	SA3.SetOutput(3, lem->GetRCSThrusterLevel(LMRCS_A2A) > 0.1);
 	//RCS thrust chamber pressure B2L (GR5042)
-	SA3.SetOutput(4, lem->GetRCSThrusterLevel(LMRCS_B2L) > 0.5);
+	SA3.SetOutput(4, lem->GetRCSThrusterLevel(LMRCS_B2L) > 0.1);
 	//RCS thrust chamber pressure A1U (GR5043)
-	SA3.SetOutput(5, lem->GetRCSThrusterLevel(LMRCS_A1U) > 0.5);
+	SA3.SetOutput(5, lem->GetRCSThrusterLevel(LMRCS_A1U) > 0.1);
 	//RCS thrust chamber pressure B1D (GR5044)
-	SA3.SetOutput(6, lem->GetRCSThrusterLevel(LMRCS_B1D) > 0.5);
+	SA3.SetOutput(6, lem->GetRCSThrusterLevel(LMRCS_B1D) > 0.1);
 	//RCS thrust chamber pressure A1F (GR5045)
-	SA3.SetOutput(7, lem->GetRCSThrusterLevel(LMRCS_A1F) > 0.5);
+	SA3.SetOutput(7, lem->GetRCSThrusterLevel(LMRCS_A1F) > 0.1);
 	//RCS thrust chamber pressure B1L (GR5046)
-	SA3.SetOutput(8, lem->GetRCSThrusterLevel(LMRCS_B1L) > 0.5);
+	SA3.SetOutput(8, lem->GetRCSThrusterLevel(LMRCS_B1L) > 0.1);
 	//DPS Arm (GH1348X)
 	SA3.SetOutput(9, lem->deca.GetEngArm());
 	//X-translation override (GH1893)
@@ -341,21 +339,21 @@ void SCERA1::Timestep()
 	SA4.SetOutput(1, lem->aea.GetTestModeFailure());
 	//Spare
 	//Jet Driver B4U Output (GH1418V)
-	SA4.SetOutput(3, lem->atca.jet_request[LMRCS_B4U] == 1);
+	SA4.SetOutput(3, lem->atca.jet_driver[LMRCS_B4U] == 1);
 	//Jet Driver B4F Output (GH1420V)
-	SA4.SetOutput(4, lem->atca.jet_request[LMRCS_B4F] == 1);
+	SA4.SetOutput(4, lem->atca.jet_driver[LMRCS_B4F] == 1);
 	//Jet Driver A4D Output (GH1419V)
-	SA4.SetOutput(5, lem->atca.jet_request[LMRCS_A4D] == 1);
+	SA4.SetOutput(5, lem->atca.jet_driver[LMRCS_A4D] == 1);
 	//Jet Driver A4R Output (GH1421V)
-	SA4.SetOutput(6, lem->atca.jet_request[LMRCS_A4R] == 1);
+	SA4.SetOutput(6, lem->atca.jet_driver[LMRCS_A4R] == 1);
 	//Jet Driver A3U Output (GH1422V)
-	SA4.SetOutput(7, lem->atca.jet_request[LMRCS_A3U] == 1);
+	SA4.SetOutput(7, lem->atca.jet_driver[LMRCS_A3U] == 1);
 	//Jet Driver B3D Output (GH1423V)
-	SA4.SetOutput(8, lem->atca.jet_request[LMRCS_B3D] == 1);
+	SA4.SetOutput(8, lem->atca.jet_driver[LMRCS_B3D] == 1);
 	//Jet Driver B3A Output (GH1424V)
-	SA4.SetOutput(9, lem->atca.jet_request[LMRCS_B3A] == 1);
+	SA4.SetOutput(9, lem->atca.jet_driver[LMRCS_B3A] == 1);
 	//Jet Driver A3R Output (GH1425V)
-	SA4.SetOutput(10, lem->atca.jet_request[LMRCS_A3R] == 1);
+	SA4.SetOutput(10, lem->atca.jet_driver[LMRCS_A3R] == 1);
 
 	//Suit outlet pressure (GF1301)
 	SA5.SetOutput(1, scale_data(lem->ecs.GetSuitPressurePSI(), 0.0, 10.0));
@@ -412,25 +410,25 @@ void SCERA1::Timestep()
 	SA10.SetOutput(4, scale_data(lem->DPSPropellant.GetOxidizerTank2BulkTempF(), 20.0, 120.0));
 
 	//RCS thrust chamber pressure B4U (GR5031)
-	SA11.SetOutput(1, lem->GetRCSThrusterLevel(LMRCS_B4U) > 0.5);
+	SA11.SetOutput(1, lem->GetRCSThrusterLevel(LMRCS_B4U) > 0.1);
 	//RCS thrust chamber pressure A4D (GR5032)
-	SA11.SetOutput(2, lem->GetRCSThrusterLevel(LMRCS_A4D) > 0.5);
+	SA11.SetOutput(2, lem->GetRCSThrusterLevel(LMRCS_A4D) > 0.1);
 	//RCS thrust chamber pressure B4F (GR5033)
-	SA11.SetOutput(3, lem->GetRCSThrusterLevel(LMRCS_B4F) > 0.5);
+	SA11.SetOutput(3, lem->GetRCSThrusterLevel(LMRCS_B4F) > 0.1);
 	//RCS thrust chamber pressure A4R (GR5034)
-	SA11.SetOutput(4, lem->GetRCSThrusterLevel(LMRCS_A4R) > 0.5);
+	SA11.SetOutput(4, lem->GetRCSThrusterLevel(LMRCS_A4R) > 0.1);
 	//RCS thrust chamber pressure A3U (GR5035)
-	SA11.SetOutput(5, lem->GetRCSThrusterLevel(LMRCS_A3U) > 0.5);
+	SA11.SetOutput(5, lem->GetRCSThrusterLevel(LMRCS_A3U) > 0.1);
 	//RCS thrust chamber pressure B3D (GR5036)
-	SA11.SetOutput(6, lem->GetRCSThrusterLevel(LMRCS_B3D) > 0.5);
+	SA11.SetOutput(6, lem->GetRCSThrusterLevel(LMRCS_B3D) > 0.1);
 	//RCS thrust chamber pressure B3A (GR5037)
-	SA11.SetOutput(7, lem->GetRCSThrusterLevel(LMRCS_B3A) > 0.5);
+	SA11.SetOutput(7, lem->GetRCSThrusterLevel(LMRCS_B3A) > 0.1);
 	//RCS thrust chamber pressure A3R (GR5038)
-	SA11.SetOutput(8, lem->GetRCSThrusterLevel(LMRCS_A3R) > 0.5);
+	SA11.SetOutput(8, lem->GetRCSThrusterLevel(LMRCS_A3R) > 0.1);
 	//RCS thrust chamber pressure B2U (GR5039)
-	SA11.SetOutput(9, lem->GetRCSThrusterLevel(LMRCS_B2U) > 0.5);
+	SA11.SetOutput(9, lem->GetRCSThrusterLevel(LMRCS_B2U) > 0.1);
 	//RCS thrust chamber pressure A2D (GR5040)
-	SA11.SetOutput(10, lem->GetRCSThrusterLevel(LMRCS_A2D) > 0.5);
+	SA11.SetOutput(10, lem->GetRCSThrusterLevel(LMRCS_A2D) > 0.1);
 
 	//Main shutoff valves closed, system A (GR9609)
 	SA12.SetOutput(1, !lem->RCSA.GetMainShutoffValve()->IsOpen());
@@ -659,8 +657,7 @@ void SCERA1::SystemTimestep(double simdt)
 	if (Operate)
 	{
 		dcpower->DrawPower(12.6);
-		SCERAHeat->GenerateHeat(6.3);
-		SCERASECHeat->GenerateHeat(6.3);
+		SCERAHeat->GenerateHeat(12.6);
 	}
 }
 
@@ -774,29 +771,29 @@ void SCERA2::Timestep()
 	SA3.SetOutput(12, val11[ISSWarning]);
 
 	//Battery 1 High Tap (GC4361X)
-	SA4.SetOutput(1, lem->stage < 2 && lem->ECA_1a.input == 1);
+	SA4.SetOutput(1, lem->stage < 2 && lem->ECA_1.GetSectAHVOn());
 	//Battery 1 Low Tap (GC4362X)
-	SA4.SetOutput(2, lem->stage < 2 && lem->ECA_1a.input == 2);
+	SA4.SetOutput(2, lem->stage < 2 && lem->ECA_1.GetSectALVOn());
 	//Battery 2 High Tap (GC4363X)
-	SA4.SetOutput(3, lem->stage < 2 && lem->ECA_1b.input == 1);
+	SA4.SetOutput(3, lem->stage < 2 && lem->ECA_1.GetSectBHVOn());
 	//Battery 2 Low Tap (GC43664X)
-	SA4.SetOutput(4, lem->stage < 2 && lem->ECA_1b.input == 2);
+	SA4.SetOutput(4, lem->stage < 2 && lem->ECA_1.GetSectBLVOn());
 	//Battery 3 High Tap (GC4365X)
-	SA4.SetOutput(5, lem->stage < 2 && lem->ECA_2a.input == 1);
+	SA4.SetOutput(5, lem->stage < 2 && lem->ECA_2.GetSectAHVOn());
 	//Battery 3 Low Tap (GC4366X)
-	SA4.SetOutput(6, lem->stage < 2 && lem->ECA_2a.input == 2);
+	SA4.SetOutput(6, lem->stage < 2 && lem->ECA_2.GetSectALVOn());
 	//Battery 4 High Tap (GC4367X)
-	SA4.SetOutput(7, lem->stage < 2 && lem->ECA_2b.input == 1);
+	SA4.SetOutput(7, lem->stage < 2 && lem->ECA_2.GetSectBHVOn());
 	//Battery 4 Low Tap (GC4368X)
-	SA4.SetOutput(8, lem->stage < 2 && lem->ECA_2b.input == 2);
+	SA4.SetOutput(8, lem->stage < 2 && lem->ECA_2.GetSectBLVOn());
 	//Battery 5 Backup Feed (GC4369X)
-	SA4.SetOutput(9, lem->ECA_3b.input == 1);
+	SA4.SetOutput(9, lem->ECA_3.GetBattAFCOn());
 	//Battery 6 Normal Feed (GC4370X)
-	SA4.SetOutput(10, lem->ECA_4a.input == 1);
+	SA4.SetOutput(10, lem->ECA_4.GetBattMFCOn());
 	//Battery 5 Normal Feed (GC4371X)
-	SA4.SetOutput(11, lem->ECA_3a.input == 1);
+	SA4.SetOutput(11, lem->ECA_3.GetBattMFCOn());
 	//Battery 6 Backup Feed (GC4372X)
-	SA4.SetOutput(12, lem->ECA_4b.input == 1);
+	SA4.SetOutput(12, lem->ECA_4.GetBattAFCOn());
 
 	//CO2 secondary cartridge (GF1241)
 	SA5.SetOutput(1, lem->CO2CanisterSelectSwitch.GetState() == 0);
@@ -873,17 +870,17 @@ void SCERA2::Timestep()
 	//AGS mode control (automatic) (GH1641)
 	SA12.SetOutput(6, lem->ModeControlAGSSwitch.IsUp());
 	//Battery 1 malfunction (GC9961)
-	SA12.SetOutput(7, false);	//TBD
+	SA12.SetOutput(7, lem->stage < 2 && lem->ECA_1.GetMalfunctionA() && lem->EPSMonitorSelectRotary.GetState() == 1);
 	//Battery 2 malfunction (GC9962)
-	SA12.SetOutput(8, false);	//TBD
+	SA12.SetOutput(8, lem->stage < 2 && lem->ECA_1.GetMalfunctionB() && lem->EPSMonitorSelectRotary.GetState() == 2);
 	//Battery 3 malfunction (GC9963)
-	SA12.SetOutput(9, false);	//TBD
+	SA12.SetOutput(9, lem->stage < 2 && lem->ECA_2.GetMalfunctionA() && lem->EPSMonitorSelectRotary.GetState() == 3);
 	//Battery 4 malfunction (GC9964)
-	SA12.SetOutput(10, false);	//TBD
+	SA12.SetOutput(10, lem->stage < 2 && lem->ECA_2.GetMalfunctionB() && lem->EPSMonitorSelectRotary.GetState() == 4);
 	//Battery 5 malfunction (GC9965)
-	SA12.SetOutput(11, false);	//TBD
+	SA12.SetOutput(11, lem->ECA_3.GetMalfunction() && lem->EPSMonitorSelectRotary.GetState() == 5);
 	//Battery 6 malfunction (GC9966)
-	SA12.SetOutput(12, false);	//TBD
+	SA12.SetOutput(12, lem->ECA_4.GetMalfunction() && lem->EPSMonitorSelectRotary.GetState() == 6);
 
 	//Roll attitude control selector (GH1628)
 	SA13.SetOutput(1, lem->scca1.GetK5());
@@ -897,17 +894,17 @@ void SCERA2::Timestep()
 	//Yaw attitude control selector (GH1630)
 	SA13.SetOutput(6, lem->scca1.GetK1());
 	//Battery 1 malfunction (GC9961)
-	SA13.SetOutput(7, false);	//TBD
+	SA13.SetOutput(7, lem->stage < 2 && lem->ECA_1.GetMalfunctionA());
 	//Battery 2 malfunction (GC9962)
-	SA13.SetOutput(8, false);	//TBD
+	SA13.SetOutput(8, lem->stage < 2 && lem->ECA_1.GetMalfunctionB());
 	//Battery 3 malfunction (GC9963)
-	SA13.SetOutput(9, false);	//TBD
+	SA13.SetOutput(9, lem->stage < 2 && lem->ECA_2.GetMalfunctionA());
 	//Battery 4 malfunction (GC9964)
-	SA13.SetOutput(10, false);	//TBD
+	SA13.SetOutput(10, lem->stage < 2 && lem->ECA_2.GetMalfunctionB());
 	//Battery 5 malfunction (GC9965)
-	SA13.SetOutput(11, false);	//TBD
+	SA13.SetOutput(11, lem->ECA_3.GetMalfunction());
 	//Battery 6 malfunction (GC9966)
-	SA13.SetOutput(12, false);	//TBD
+	SA13.SetOutput(12, lem->ECA_4.GetMalfunction());
 
 	//Abort stage command (GH1283)
 	SA14.SetOutput(1, lem->scca1.GetK19());
@@ -1006,8 +1003,7 @@ void SCERA2::SystemTimestep(double simdt)
 	if (Operate)
 	{
 		dcpower->DrawPower(10.36);
-		SCERAHeat->GenerateHeat(5.18);
-		SCERASECHeat->GenerateHeat(5.18);
+		SCERAHeat->GenerateHeat(10.36);
 	}
 }
 
@@ -1105,4 +1101,13 @@ SCEA_SolidStateSwitch* SCERA2::GetSwitch(int sa, int chan)
 	}
 
 	return NULL;
+}
+
+bool SCERA2::GetBatFaultLogic()
+{
+	if (SA12.GetSwitch(7)->IsClosed() || SA12.GetSwitch(8)->IsClosed() || SA12.GetSwitch(9)->IsClosed() || SA12.GetSwitch(10)->IsClosed() || SA12.GetSwitch(11)->IsClosed() || SA12.GetSwitch(12)->IsClosed())
+	{
+		return true;
+	}
+	return false;
 }

@@ -189,8 +189,9 @@ private:
 class LM_VHF {
 public:
 	LM_VHF();
-	void Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh);	       // Initialization
+	void Init(LEM *vessel, h_HeatLoad *vhfh);	       // Initialization
 	void Timestep(double simt);        // TimeStep
+	
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
@@ -201,9 +202,6 @@ public:
 	LEM *lem;					   // Ship we're installed in
 	VESSEL *csm;					//Pointer to CSM
 	h_HeatLoad *VHFHeat;			//VHF Heat Load
-	h_HeatLoad *VHFSECHeat;			//VHF Heat Load
-	h_HeatLoad *PCMHeat;			//PCM Heat Load
-	h_HeatLoad *PCMSECHeat;			//PCM Heat Load
 
 	LM_VHFAntenna fwdInflightVHF;
 	LM_VHFAntenna aftInflightVHF;
@@ -234,9 +232,21 @@ public:
 
 	double RCVDinputPowRCVR_A; //Power received by transcever A in dBm
 	double RCVDinputPowRCVR_B;//Power received by transcever B in dBm
-	
-	//****************************
+};
 
+class LM_PCM
+{
+public:
+	LM_PCM();
+	~LM_PCM();
+	void Init(LEM *vessel, h_HeatLoad *pcmh);	       // Initialization
+	void Timestep(double simt);     // TimeStep
+	void SystemTimestep(double simdt);
+
+	double last_update;				// simt of last update
+protected:
+	LEM *lem;					   // Ship we're installed in
+	h_HeatLoad *PCMHeat;			//PCM Heat Load
 
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data
@@ -256,7 +266,6 @@ public:
 	int wsk_error;                  // Winsock error
 	char wsk_emsg[256];             // Winsock error message
 	// PCM datastream management
-	double last_update;				// simt of last update
 	double last_rx;                 // simt of last uplink update
 	int word_addr;                  // Word address of outgoing packet
 	int frame_addr;                 // Frame address
@@ -266,7 +275,6 @@ public:
 	int rx_offset;					// RX offset to use
 	int mcc_offset;					// RX offset into MCC data block
 	int mcc_size;					// Size of MCC data block
-	int pcm_rate_override;          // Downtelemetry rate override
 	unsigned char tx_data[1024];    // Characters to be transmitted
 	unsigned char rx_data[1024];    // Characters recieved
 	unsigned char mcc_data[2048];	// MCC-provided incoming data
@@ -291,7 +299,7 @@ protected:
 class LM_SBAND {
 public:
 	LM_SBAND();
-	void Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *secsbxh, h_HeatLoad *sbph, h_HeatLoad *secsbph);	       // Initialization
+	void Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *sbph);	       // Initialization
 	void Timestep(double simt);        // Timestep
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
@@ -299,9 +307,7 @@ public:
 
 	LEM *lem;					   // Ship we're installed in
 	h_HeatLoad *SBXHeat;			//XCVR Heat
-	h_HeatLoad *SBXSECHeat;			//XCVR Heat
 	h_HeatLoad *SBPHeat;			//PMP Heat
-	h_HeatLoad *SBPSECHeat;			//PMP Heat
 	int pa_mode_1,pa_mode_2;       // Power amplifier state
 	double pa_timer_1,pa_timer_2;  // Tube heater timer
 	int tc_mode_1,tc_mode_2;	   // Transciever state
@@ -314,7 +320,7 @@ public:
 class LEM_SteerableAnt: public LM_SBandAntenna {
 public:
 	LEM_SteerableAnt();
-	void Init(LEM *s, h_Radiator *an, Boiler *anheat);
+	void Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad *anthtld);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	void Timestep(double simdt);
@@ -334,6 +340,7 @@ public:
 	LEM *lem;					// Pointer at LEM
 	h_Radiator *antenna;			// Antenna (loses heat into space)
 	Boiler *antheater;			// Antenna Heater (puts heat back into antenna)
+	h_HeatLoad *antheatload;		//operational heat load on antenna
 protected:
 	double pitch;
 	double yaw;

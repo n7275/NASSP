@@ -225,9 +225,9 @@
 #define AID_ASCENT_HE                   437
 #define AID_EXPLOSIVE_DEVICES2          438
 #define AID_ATTITUDE_CONTROL_SWITCHES   440
-#define AID_ENG_FUEL_TEMP               441
-#define AID_ENG_FUEL_PRESS              442
-#define AID_ENG_THRUST                  443
+#define AID_SPARE1		                441
+#define AID_SPARE2		                442
+#define AID_SPARE3	                    443
 #define AID_RCS_TEMP                    444
 #define AID_FDAI                        445
 #define AID_CRSFD_SWITCH                446
@@ -843,6 +843,31 @@
 #define IDB_BORDER_210x200              2020
 #define IDB_BORDER_104x106              2021
 #define IDB_BORDER_286x197              2022
+#define AID_DUMMY_PANEL_AREA			2023
+
+// VC Active Areas
+#define AID_VC_OVERHEADHATCH            3000
+#define AID_VC_OVERHEADHATCHHANDLE      3001
+#define AID_VC_OVERHEADHATCHRELIEFVALVE 3002
+#define AID_VC_FORWARDHATCH             3003
+#define AID_VC_FORWARDHATCHHANDLE       3004
+#define AID_VC_FORWARDHATCHRELIEFVALVE  3005
+
+#define AID_VC_UTILITYLIGHTCDR          3006
+#define AID_VC_UTILITYLIGHTLMP          3007
+
+#define AID_VC_SWITCH_ORDEAL_01          3008
+#define AID_VC_SWITCH_ORDEAL_02          3009
+#define AID_VC_SWITCH_ORDEAL_03          3010
+#define AID_VC_SWITCH_ORDEAL_04          3011
+#define AID_VC_SWITCH_ORDEAL_05          3012
+#define AID_VC_SWITCH_ORDEAL_06          3013
+#define AID_VC_ROT_ORDEAL_01             3014
+
+#define AID_VC_SW_RRGYRO                 3020
+#define AID_VC_RETICLEDISP               3021
+
+#define AID_VC_COAS2                     3031
 
 // VC Active Areas (Panel 1)
 #define AID_VC_PANEL_1				    ((id >= 3100) && (id <= 3140))
@@ -1002,6 +1027,7 @@
 #define AID_VC_START_BUTTON    3512
 #define AID_VC_STOP_BUTTON_CDR 3513
 #define AID_VC_PLUSX_BUTTON    3514
+#define AID_VC_START_BUTTON_RED  3515
 
 // VC Active Areas (Panel 6)
 #define AID_VC_PANEL_6			((id >= 3600) && (id <= 3630))
@@ -1293,6 +1319,37 @@
 #define AID_VC_CB_P16R4_17      4681
 #define AID_VC_CB_P16R4_18      4682
 #define AID_VC_CB_P16R4_19      4683
+
+// ECS Panels
+#define AID_VC_ROT_SUITCIRCUITRELIEF    5000
+#define AID_VC_ROT_CABINGASRETURN       5001
+#define AID_VC_ROT_CANISTER1            5002
+#define AID_VC_ROT_CANISTER2            5003
+#define AID_VC_ROT_CABINREPRESS         5004
+#define AID_VC_ROT_PLSSFILL             5005
+#define AID_VC_ROT_PRESSREGA            5006
+#define AID_VC_ROT_PRESSREGB            5007
+#define AID_VC_ROT_DESO2                5008
+#define AID_VC_ROT_ASCO2_1              5009
+#define AID_VC_ROT_ASCO2_2              5010
+#define AID_VC_ROT_SECEVAPFLOW          5011
+#define AID_VC_ROT_PRIEVAPFLOW_1        5012
+#define AID_VC_ROT_PRIEVAPFLOW_2        5013
+#define AID_VC_ROT_DESH2O               5014
+#define AID_VC_ROT_SUITTEMP             5015
+#define AID_VC_ROT_WATERTANKSEL         5016
+#define AID_VC_ROT_LGC                  5017
+#define AID_VC_ROT_SUITISOLCDR          5018
+#define AID_VC_ROT_SUITISOLLMP          5019
+#define AID_VC_ROT_ASCH2O               5020
+
+#define AID_VC_SUITGASDIVERTER          5021
+#define AID_VC_H2OSEP                   5022
+#define AID_VC_CANISTERSEL              5023
+#define AID_VC_VENT1                    5024
+#define AID_VC_VENT2                    5025
+#define AID_VC_ACTOVRDCDR               5026
+#define AID_VC_ACTOVRDLMP               5027
 
 #define IDB_LEM_FDAI_ROLL               10006
 

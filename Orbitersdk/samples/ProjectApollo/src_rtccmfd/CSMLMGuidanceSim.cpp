@@ -27,14 +27,13 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "saturn.h"
 #include "rtcc.h"
 
-CSMLMPoweredFlightIntegration::CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInputArray &T, int &I, EphemerisDataTable *E, RTCCNIAuxOutputTable *A) :
+CSMLMPoweredFlightIntegration::CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInputArray &T, int &I, EphemerisDataTable2 *E, RTCCNIAuxOutputTable *A) :
+	RTCCModule(r),
 	TArr(T),
 	IERR(I),
 	Eph(E),
 	Aux(A)
 {
-	rtcc = r;
-
 	TLARGE = 10e80;
 }
 
@@ -58,6 +57,8 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 	TPREV = T;
 	DTPREV = 0.0;
 
+	AOM = CDFACT / WT;
+
 	TLOP = TBM;
 	TI = TBM;
 	MPHASE = 1;
@@ -65,6 +66,7 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 	TCO = 0.0;
 	KEND = 0;
 	TPREV = TBM;
+	DTP = -1.0;
 
 	DVGO = abs(TArr.DVMAN);
 	THRUST = THPS[MPHASE - 1];
@@ -102,7 +104,7 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 	sv_ff.R = R;
 	sv_ff.V = V;
 	sv_ff.GMT = TArr.sv0.GMT + T;
-	sv_ff.RBI = TArr.sv0.RBI;
+	//sv_ff.RBI = TArr.sv0.RBI;
 
 	CalcBodyAttitude();
 
@@ -113,11 +115,23 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 
 	KTHSWT = 1;
 
-	R = RSAVE;
-	V = VSAVE;
+	R = RP = RSAVE;
+	V = VP = VSAVE;
 	T = TSAVE;
 	if (TArr.KEPHOP != 0)
 	{
+		//Store initial state vector
+		EphemerisData2 sv;
+
+		sv.R = R;
+		sv.V = V;
+		sv.GMT = TArr.sv0.GMT + T;
+		Eph->table.push_back(sv);
+
+		if (TArr.KEPHOP == 2)
+		{
+			WeightTable.push_back(WT);
+		}
 		TNEXT = TArr.DTOUT;
 	}
 
@@ -130,7 +144,7 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 		sv1.R = R;
 		sv1.V = V;
 		sv1.GMT = TArr.sv0.GMT + T;
-		sv1.RBI = TArr.sv0.RBI;
+		//sv1.RBI = TArr.sv0.RBI;
 		TEND = TLARGE;
 		TBI = TBM;
 		if (DTMAN > 0)
@@ -281,6 +295,14 @@ PMMRKJ_LABEL_12B:
 	}
 	MPHASE = 7;
 PMMRKJ_LABEL_13B:
+
+	//Special hacky SPS short burn logic
+	if (T - TBI < 1.0)
+	{
+		double dt_sb = T - TBI;
+		DTSPAN[7] = 0.405 + (dt_sb - 0.5)*(0.6 - 0.405) / (1.0 - 0.5);
+	}
+
 	TI = T + DTSPAN[7];
 	THRUST = THRUST / THPS[9] * THPS[7];
 	WTLRT = WTLRT / WDOTPS[9] * WDOTPS[7] * TArr.WDMULT;
@@ -326,7 +348,7 @@ PMMRKJ_LABEL_15A:
 	}
 PMMRKJ_LABEL_15B:
 	IJ = 0;
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS && TArr.IC == 13 && TArr.LMDESCJETT <= TBM)
+	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS && (TArr.IC == 13 || TArr.IC == 5) && TArr.LMDESCJETT <= TBM)
 	{
 		goto PMMRKJ_LABEL_15C;
 	}
@@ -354,17 +376,17 @@ PMMRKJ_LABEL_16A:
 	sv1.R = R;
 	sv1.V = V;
 	sv1.GMT = TArr.sv0.GMT + T;
-	sv1.RBI = TArr.sv0.RBI;
+	//sv1.RBI = TArr.sv0.RBI;
 	if (TArr.KTRIMOP == -1)
 	{
 		IA = 1;
-		rtcc->GIMGBL(WC, WL, P_G, Y_G, THRUST, WTLRT, TArr.ThrusterCode, TArr.IC, IA, IJ, TArr.DOCKANG);
+		pRTCC->GIMGBL(WC, WL, P_G, Y_G, THRUST, WTLRT, TArr.ThrusterCode, TArr.IC, IA, IJ, TArr.DOCKANG);
 		IA = -1;
 	}
 	else
 	{
 		IA = 0;
-		rtcc->GetSystemGimbalAngles(TArr.ThrusterCode, P_G, Y_G);
+		pRTCC->GetSystemGimbalAngles(TArr.ThrusterCode, P_G, Y_G);
 	}
 	PGBI = P_G;
 	YGBI = Y_G;
@@ -450,7 +472,7 @@ PMMRKJ_LABEL_22C:
 	sv2.R = R;
 	sv2.V = V;
 	sv2.GMT = TArr.sv0.GMT + T;
-	sv2.RBI = TArr.sv0.RBI;
+	//sv2.RBI = TArr.sv0.RBI;
 	if (Aux && TArr.KAUXOP)
 	{
 		Aux->A_T = A_T_out;
@@ -485,9 +507,29 @@ PMMRKJ_LABEL_22C:
 		Aux->GMT_BO = sv2.GMT;
 		if (TArr.KEPHOP >= 1)
 		{
-			Eph->table.push_back(sv2);
+			//Don't store same state vector twice, relevant for zero maneuvers
+			if (Eph->table.size() == 0 || Eph->table.back().GMT != sv2.GMT)
+			{
+				Eph->table.push_back(sv2);
+			}
+
+			//Write ephemeris header
+			if (TArr.sv0.RBI == BODY_EARTH)
+			{
+				Eph->Header.CSI = 0;
+			}
+			else
+			{
+				Eph->Header.CSI = 2;
+			}
+			Eph->Header.NumVec = Eph->table.size();
+			Eph->Header.TL = Eph->table.front().GMT;
+			Eph->Header.TR = Eph->table.back().GMT;
 		}
-		Aux->sv_FF = sv_ff;
+		Aux->sv_FF.R = sv_ff.R;
+		Aux->sv_FF.V = sv_ff.V;
+		Aux->sv_FF.GMT = sv_ff.GMT;
+		Aux->sv_FF.RBI = TArr.sv0.RBI;
 		Aux->V_G = VGN;
 		Aux->X_B = X_B;
 		Aux->Y_B = Y_B;
@@ -496,19 +538,10 @@ PMMRKJ_LABEL_22C:
 		Aux->WTEND = WT;
 		Aux->MainFuelUsed = MAINFUELUSED;
 		Aux->RCSFuelUsed = RCSFUELUSED;
-		Aux->W_CSM = WC;
-		if (TArr.IC == 4 || TArr.IC == 5)
-		{
-			Aux->W_LMA = WL;
-			Aux->W_LMD = 0.0;
-		}
-		else
-		{
-			Aux->W_LMA = TArr.LMAWT;
-			Aux->W_LMD = WL - TArr.LMAWT;
-		}
-
-		Aux->W_SIVB = WS;
+		Aux->W_CSM = TArr.CSMWT;
+		Aux->W_LMA = TArr.LMAWT;
+		Aux->W_LMD = TArr.LMDWT;
+		Aux->W_SIVB = TArr.SIVBWT;
 	}
 }
 
@@ -528,7 +561,28 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	DV_ul = 0.0;
 	X_B = Y_B = Z_B = _V(0, 0, 0);
 	Kg = 0;
-	IJ = 0;
+
+	//This only because ECI coordinate system is wrong
+	if (TArr.sv0.RBI == BODY_EARTH)
+	{
+		MATRIX3 obli_E = OrbMech::GetObliquityMatrix(BODY_EARTH, pRTCC->GetGMTBase() + TArr.sv0.GMT / 24.0 / 3600.0);
+		U_Z = mul(obli_E, _V(0, 1, 0));
+		U_Z = _V(U_Z.x, U_Z.z, U_Z.y);
+		W_ES = U_Z * OrbMech::w_Earth;
+	}
+
+	CD = pRTCC->SystemParameters.MCADRG;
+	CDFACT = 0.5 * TArr.DENSMULT *TArr.A;
+	
+	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS && (TArr.IC == 13 || TArr.IC == 5) && TArr.LMDESCJETT <= TBM)
+	{
+		IJ = 1;
+	}
+	else
+	{
+		IJ = 0;
+	}
+
 	DTMANE = 0.0;
 	A_T_in = TArr.AT;
 
@@ -566,6 +620,12 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	{
 		WC = TArr.CSMWT;
 		WL = 0.0;
+		WS = 0.0;
+	}
+	else if (TArr.IC == 5)
+	{
+		WC = TArr.CSMWT;
+		WL = TArr.LMAWT;
 		WS = 0.0;
 	}
 	else if (TArr.IC == 12)
@@ -616,19 +676,19 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 		TArr.MANOP = 4;
 	}
 
-	double Thrust, isp;
-	rtcc->EngineParametersTable(TArr.ThrusterCode, Thrust, isp);
+	double Thrust, wdot, OnboardThrust;
+	pRTCC->EngineParametersTable(TArr.ThrusterCode, Thrust, wdot, OnboardThrust);
 
 	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSMINUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSMINUS4)
 	{
 		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
+		WDOTPS[0] = wdot;
 
 		THPS[6] = Thrust;
 		THPS[9] = Thrust;
 
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[9] = Thrust / isp;
+		WDOTPS[6] = wdot;
+		WDOTPS[9] = wdot;
 
 		DTSPAN[3] = 6.0;
 		DTSPAN[5] = 4.0;
@@ -636,58 +696,58 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSMINUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSMINUS4)
 	{
 		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
+		WDOTPS[0] = wdot;
 
 		THPS[6] = Thrust;
 		THPS[9] = Thrust;
 
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[9] = Thrust / isp;
+		WDOTPS[6] = wdot;
+		WDOTPS[9] = wdot;
 
 		DTSPAN[3] = 6.0;
 		DTSPAN[5] = 4.0;
 	}
-	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LOX_DUMP || TArr.ThrusterCode == RTCC_ENGINETYPE_SIVB_APS)
+	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LOX_DUMP)
 	{
 		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
+		WDOTPS[0] = wdot;
 
 		THPS[6] = Thrust;
 		THPS[9] = Thrust;
 
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[9] = Thrust / isp;
+		WDOTPS[6] = wdot;
+		WDOTPS[9] = wdot;
 
 		DTSPAN[3] = TLARGE;
 		DTSPAN[5] = TLARGE;
 	}
 	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS)
 	{
-		THPS[1] = rtcc->MCTST2;
-		THPS[2] = rtcc->MCTST4;
-		THPS[6] = Thrust;
-		THPS[7] = rtcc->MCTST4;
-		THPS[9] = rtcc->MCTST4;
+		THPS[1] = pRTCC->SystemParameters.MCTST2;
+		THPS[2] = pRTCC->SystemParameters.MCTST4;
+		THPS[6] = pRTCC->SystemParameters.MCTST6;
+		THPS[7] = pRTCC->SystemParameters.MCTST4;
+		THPS[9] = pRTCC->SystemParameters.MCTST4;
 
-		WDOTPS[1] = rtcc->MCTSW2;
-		WDOTPS[2] = rtcc->MCTSW4;
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[7] = rtcc->MCTSW4;
-		WDOTPS[9] = rtcc->MCTSW4;
+		WDOTPS[1] = pRTCC->SystemParameters.MCTSW2;
+		WDOTPS[2] = pRTCC->SystemParameters.MCTSW4;
+		WDOTPS[6] = pRTCC->SystemParameters.MCTSW6;
+		WDOTPS[7] = pRTCC->SystemParameters.MCTSW4;
+		WDOTPS[9] = pRTCC->SystemParameters.MCTSW4;
 
-		DTSPAN[1] = rtcc->MCTSD2;
-		DTSPAN[2] = rtcc->MCTSD3;
-		DTSPAN[3] = 6.0;
+		DTSPAN[1] = pRTCC->SystemParameters.MCTSD2;
+		DTSPAN[2] = pRTCC->SystemParameters.MCTSD3;
+		DTSPAN[3] = pRTCC->SystemParameters.MCTSD4;
 		DTSPAN[4] = 0.0;
 		DTSPAN[5] = 4.0;
 		DTSPAN[6] = 1.0;
-		DTSPAN[7] = 0.0;
-		DTSPAN[8] = rtcc->MCTSD9;
+		DTSPAN[7] = pRTCC->SystemParameters.MCTSD5;
+		DTSPAN[8] = pRTCC->SystemParameters.MCTSD9;
 
-		XK[0] = Thrust;
-		XK[1] = 0.0;
-		XK[2] = Thrust;
-		XK[3] = 6975.34;
+		XK[0] = pRTCC->SystemParameters.MCTSK1;
+		XK[1] = pRTCC->SystemParameters.MCTSK2;
+		XK[2] = pRTCC->SystemParameters.MCTSK3;
+		XK[3] = pRTCC->SystemParameters.MCTSK4;
 		if (TArr.UllageOption)
 		{
 			XK[3] *= 2.0;
@@ -699,20 +759,20 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	}
 	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMAPS)
 	{
-		THPS[1] = rtcc->MCTAT2;
-		THPS[2] = rtcc->MCTAT4;
+		THPS[1] = pRTCC->SystemParameters.MCTAT2;
+		THPS[2] = pRTCC->SystemParameters.MCTAT4;
 		THPS[6] = Thrust;
-		THPS[7] = rtcc->MCTAT4;
-		THPS[9] = rtcc->MCTAT4;
+		THPS[7] = pRTCC->SystemParameters.MCTAT4;
+		THPS[9] = pRTCC->SystemParameters.MCTAT4;
 
-		WDOTPS[1] = rtcc->MCTAW2;
-		WDOTPS[2] = rtcc->MCTAW4;
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[7] = rtcc->MCTAW4;
-		WDOTPS[9] = rtcc->MCTAW4;
+		WDOTPS[1] = pRTCC->SystemParameters.MCTAW2;
+		WDOTPS[2] = pRTCC->SystemParameters.MCTAW4;
+		WDOTPS[6] = wdot;
+		WDOTPS[7] = pRTCC->SystemParameters.MCTAW4;
+		WDOTPS[9] = pRTCC->SystemParameters.MCTAW4;
 
-		DTSPAN[1] = rtcc->MCTAD2;
-		DTSPAN[2] = rtcc->MCTAD3;
+		DTSPAN[1] = pRTCC->SystemParameters.MCTAD2;
+		DTSPAN[2] = pRTCC->SystemParameters.MCTAD3;
 		DTSPAN[3] = 6.0;
 		DTSPAN[4] = 0.0;
 		DTSPAN[5] = 4.0;
@@ -720,10 +780,10 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 		DTSPAN[7] = 0.1765;
 		DTSPAN[8] = 0.5;
 
-		XK[0] = rtcc->MCTAK1;
-		XK[1] = rtcc->MCTAK2;
-		XK[2] = rtcc->MCTAK3;
-		XK[3] = rtcc->MCTAK4;
+		XK[0] = pRTCC->SystemParameters.MCTAK1;
+		XK[1] = pRTCC->SystemParameters.MCTAK2;
+		XK[2] = pRTCC->SystemParameters.MCTAK3;
+		XK[3] = pRTCC->SystemParameters.MCTAK4;
 
 		if (TArr.DTU == 0.0)
 		{
@@ -732,28 +792,28 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	}
 	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS)
 	{
-		THPS[1] = rtcc->MCTDT2;
-		THPS[2] = rtcc->MCTDT3;
-		THPS[3] = rtcc->MCTDT4;
-		THPS[4] = rtcc->MCTDT5 * TArr.DPSScale;
+		THPS[1] = pRTCC->SystemParameters.MCTDT2;
+		THPS[2] = pRTCC->SystemParameters.MCTDT3;
+		THPS[3] = pRTCC->SystemParameters.MCTDT4;
+		THPS[4] = pRTCC->SystemParameters.MCTDT5 * TArr.DPSScale;
 		THPS[6] = Thrust;
-		THPS[7] = rtcc->MCTDT6 * TArr.DPSScale;
-		THPS[9] = rtcc->MCTDT6 * TArr.DPSScale;
+		THPS[7] = pRTCC->SystemParameters.MCTDT6 * TArr.DPSScale;
+		THPS[9] = pRTCC->SystemParameters.MCTDT6 * TArr.DPSScale;
 
-		WDOTPS[1] = rtcc->MCTDW2;
-		WDOTPS[2] = rtcc->MCTDW3;
-		WDOTPS[3] = rtcc->MCTDW4;
-		WDOTPS[4] = rtcc->MCTDW5 * TArr.DPSScale;
-		WDOTPS[6] = THPS[6] / isp;
-		WDOTPS[7] = rtcc->MCTDW6 * TArr.DPSScale;
-		WDOTPS[9] = rtcc->MCTDW6 * TArr.DPSScale;
+		WDOTPS[1] = pRTCC->SystemParameters.MCTDW2;
+		WDOTPS[2] = pRTCC->SystemParameters.MCTDW3;
+		WDOTPS[3] = pRTCC->SystemParameters.MCTDW4;
+		WDOTPS[4] = pRTCC->SystemParameters.MCTDW5 * TArr.DPSScale;
+		WDOTPS[6] = wdot;
+		WDOTPS[7] = pRTCC->SystemParameters.MCTDW6 * TArr.DPSScale;
+		WDOTPS[9] = pRTCC->SystemParameters.MCTDW6 * TArr.DPSScale;
 
-		DTSPAN[1] = rtcc->MCTDD2;
-		DTSPAN[2] = rtcc->MCTDD3;
+		DTSPAN[1] = pRTCC->SystemParameters.MCTDD2;
+		DTSPAN[2] = pRTCC->SystemParameters.MCTDD3;
 		DTSPAN[3] = 6.0;//TArr.DTPS10 - DTSPAN[2] - DTSPAN[1];
-		DTSPAN[4] = rtcc->MCTDD5;
+		DTSPAN[4] = pRTCC->SystemParameters.MCTDD5;
 		DTSPAN[5] = 4.0;
-		DTSPAN[6] = rtcc->MCTDD6;
+		DTSPAN[6] = pRTCC->SystemParameters.MCTDD6;
 		DTSPAN[7] = 0.38;
 		DTSPAN[8] = 0.5;
 
@@ -772,27 +832,27 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	{
 		if (TArr.UllageOption)
 		{
-			rtcc->EngineParametersTable(RTCC_ENGINETYPE_LMRCSPLUS4, Thrust, isp);
+			pRTCC->EngineParametersTable(RTCC_ENGINETYPE_LMRCSPLUS4, Thrust, wdot, OnboardThrust);
 		}
 		else
 		{
-			rtcc->EngineParametersTable(RTCC_ENGINETYPE_LMRCSPLUS2, Thrust, isp);
+			pRTCC->EngineParametersTable(RTCC_ENGINETYPE_LMRCSPLUS2, Thrust, wdot, OnboardThrust);
 		}
 		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
+		WDOTPS[0] = wdot;
 	}
 	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS)
 	{
 		if (TArr.UllageOption)
 		{
-			rtcc->EngineParametersTable(RTCC_ENGINETYPE_CSMRCSPLUS4, Thrust, isp);
+			pRTCC->EngineParametersTable(RTCC_ENGINETYPE_CSMRCSPLUS4, Thrust, wdot, OnboardThrust);
 		}
 		else
 		{
-			rtcc->EngineParametersTable(RTCC_ENGINETYPE_CSMRCSPLUS2, Thrust, isp);
+			pRTCC->EngineParametersTable(RTCC_ENGINETYPE_CSMRCSPLUS2, Thrust, wdot, OnboardThrust);
 		}
 		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
+		WDOTPS[0] = wdot;
 	}
 
 	if (TArr.DTU > 0)
@@ -809,7 +869,7 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	DTTOC = DTSPAN[7];
 }
 
-void CSMLMPoweredFlightIntegration::PCRUNG(EphemerisDataTable *E, std::vector<double> &W)
+void CSMLMPoweredFlightIntegration::PCRUNG(EphemerisDataTable2 *E, std::vector<double> &W)
 {
 	VECTOR3 RDDP1, RDDP2, RDDP3;
 	if (DT != DTPREV)
@@ -874,11 +934,11 @@ PCRUNG_LABEL_4B:
 	//Time to store some data
 	if (T == TNEXT)
 	{
-		EphemerisData sv;
+		EphemerisData2 sv;
 
 		sv.R = R;
 		sv.V = V;
-		sv.RBI = TArr.sv0.RBI;
+		//sv.RBI = TArr.sv0.RBI;
 		sv.GMT = TArr.sv0.GMT + T;
 		E->table.push_back(sv);
 		TLOP = TNEXT;
@@ -902,11 +962,54 @@ void CSMLMPoweredFlightIntegration::PCRDD()
 {
 	double TL, WDOT;
 
-	//Compute gravitational acceleration
-	VECTOR3 r_p_ddot = OrbMech::gravityroutine(RP, rtcc->GetGravref(TArr.sv0.RBI), rtcc->GetGMTBase() + (TArr.sv0.GMT + T) / 24.0 / 3600.0);
+	//Computing K3?
+	if (KCODE != 3)
+	{
+		//Compute gravitational acceleration
+		VECTOR3 U_R;
+		double RSQD, RMAG;
+
+		U_R = unit(RP);
+		RSQD = dotp(RP, RP);
+		RMAG = sqrt(RSQD);
+
+		if (TArr.sv0.RBI == BODY_EARTH)
+		{
+			VECTOR3 g_b;
+			double costheta;
+			costheta = dotp(U_R, U_Z);
+			g_b = -(U_R*(1.0 - 5.0*costheta*costheta) + U_Z * 2.0*costheta)*OrbMech::mu_Earth / RSQD * 3.0 / 2.0*OrbMech::J2_Earth*pow(OrbMech::R_Earth / RMAG, 2.0);
+			r_p_ddot = -U_R * OrbMech::mu_Earth / RSQD + g_b;
+		}
+		else
+		{
+			r_p_ddot = -U_R * OrbMech::mu_Moon / RSQD;
+		}
+		//r_p_ddot = OrbMech::gravityroutine(RP, pRTCC->GetGravref(TArr.sv0.RBI), pRTCC->GetGMTBase() + (TArr.sv0.GMT + T) / 24.0 / 3600.0);
+
+		if (TArr.sv0.RBI == BODY_EARTH)
+		{
+			//Compute altitude
+			ALT = RMAG - OrbMech::R_Earth;
+			//Compute density
+			pRTCC->GLFDEN(ALT, RHO, SOS);
+		}
+	}
+
 	//Compute drag acceleration
-	VECTOR3 r_d_ddot = _V(0, 0, 0);
-	//Sum drag and gravity termins
+	VECTOR3 r_d_ddot;
+	if (TArr.sv0.RBI == BODY_EARTH)
+	{
+		V_R = VP - crossp(W_ES, RP);
+		VRMAG = length(V_R);
+		RHOP = RHO * AOM*CD*VRMAG;
+		r_d_ddot = -V_R * RHOP;
+	}
+	else
+	{
+		r_d_ddot = _V(0, 0, 0);
+	}
+	//Sum drag and gravity terms
 	RDDP = r_p_ddot + r_d_ddot;
 	if (KTHSWT == 0)
 	{
@@ -914,10 +1017,17 @@ void CSMLMPoweredFlightIntegration::PCRDD()
 		RDD = RDDP + RDDT;
 		return;
 	}
+	//Computing K3?
 	if (KCODE == 3)
 	{
 		RDD = RDDP + RDDT;
 		return;
+	}
+
+	//Average G
+	if (KCODE == 1 && TArr.MANOP >= 3)
+	{
+		AverageGRoutine();
 	}
 
 	if (MPHASE == 1)
@@ -929,7 +1039,7 @@ void CSMLMPoweredFlightIntegration::PCRDD()
 	}
 	else
 	{
-		rtcc->GIMGBL(WC, WL, P_G, Y_G, TL, WDOT, TArr.ThrusterCode, TArr.IC, IA, IJ, TArr.DOCKANG);
+		pRTCC->GIMGBL(WC, WL, P_G, Y_G, TL, WDOT, TArr.ThrusterCode, TArr.IC, IA, IJ, TArr.DOCKANG);
 		goto PCRDD_LABEL_6A;
 	}
 
@@ -977,6 +1087,7 @@ PCRDD_LABEL_3C:
 		{
 			WL = WL - DW;
 		}
+		//TBD: MPHASE = 2 has some RCS ullage, take that into account
 		if (MPHASE == 1)
 		{
 			RCSFUELUSED += DW;
@@ -989,7 +1100,7 @@ PCRDD_LABEL_3C:
 		{
 			DVTO = DVTO - A * abs(THRUST);
 			DVTOX = DVTOX - A * abs(THX);
-			AOM = CD / WT;
+			AOM = CDFACT / WT;
 			TPREV = T;
 		}
 		else
@@ -1006,7 +1117,7 @@ PCRDD_LABEL_3C:
 					DVGO = abs(TArr.DVMAN) - DVX;
 				}
 			}
-			AOM = CD / WT;
+			AOM = CDFACT / WT;
 			TPREV = T;
 		}
 	}
@@ -1021,7 +1132,7 @@ PCRDD_LABEL_3C:
 	return;
 
 PCRDD_LABEL_6A:
-	if (MPHASE == 7)
+	if (MPHASE == 6)
 	{
 		//THRUST = TL;
 		//WTLRT = WDOT;
@@ -1177,7 +1288,7 @@ PCGUID_4_A:
 		A_TR = VG / Vg;
 		A_TM = A_TR;
 		A_TL = A_TR;
-		DTN = Tg - T;
+		//DTN = Tg - T;
 	}
 PCGUID_4_B:
 	Vgo = Vg - XK[3] / WT;
@@ -1223,10 +1334,10 @@ PCGUID_6_A:
 	DTSPAN[3] = TLARGE;
 
 PCGUID_6_B:
-	Vn_apo = V;
-	g_apo = RDDP;
-	DTP = DTN;
-	Vg_apo = Vg;
+	//Vn_apo = V;
+	//g_apo = RDDP;
+	//DTP = DTN;
+	//Vg_apo = Vg;
 	return;
 PCGUID_7_A:
 	KGN = 5;
@@ -1236,14 +1347,14 @@ PCGUID_7_A:
 	}
 	return;
 PCGUID_8_A:
-	VECTOR3 g_av = (RDDP + g_apo) / 2.0;
-	DTN = DT;
-	VECTOR3 DVV = V - Vn_apo - g_av * DTP;
-	VG = VG - DVV;
+	//VECTOR3 g_av = (RDDP + g_apo) / 2.0;
+	//DTN = DT;
+	//VECTOR3 DVV = V - Vn_apo - g_av * DTP;
+	//VG = VG - DVV;
 	Vg = length(VG);
 	A = -WTLRT * Vg / THRUST;
 	TGO = WT / WTLRT * (1.0 - exp(A)) - DTSPAN[7];
-	if (TGO > DTSPAN[5])
+	if (TGO > 4.0)
 	{
 	PCGUID_8_B:
 		A_T = VG / Vg;
@@ -1260,20 +1371,28 @@ PCGUID_8_A:
 void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 {
 	VECTOR3 Y_T;
-	double TTT = rtcc->GetOnboardComputerThrust(TArr.ThrusterCode);
+	double TTT = pRTCC->GetOnboardComputerThrust(TArr.ThrusterCode);
 
 	if (AttGiven == false)
 	{
 		if (TArr.ExtDVCoordInd)
 		{
-			VG = rtcc->PIEXDV(sv_ff.R, sv_ff.V, TArr.CAPWT, TTT, TArr.VG, true);
+			VG = pRTCC->PIEXDV(sv_ff.R, sv_ff.V, TArr.CAPWT, TTT, TArr.VG, true);
 		}
 		else
 		{
 			VG = TArr.VG;
 		}
-		A_T = unit(VG);
-
+		double dv = length(VG);
+		if (dv == 0.0)
+		{
+			A_T = _V(1, 0, 0);
+		}
+		else
+		{
+			A_T = unit(VG);
+		}
+		
 		Y_T = unit(crossp(A_T, sv_ff.R));
 
 		if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS4)
@@ -1311,11 +1430,11 @@ void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 			double Thr, WDOT;
 			if (TArr.KTRIMOP == -1)
 			{
-				rtcc->GIMGBL(TArr.CSMWT, TArr.LMAWT + TArr.LMDWT, P_G, Y_G, Thr, WDOT, TArr.ThrusterCode, TArr.IC, 1, IJ, TArr.DOCKANG);
+				pRTCC->GIMGBL(TArr.CSMWT, TArr.LMAWT + TArr.LMDWT, P_G, Y_G, Thr, WDOT, TArr.ThrusterCode, TArr.IC, 1, IJ, TArr.DOCKANG);
 			}
 			else
 			{
-				rtcc->GetSystemGimbalAngles(TArr.ThrusterCode, P_G, Y_G);
+				pRTCC->GetSystemGimbalAngles(TArr.ThrusterCode, P_G, Y_G);
 			}
 
 			X_B = A_T * cos(P_G)*cos(Y_G) - Y_T * cos(P_G)*sin(Y_G) + Z_T * sin(P_G);
@@ -1347,4 +1466,20 @@ void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 			}
 		}
 	}
+}
+
+void CSMLMPoweredFlightIntegration::AverageGRoutine()
+{
+	//Average G
+	DTN = DT;
+	if (DTP > 0.0)
+	{
+		VECTOR3 g_av = (RDDP + g_apo) / 2.0;
+		VECTOR3 DVV = V - Vn_apo - g_av * DTP;
+		VG = VG - DVV;
+	}
+
+	Vn_apo = V;
+	g_apo = RDDP;
+	DTP = DTN;
 }

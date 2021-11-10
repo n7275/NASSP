@@ -201,21 +201,8 @@ bool IU::GetSIIPropellantDepletionEngineCutoff()
 	return false;
 }
 
-bool IU::GetSIIEngineOut()
+bool IU::GetSIIEnginesOut()
 {
-	return false;
-}
-
-bool IU::GetSIVBEngineOut()
-{
-	int stage = lvCommandConnector.GetStage();
-	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return false;
-
-	if (lvCommandConnector.GetSIVBThrustOK() == false)
-	{
-		return true;
-	}
-
 	return false;
 }
 
@@ -1306,21 +1293,6 @@ void IUToLVCommandConnector::GetSIIThrustOK(bool *ok)
 	}
 }
 
-bool IUToLVCommandConnector::GetSIIEngineOut()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SII_ENGINE_OUT;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
 bool IUToLVCommandConnector::GetSIIPropellantDepletionEngineCutoff()
 {
 	ConnectorMessage cm;
@@ -1603,9 +1575,19 @@ bool IUSV::GetSIIPropellantDepletionEngineCutoff()
 	return lvCommandConnector.GetSIIPropellantDepletionEngineCutoff();
 }
 
-bool IUSV::GetSIIEngineOut()
+bool IUSV::GetSIIEnginesOut()
 {
-	return lvCommandConnector.GetSIIEngineOut();
+	return eds.GetSIIEnginesOut();
+}
+
+bool IUSV::GetSIIInboardEngineOut()
+{
+	return eds.GetSIIInboardEngineOut();
+}
+
+bool IUSV::GetSIIOutboardEngineOut()
+{
+	return eds.GetSIIOutboardEngineOut();
 }
 
 bool IUSV::ESEGetSICOutboardEnginesCantInhibit()

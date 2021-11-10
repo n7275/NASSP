@@ -65,6 +65,7 @@ public:
 	void SetSIEngineFailure(int n, double misst);
 	void SetSIIEngineFailure(int n, double misst);
 	void SetRandomFailures(double FailureMultiplier);
+	void SetAEAACommands(int arm, int set);
 
 	void menuVoid();
 	void menuSetMainPage();
@@ -73,7 +74,6 @@ public:
 	void menuSetIUPage();
 	void menuSetTELEPage();
 	void menuSetLGCPage();
-	void menuSetSOCKPage();
 	void menuSetDebugPage();
 	void menuSetFailuresPage();
 
@@ -84,6 +84,7 @@ public:
 	void menuSetCDRInSuit();
 	void menuSetLMPInSuit();
 	void menuStartEVA();
+	void menuConnectCSMO2Hose();
 	void menuSetPrimECSTestHeaterPower();
 	void menuSetSecECSTestHeaterPower();
 	void menuAbortUplink();
@@ -112,6 +113,7 @@ public:
 	void menuSetSIEngineFailure();
 	void menuSetSIIEngineFailure();
 	void menuSetRandomFailures();
+	void menuAEAACommands();
 
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);

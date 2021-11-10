@@ -56,10 +56,26 @@ const double P1_3_TILT = 18.4 * RAD;
 const int	P1_SWITCHCOUNT = 49;
 const int	P2_SWITCHCOUNT = 90;
 const int	P3_SWITCHCOUNT = 64;
+const int	P4_SWITCHCOUNT = 5;
+const int	P5_SWITCHCOUNT = 10;
+const int	P6_SWITCHCOUNT = 8;
+const int	P7_SWITCHCOUNT = 6;
+const int	P8_SWITCHCOUNT = 25;
+const int	P9_SWITCHCOUNT = 9;
+const int	P10_SWITCHCOUNT = 8;
+const int	P13_SWITCHCOUNT = 6;
+const int	P15_SWITCHCOUNT = 5;
+const int	P16_SWITCHCOUNT = 3;
+const int	P100_SWITCHCOUNT = 6;
+const int	P101_SWITCHCOUNT = 4;
+const int	P122_SWITCHCOUNT = 7;
+const int	P306_SWITCHCOUNT = 8;
 
 // Number of push buttons
 const int   P1_PUSHBCOUNT = 11;
 const int   P2_PUSHBCOUNT = 19;
+const int   P122_PUSHBCOUNT = 19;
+const int   LEB_L_PUSHBCOUNT = 4;
 
 // Number of switch covers
 const int   P1_SWITCHCOVERCOUNT = 15;
@@ -69,18 +85,64 @@ const int   P2_SWITCHCOVERCOUNT = 12;
 const int	 P1_ROTCOUNT = 1;
 const int	 P2_ROTCOUNT = 4;
 const int	 P3_ROTCOUNT = 5;
+const int	 P4_ROTCOUNT = 1;
+const int	 P5_ROTCOUNT = 2;
+const int	 P7_ROTCOUNT = 5;
+const int	 P8_ROTCOUNT = 3;
+const int	 P12_ROTCOUNT = 1;
+const int	 P100_ROTCOUNT = 3;
+const int	 P101_ROTCOUNT = 2;
+const int	 P326_ROTCOUNT = 6;
+const int	 LEB_R_ROTCOUNT = 3;
+const int	 LEB_L_ROTCOUNT = 22;
 
 // Number of thumbwheels
 const int	 P1_TWCOUNT = 2;
 const int	 P2_TWCOUNT = 1;
 const int	 P3_TWCOUNT = 2;
+const int	 P6_TWCOUNT = 6;
+const int	 P9_TWCOUNT = 6;
+const int	 P10_TWCOUNT = 6;
 
 // Number of needles
 const int	 P1_NEEDLECOUNT = 5;
 
+// Number of circuit breakers
+const int P4_CBCOUNT = 12;
+const int P5_CBCOUNT = 69;
+const int P8_CBCOUNT = 67;
+const int LEB_R1_CBCOUNT = 81;
+const int LEB_R2_CBCOUNT = 31;
+
+// Clickspot radius
+const double SWITCH = 0.008; //0.006
+const double PUSHB = 0.008;
+const double ROT = 0.02;
+const double CB = 0.008;
+const double TW = 0.01;
+
 // Switch clickspot offset
 const VECTOR3	P1_3_CLICK = { 0.00, 0.009*cos(P1_3_TILT - (90.0 * RAD)), 0.009*sin(P1_3_TILT - (90.0 * RAD)) };
 const VECTOR3	P1_3_TWCLICK = { 0.00, 0.024*cos(P1_3_TILT - (90.0 * RAD)), 0.024*sin(P1_3_TILT - (90.0 * RAD)) };
+const VECTOR3	P6_TWCLICK = { -0.016793, -0.010398, -0.013661 };
+const VECTOR3	P9_TWCLICK = { 0.017689, -0.011461, -0.012926 };
+const VECTOR3	P10_TWCLICK = { 0.000035, -0.021956, -0.009651 };
+const VECTOR3	P4_CLICK = { -0.00442, 0.008318, -0.002538 };
+const VECTOR3	P6_CLICK = { -0.006293, -0.003896, -0.005119 };
+const VECTOR3	P5_CLICK = { -0.00828, 0.00004, -0.005173 };
+const VECTOR3	P7_CLICK = { 0.00442, 0.008327, -0.002499 };
+const VECTOR3	P8_CLICK = { 0.00826, 0.00008, -0.005196 };
+const VECTOR3	P9_CLICK = { 0.006978, -0.004521, -0.005098 };
+const VECTOR3	P10_CLICK = { 0.000013, -0.008239, -0.003621 };
+const VECTOR3	P13_CLICK = { 0.005371, -0.00622, -0.005259 };
+const VECTOR3	P15_CLICK = { 0.005634, -0.006241, -0.004942 };
+const VECTOR3	P16_CLICK = { -0.006025, -0.005422, -0.005441 };
+const VECTOR3	P101_CLICK = { 0, 0.938288430820701 * 0.009, -0.345853756070434 * 0.009 };
+const VECTOR3	P306_CLICK = { 0.009, 0, 0 };
+const VECTOR3	P325_CLICK = { 0, 0, 0.07 };
+const VECTOR3	P600_CLICK = { 0, -0.009, 0 };
+const VECTOR3	LEBFLOOR_CLICK = { 0, 0.009, 0 };
+const VECTOR3	LEBLEFT_CLICK = { 0.009, 0, 0 };
 
 // Rotary/Needle rotation axises
 const VECTOR3	P1_3_ROT_AXIS = { 0.00, sin(P1_3_TILT),-cos(P1_3_TILT) };
@@ -187,6 +249,256 @@ const VECTOR3 P3_TW_POS[P3_TWCOUNT] = {
 	{0.5832, 0.3306, 0.2629}, {0.5832, 0.2747, 0.2444}
 };
 
+// Panel 4 switches
+const VECTOR3 P4_TOGGLE_POS[P4_SWITCHCOUNT] = {
+{1.1509, 0.2085, 0.0020}, {1.1266, 0.1798, -0.0481}, {1.1787, 0.2074, -0.0480}, {1.1817, 0.1880, -0.1142}, {1.2203, 0.2086, -0.1140}
+};
+
+// Panel 4 rotaries
+const VECTOR3 P4_ROT_POS[P4_ROTCOUNT] = {
+	{1.1305, 0.1670, -0.1088}
+};
+
+// Panel 4 circuit breakers
+const VECTOR3 P4_CB_POS[P4_CBCOUNT] = {
+{1.1127, 0.1476, -0.1605}, {1.1333, 0.1585, -0.1602}, {1.1541, 0.1695, -0.1600}, {1.1858, 0.1863, -0.1603}, {1.2064, 0.1973, -0.1600},
+{1.2271, 0.2083, -0.1598}, {1.1251, 0.1420, -0.1984}, {1.1465, 0.1533, -0.1985}, {1.1679, 0.1647, -0.1985}, {1.1890, 0.1759, -0.1980},
+{1.2101, 0.1870, -0.1982}, {1.2311, 0.1982, -0.1979}
+};
+
+// Panel 5 switches
+const VECTOR3 P5_TOGGLE_POS[P5_SWITCHCOUNT] = {
+{1.0635, 0.4726, 0.2254}, {1.0830, 0.4807, 0.1946}, {1.1024, 0.4888, 0.1636}, {1.1218, 0.4970, 0.1328}, {1.1525, 0.5098, 0.0844},
+{1.1660, 0.5155, 0.0631}, {1.1794, 0.5212, 0.0417}, {1.1988, 0.5293, 0.0108}, {1.1492, 0.4365, 0.0895}, {1.1627, 0.4422, 0.0682}
+};
+
+// Panel 5 rotaries
+const VECTOR3 P5_ROT_POS[P5_ROTCOUNT] = {
+	{1.0745, 0.4076, 0.1899}, {1.1143, 0.4244, 0.1267}
+};
+
+// Panel 5 circuit breakers
+const VECTOR3 P5_CB_POS[P5_CBCOUNT] = {
+{1.2131, 0.5463, -0.0392}, {1.2243, 0.5510, -0.0572}, {1.2447, 0.5597, -0.0896}, {1.2749, 0.5723, -0.1374}, {1.2950, 0.5808, -0.1693},
+{1.3064, 0.5855, -0.1872}, {1.3179, 0.5903, -0.2054}, {1.2181, 0.5024, -0.0474}, {1.2296, 0.5074, -0.0655}, {1.2410, 0.5122, -0.0836},
+{1.2575, 0.5189, -0.1098}, {1.2686, 0.5237, -0.1273}, {1.2796, 0.5283, -0.1448}, {1.2907, 0.5330, -0.1624}, {1.3018, 0.5377, -0.1801},
+{1.3129, 0.5423, -0.1974}, {1.3240, 0.5470, -0.2151}, {1.1709, 0.4335, 0.0273}, {1.1824, 0.4385, 0.0091}, {1.1938, 0.4434, -0.0089},
+{1.2226, 0.4553, -0.0546}, {1.2337, 0.4601, -0.0721}, {1.2447, 0.4647, -0.0896}, {1.2558, 0.4694, -0.1072}, {1.2669, 0.4741, -0.1249},
+{1.2780, 0.4787, -0.1422}, {1.2891, 0.4834, -0.1599}, {1.3134, 0.4935, -0.1984}, {1.0670, 0.3376, 0.1924}, {1.0782, 0.3423, 0.1744},
+{1.1066, 0.3542, 0.1293}, {1.1180, 0.3590, 0.1112}, {1.1294, 0.3639, 0.0933}, {1.1408, 0.3687, 0.0752}, {1.1579, 0.3757, 0.0480},
+{1.1693, 0.3805, 0.0299}, {1.1807, 0.3854, 0.0120}, {1.1921, 0.3902, -0.0061}, {1.2363, 0.4087, -0.0764}, {1.2477, 0.4135, -0.0944},
+{1.2591, 0.4184, -0.1124}, {1.2705, 0.4232, -0.1305}, {1.2871, 0.4300, -0.1569}, {1.2985, 0.4349, -0.1750}, {1.3099, 0.4397, -0.1930},
+{1.3213, 0.4445, -0.2110}, {1.0864, 0.2956, 0.1615}, {1.1168, 0.3082, 0.1133}, {1.1420, 0.3187, 0.0734}, {1.1535, 0.3237, 0.0552},
+{1.1649, 0.3285, 0.0372}, {1.1926, 0.3401, -0.0069}, {1.2040, 0.3450, -0.0249}, {1.2616, 0.3692, -0.1164}, {1.2727, 0.3739, -0.1339},
+{1.2837, 0.3785, -0.1514}, {1.2949, 0.3833, -0.1690}, {1.3060, 0.3879, -0.1867}, {1.3170, 0.3926, -0.2041}, {1.1010, 0.2534, 0.1383},
+{1.1182, 0.2605, 0.1111}, {1.1320, 0.2663, 0.0892}, {1.1431, 0.2711, 0.0716}, {1.1541, 0.2757, 0.0542}, {1.1652, 0.2804, 0.0365},
+{1.1763, 0.2851, 0.0189}, {1.1874, 0.2897, 0.0015}, {1.1985, 0.2944, -0.0162}, {1.2096, 0.2990, -0.0338}
+};
+
+// Panel 6 switches
+const VECTOR3 P6_TOGGLE_POS[P6_SWITCHCOUNT] = {
+{0.8417, 0.7281, 0.3304}, {0.8871, 0.6781, 0.3139}, {0.9330, 0.6277, 0.2971}, {0.9047, 0.7671, 0.2239}, {0.9521, 0.7151, 0.2064},
+{0.9973, 0.6656, 0.1897}, {1.0243, 0.5847, 0.2194}, {1.0351, 0.6043, 0.1910}
+};
+
+// Panel 6 thumbwheels
+const VECTOR3 P6_TW_POS[P6_TWCOUNT] = {
+{0.8661, 0.7540, 0.3201}, {0.9115, 0.7045, 0.3034}, {0.9575, 0.6543, 0.2864}, {0.9112, 0.7617, 0.2602}, {0.9589, 0.7096, 0.2424},
+{1.0038, 0.6602, 0.2258}
+};
+
+// Panel 7 switches
+const VECTOR3 P7_TOGGLE_POS[P7_SWITCHCOUNT] = {
+{-1.1340, 0.2070, 0.0421}, {-1.1548, 0.2001, -0.0147}, {-1.1319, 0.1881, -0.0149}, {-1.1432, 0.1790, -0.0628}, {-1.1545, 0.1690, -0.1137},
+{-1.1317, 0.1571, -0.1139}
+};
+
+// Panel 7 rotaries
+const VECTOR3 P7_ROT_POS[P7_ROTCOUNT] = {
+	{-1.1892, 0.2079, -0.0612}, {-1.2288, 0.2103, -0.1199}, {-1.2709, 0.2117, -0.1857}, {-1.2104, 0.1801, -0.1858}, {-1.1565, 0.1613, -0.1646}
+};
+
+// Panel 8 switches
+const VECTOR3 P8_TOGGLE_POS[P8_SWITCHCOUNT] = {
+{-1.2784, 0.5453, -0.1002}, {-1.2647, 0.5400, -0.0787}, {-1.2513, 0.5347, -0.0573}, {-1.2377, 0.5294, -0.0359}, {-1.2242, 0.5240, -0.0146},
+{-1.2107, 0.5186, 0.0069}, {-1.1972, 0.5133, 0.0282}, {-1.1836, 0.5080, 0.0496}, {-1.1701, 0.5026, 0.0710}, {-1.1566, 0.4973, 0.0923},
+{-1.1431, 0.4919, 0.1137}, {-1.1295, 0.4865, 0.1350}, {-1.1160, 0.4813, 0.1565}, {-1.1025, 0.4759, 0.1778}, {-1.0890, 0.4705, 0.1992},
+{-1.0754, 0.4652, 0.2207}, {-1.2178, 0.4169, -0.0045}, {-1.2043, 0.4116, 0.0170}, {-1.1748, 0.3641, 0.0531}, {-1.1575, 0.3571, 0.0807},
+{-1.1399, 0.3504, 0.1083}, {-1.1258, 0.3447, 0.1307}, {-1.1138, 0.3400, 0.1496}, {-1.1018, 0.3352, 0.1687}, {-1.0860, 0.3290, 0.1938}
+};
+
+// Panel 8 rotaries
+const VECTOR3 P8_ROT_POS[P8_ROTCOUNT] = {
+	{-1.1575, 0.4264, 0.0725}, {-1.1217, 0.4119, 0.1292}, {-1.0860, 0.3979, 0.1855}
+};
+
+// Panel 8 circuit breakers
+const VECTOR3 P8_CB_POS[P8_CBCOUNT] = {
+{-1.3346, 0.5696, -0.2170}, {-1.3188, 0.5633, -0.1922}, {-1.2939, 0.5535, -0.1528}, {-1.3348, 0.5092, -0.2175}, {-1.3233, 0.5047, -0.1993},
+{-1.3118, 0.5001, -0.1812}, {-1.3005, 0.4957, -0.1632}, {-1.2890, 0.4910, -0.1453}, {-1.2775, 0.4866, -0.1271}, {-1.2662, 0.4821, -0.1091},
+{-1.2546, 0.4774, -0.0909}, {-1.2433, 0.4730, -0.0728}, {-1.2317, 0.4684, -0.0547}, {-1.2204, 0.4641, -0.0368}, {-1.2090, 0.4593, -0.0188},
+{-1.1975, 0.4550, -0.0007}, {-1.1862, 0.4505, 0.0174}, {-1.1746, 0.4457, 0.0356}, {-1.3342, 0.4614, -0.2165}, {-1.3227, 0.4569, -0.1984},
+{-1.3112, 0.4523, -0.1803}, {-1.2999, 0.4480, -0.1623}, {-1.2884, 0.4432, -0.1443}, {-1.2769, 0.4389, -0.1262}, {-1.2656, 0.4344, -0.1082},
+{-1.2540, 0.4296, -0.0900}, {-1.2427, 0.4253, -0.0719}, {-1.2312, 0.4207, -0.0538}, {-1.3330, 0.4146, -0.2146}, {-1.3215, 0.4101, -0.1965},
+{-1.3100, 0.4055, -0.1784}, {-1.2987, 0.4012, -0.1604}, {-1.2873, 0.3964, -0.1424}, {-1.2757, 0.3921, -0.1243}, {-1.2644, 0.3876, -0.1063},
+{-1.2528, 0.3828, -0.0881}, {-1.2415, 0.3785, -0.0700}, {-1.2300, 0.3739, -0.0519}, {-1.2187, 0.3695, -0.0339}, {-1.2072, 0.3648, -0.0160},
+{-1.1957, 0.3604, 0.0021}, {-1.1844, 0.3559, 0.0202}, {-1.3349, 0.3672, -0.2176}, {-1.3234, 0.3627, -0.1994}, {-1.3119, 0.3581, -0.1814},
+{-1.3006, 0.3537, -0.1634}, {-1.2891, 0.3490, -0.1454}, {-1.2776, 0.3446, -0.1273}, {-1.2663, 0.3401, -0.1092}, {-1.2547, 0.3354, -0.0911},
+{-1.2434, 0.3310, -0.0730}, {-1.2318, 0.3264, -0.0549}, {-1.2205, 0.3221, -0.0369}, {-1.2091, 0.3173, -0.0189}, {-1.1673, 0.3008, 0.0474},
+{-1.1558, 0.2962, 0.0655}, {-1.1445, 0.2919, 0.0835}, {-1.1331, 0.2871, 0.1014}, {-1.1215, 0.2828, 0.1195}, {-1.1102, 0.2783, 0.1376},
+{-1.0986, 0.2735, 0.1558}, {-1.3237, 0.3158, -0.1999}, {-1.3122, 0.3113, -0.1817}, {-1.3007, 0.3067, -0.1636}, {-1.2894, 0.3023, -0.1456},
+{-1.2779, 0.2976, -0.1277}, {-1.2664, 0.2933, -0.1096}
+};
+
+// Panel 9 switches
+const VECTOR3 P9_TOGGLE_POS[P9_SWITCHCOUNT] = {
+{-0.9100, 0.7654, 0.2204}, {-0.9548, 0.7162, 0.2031}, {-1.0003, 0.6658, 0.1858}, {-0.8512, 0.7320, 0.3298}, {-0.8983, 0.6797, 0.3119},
+{-0.9431, 0.6301, 0.2949}, {-1.0367, 0.6007, 0.1939}, {-1.0256, 0.5790, 0.2280}, {-1.0146, 0.5572, 0.2621}
+};
+
+// Panel 9 thumbwheels
+const VECTOR3 P9_TW_POS[P9_TWCOUNT] = {
+{-0.9182, 0.7617, 0.2566}, {-0.9631, 0.7120, 0.2397}, {-1.0087, 0.6615, 0.2222}, {-0.8749, 0.7584, 0.3179}, {-0.9222, 0.7061, 0.3001},
+{-0.9670, 0.6566, 0.2829}
+};
+
+// Panel 10 switches
+const VECTOR3 P10_TOGGLE_POS[P10_SWITCHCOUNT] = {
+{0.0929, 0.3539, 0.5188}, {0.0928, 0.3791, 0.4605}, {0.0930, 0.4047, 0.4013}, {-0.0028, 0.3791, 0.4605}, {-0.0028, 0.4047, 0.4012},
+{-0.0986, 0.3540, 0.5188}, {-0.0985, 0.3791, 0.4605}, {-0.0985, 0.4046, 0.4013}
+};
+
+// Panel 10 thumbwheels
+const VECTOR3 P10_TW_POS[P10_TWCOUNT] = {
+{0.0624, 0.3754, 0.5277}, {0.0623, 0.4002, 0.4695}, {0.0625, 0.4257, 0.4105}, {-0.0684, 0.3754, 0.5277}, {-0.0684, 0.4002, 0.4695},
+{-0.0685, 0.4257, 0.4105}
+};
+
+// Panel 12 rotaries
+const VECTOR3 P12_ROT_POS[P12_ROTCOUNT] = {
+{-0.3027, 0.1734, 0.5538}
+};
+
+// Panel 13 switches
+const VECTOR3 P13_TOGGLE_POS[P13_SWITCHCOUNT] = {
+{-0.9838, 1.0715, -0.2288}, {-0.9574, 1.0460, -0.1718}, {-0.9352, 1.0243, -0.1233}, {-1.0234, 1.0360, -0.2263}, {-0.9864, 0.9999, -0.1455},
+{-0.9749, 0.9889, -0.1208}
+};
+
+// Panel 15 switches
+const VECTOR3 P15_TOGGLE_POS[P15_SWITCHCOUNT] = {
+{-0.8312, 0.9137, 0.2083}, {-0.8075, 0.8896, 0.2649}, {-0.7980, 0.8802, 0.2871}, {-0.7880, 0.8700, 0.3111}, {-0.7708, 0.8527, 0.3520}
+};
+
+// Panel 16 switches
+const VECTOR3 P16_TOGGLE_POS[P16_SWITCHCOUNT] = {
+{0.7430, 0.8487, 0.3613}, {0.7878, 0.8822, 0.2766}, {0.8170, 0.9039, 0.2215}
+};
+
+// Panel 100 switches
+const VECTOR3 P100_TOGGLE_POS[P100_SWITCHCOUNT] = {
+{-0.7336, -0.6991, 0.2216}, {-0.7050, -0.6991, 0.2216}, {-0.6659, -0.6991, 0.2216}, {-0.6138, -0.6991, 0.2216}, {-0.5778, -0.6991, 0.2216},
+{-0.5436, -0.6991, 0.2216}
+};
+
+// Panel 100 rotaries
+const VECTOR3 P100_ROT_POS[P100_ROTCOUNT] = {
+{-0.7232, -0.6952, 0.1361}, {-0.6414, -0.6952, 0.1361}, {-0.5711, -0.6952, 0.1361}
+};
+
+// Panel 101 switches
+const VECTOR3 P101_TOGGLE_POS[P101_SWITCHCOUNT] = {
+{-0.3969, -0.6484, 0.4125}, {-0.4717, -0.6764, 0.3361}, {-0.4250, -0.6764, 0.3361}, {-0.3975, -0.6764, 0.3361}
+};
+
+// Panel 101 rotaries
+const VECTOR3 P101_ROT_POS[P101_ROTCOUNT] = {
+{-0.4692, -0.6228, 0.4710}, {-0.3974, -0.6228, 0.4710}
+};
+
+// Panel 122 switches
+const VECTOR3 P122_TOGGLE_POS[P122_SWITCHCOUNT] = {
+{-0.3150, -0.7130, 0.0791}, {-0.2414, -0.7130, 0.0792}, {-0.1800, -0.7130, 0.0791}, {-0.2413, -0.7130, 0.0009}, {-0.1801, -0.7130, 0.0009},
+{0.1715, -0.7130, 0.0709}, {0.1716, -0.7130, -0.0079}
+};
+
+// Panel 122 push-buttons
+const VECTOR3 P122_PUSHB_POS[P122_PUSHBCOUNT] = {
+{0.2894, -0.6997, 0.0963}, {0.2894, -0.6997, 0.0741}, {0.3122, -0.6997, 0.1073}, {0.3122, -0.6997, 0.0853}, {0.3122, -0.6997, 0.0630},
+{0.3349, -0.6997, 0.0630}, {0.3576, -0.6998, 0.0630}, {0.3805, -0.6998, 0.0630}, {0.3349, -0.6997, 0.0853}, {0.3576, -0.6998, 0.0853},
+{0.3805, -0.6998, 0.0853}, {0.3349, -0.6997, 0.1073}, {0.3576, -0.6998, 0.1073}, {0.3805, -0.6998, 0.1073}, {0.4032, -0.6998, 0.1073},
+{0.4032, -0.6998, 0.0853}, {0.4032, -0.6998, 0.0630}, {0.4260, -0.6998, 0.0961}, {0.4260, -0.6998, 0.0739}
+};
+
+// Panel 306 switches
+const VECTOR3 P306_TOGGLE_POS[P306_SWITCHCOUNT] = {
+{-0.5233, -0.5086, 0.3536}, {-0.5233, -0.5293, 0.3536}, {-0.5233, -0.5498, 0.3536}, {-0.5233, -0.5704, 0.3536}, {-0.5233, -0.5910, 0.3536},
+{-0.5233, -0.6116, 0.3536}, {-0.5233, -0.6323, 0.3536}, {-0.5226, -0.6023, 0.4065}
+};
+
+// Panel 325 Levers
+const VECTOR3 Cab_Press_Rel_Handle1Location = { -1.2149, 0.7847, -0.2850 };
+const VECTOR3 Cab_Press_Rel_Handle2Location = { -1.2024, 0.6799, -0.2992 };
+
+// Panel 326 rotaries
+const VECTOR3 P326_ROT_POS[P326_ROTCOUNT] = {
+{-1.1659, 0.5990, -0.2336}, {-1.1659, 0.5355, -0.2336}, {-1.1659, 0.4719, -0.2336}, {-1.2942, 0.3346, -0.2336}, {-1.2305, 0.3346, -0.2336},
+{-1.1670, 0.3346, -0.2336}
+};
+
+// LEB Right Rotaries
+
+const VECTOR3 LEB_R_ROT_POS[LEB_R_ROTCOUNT] = {
+	{1.0811, -0.5597, -0.4702}, {1.0811, -0.5536, -0.6556}, {1.0811, -0.4765, -0.6556}
+};
+
+// LEB Right wall 1 circuit breakers
+const VECTOR3 LEB_R1_CB_POS[LEB_R1_CBCOUNT] = {
+{1.0887, 0.0627, 0.2484}, {1.0887, 0.0827, 0.2484}, {1.0887, 0.1026, 0.2484}, {1.0887, 0.1225, 0.2484}, {1.0887, 0.0627, 0.2139},
+{1.0887, 0.0812, 0.2139}, {1.0887, 0.0997, 0.2139}, {1.0887, 0.1182, 0.2139}, {1.0887, 0.0627, 0.1804}, {1.0887, 0.0812, 0.1804},
+{1.0887, 0.0998, 0.1804}, {1.0887, 0.1182, 0.1804}, {1.0887, 0.0626, 0.1464}, {1.0887, 0.0813, 0.1464}, {1.0887, 0.0997, 0.1464},
+{1.0887, 0.1182, 0.1464}, {1.0887, 0.0627, 0.1118}, {1.0887, 0.0812, 0.1118}, {1.0887, 0.0628, 0.0772}, {1.0887, 0.0812, 0.0772},
+{1.0887, 0.0627, 0.0106}, {1.0887, 0.0812, 0.0106}, {1.0887, -0.0841, 0.2422}, {1.0887, -0.0356, 0.2422}, {1.0887, -0.1464, 0.2047},
+{1.0887, -0.1118, 0.2047}, {1.0887, -0.0773, 0.2047}, {1.0887, -0.0428, 0.2047}, {1.0887, -0.2274, 0.1595}, {1.0887, -0.2076, 0.1595},
+{1.0887, -0.1876, 0.1595}, {1.0887, -0.1678, 0.1595}, {1.0887, -0.1489, 0.1595}, {1.0887, -0.1119, 0.1589}, {1.0887, -0.0769, 0.1589},
+{1.0887, -0.0429, 0.1589}, {1.0887, -0.2301, 0.1139}, {1.0887, -0.2090, 0.1139}, {1.0887, -0.1881, 0.1139}, {1.0887, -0.1672, 0.1139},
+{1.0887, -0.1463, 0.1139}, {1.0887, -0.1118, 0.1139}, {1.0887, -0.0773, 0.1139}, {1.0887, -0.0427, 0.1139}, {1.0887, -0.5147, 0.0014},
+{1.0887, -0.4804, 0.0014}, {1.0887, -0.4612, 0.0014}, {1.0887, -0.4311, 0.0014}, {1.0887, -0.4125, 0.0014}, {1.0887, -0.3933, 0.0014},
+{1.0887, -0.3748, 0.0014}, {1.0887, -0.5147, -0.0482}, {1.0887, -0.4805, -0.0482}, {1.0887, -0.4611, -0.0482}, {1.0887, -0.4313, -0.0482},
+{1.0887, -0.4124, -0.0482}, {1.0887, -0.3933, -0.0482}, {1.0887, -0.3745, -0.0482}, {1.0887, -0.5146, -0.0984}, {1.0887, -0.4804, -0.0984},
+{1.0887, -0.4611, -0.0984}, {1.0887, -0.4310, -0.0984}, {1.0887, -0.4124, -0.0984}, {1.0887, -0.3935, -0.0984}, {1.0887, -0.3745, -0.0984},
+{1.0887, -0.5207, -0.1431}, {1.0887, -0.5019, -0.1431}, {1.0887, -0.4829, -0.1431}, {1.0887, -0.4639, -0.1431}, {1.0887, -0.4313, -0.1431},
+{1.0887, -0.4124, -0.1431}, {1.0887, -0.3934, -0.1431}, {1.0887, -0.3745, -0.1431}, {1.0887, -0.5237, -0.1897}, {1.0887, -0.5028, -0.1897},
+{1.0887, -0.4819, -0.1897}, {1.0887, -0.4610, -0.1897}, {1.0887, -0.4353, -0.1897}, {1.0887, -0.4144, -0.1897}, {1.0887, -0.3932, -0.1897},
+{1.0887, -0.3725, -0.1897}
+};
+
+// LEB Right wall 2 circuit breakers
+const VECTOR3 LEB_R2_CB_POS[LEB_R2_CBCOUNT] = {
+{1.0866, -0.6567, -0.3024}, {1.0866, -0.6567, -0.3280}, {1.0866, -0.6567, -0.3558}, {1.0866, -0.6567, -0.3814}, {1.0866, -0.6565, -0.4168},
+{1.0866, -0.6565, -0.4437}, {1.0866, -0.6565, -0.4705}, {1.0866, -0.6565, -0.4975}, {1.0866, -0.6565, -0.5245}, {1.0866, -0.6565, -0.5468},
+{1.0866, 0.1940, -0.3246}, {1.0866, 0.2255, -0.3246}, {1.0866, 0.2491, -0.3246}, {1.0866, 0.2732, -0.3246}, {1.0866, 0.2970, -0.3246},
+{1.0866, 0.3283, -0.3246}, {1.0866, 0.3521, -0.3246}, {1.0866, 0.3761, -0.3246}, {1.0866, 0.4073, -0.3246}, {1.0866, 0.4311, -0.3246},
+{1.0866, 0.4551, -0.3246}, {1.0866, 0.4789, -0.3246}, {1.0866, 0.5102, -0.3246}, {1.0866, 0.5766, -0.2883}, {1.0866, 0.6237, -0.2883},
+{1.0866, 0.5766, -0.3211}, {1.0866, 0.6237, -0.3213}, {1.0866, 0.7718, -0.3005}, {1.0866, 0.7983, -0.3005}, {1.0866, 0.7718, -0.3409},
+{1.0866, 0.7983, -0.3409}
+};
+
+// LEB Left push-buttons
+const VECTOR3 LEB_L_PUSHB_POS[LEB_L_PUSHBCOUNT] = {
+{-1.0608, 0.2392, -0.3428}, {-1.0727, -0.5641, -0.3161}, {-1.0727, -0.5997, -0.3164}, {-1.0838, -0.6491, -0.5083}
+};
+
+// LEB Left Rotaries
+
+const VECTOR3 LEB_L_ROT_POS[LEB_L_ROTCOUNT] = {
+{-1.0826, 1.0052, -0.3451}, {-1.0827, 0.9334, -0.7408}, {-1.0797, 0.6465, -0.8017}, {-1.0810, 0.6287, -0.5564}, {-1.1027, 0.1549, -0.5528},
+{-1.1027, 0.1612, -0.6055}, {-1.1027, 0.1569, -0.6560}, {-1.1024, 0.2024, -0.6963}, {-1.1002, 0.2175, -0.7425}, {-1.1002, 0.1567, -0.7425},
+{-1.1002, 0.2040, -0.7992}, {-1.1002, 0.1607, -0.7992}, {-1.0794, -0.5441, -0.4012}, {-1.0794, -0.6041, -0.4012}, {-1.0827, -0.6138, -0.5079},
+{-1.0802, -0.5950, -0.5845}, {-1.0802, -0.6160, -0.7094}, {-1.0802, -0.6165, -0.7634}, {-1.0802, -0.6165, -0.8171}, {-1.0802, -0.5416, -0.7602},
+{-1.0827, 0.1467, -0.3310}, {-1.0740, 0.1364, -0.3000}
+};
+
 // Switch Covers
 const VECTOR3 P1_COVERS_POS[P1_SWITCHCOVERCOUNT] = {
 {-0.523385, 0.837354, 0.401598}, {-0.897739, 0.291494, 0.218991}, {-0.807395, 0.400065, 0.255313}, {-0.807395, 0.400065, 0.255313}, {-0.650851, 0.339981, 0.235209}, 
@@ -199,6 +511,19 @@ const VECTOR3 P2_COVERS_POS[P2_SWITCHCOVERCOUNT] = {
 {-0.342684, 0.413289, 0.259907}, {-0.342684, 0.413289, 0.259907}, {-0.412789, 0.34966, 0.238427}, {-0.412789, 0.34966, 0.238427}, {-0.447372, 0.295628, 0.220297}, 
 {-0.234966, 0.851656, 0.406449}, {-0.169936, 0.675647, 0.347563}
 };
+
+// Panel 600
+const VECTOR3 Sw_P600_01Location = { 0.1788, 1.4288, -0.3471 };
+const VECTOR3 Sw_P600_02Location = { -0.1769, 1.4288, -0.3455 };
+
+// THC Handle
+const VECTOR3 THChandleLocation = { -0.9249, 0.2373, 0.0419 };
+
+// Panel 163
+const VECTOR3 Switch_P163Location = { -0.9108, -0.6972, -0.4823 };
+
+// PLVC switch
+const VECTOR3 Switch_PLVCLocation = { -1.0979, 1.0467, -0.4147 };
 
 extern GDIParams g_Param;
 
@@ -235,6 +560,9 @@ void Saturn::InitVC()
 	srf[SRF_VC_SPSMAXINDICATOR] = oapiLoadTexture("ProjectApollo/VC/SPSmax_indicator.dds");
 	srf[SRF_VC_SPSMININDICATOR] = oapiLoadTexture("ProjectApollo/VC/SPSmin_indicator.dds");
 	srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV] = oapiLoadTexture("ProjectApollo/VC/thumbwheel_large_fonts_inv.dds");
+	srf[SRF_VC_CWS_GNLIGHTS] = oapiLoadTexture("ProjectApollo/VC/csm_lower_equip_bay_lights.dds");
+	srf[SRF_VC_DIGITAL90] = oapiLoadTexture("ProjectApollo/VC/digitaldisp90.dds");
+	srf[SRF_VC_EVENT_TIMER_DIGITS90] = oapiLoadTexture("ProjectApollo/VC/event_timer90.dds");
 
 	// Set Colour Key
 
@@ -257,13 +585,16 @@ void Saturn::InitVC()
 	oapiSetSurfaceColourKey(srf[SRF_VC_SPSMAXINDICATOR], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_SPSMININDICATOR], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_CWS_GNLIGHTS], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITAL90], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_EVENT_TIMER_DIGITS90], ck);
 
 	//
 	// Register active areas for repainting here
 	//
 		
-	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 12);
-	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 1);
+	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 3);
+	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 4);
 
 	// Panel 1
 
@@ -308,6 +639,17 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_SPS_FUEL_PCT, _R(137, 1344, 175, 1357), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_SPSOXIDFLOWIND, _R(78, 1479, 100, 1521), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_SPS_INJ_VLV, _R(69, 1210, 247, 1244), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+
+	// Lower Equipment Bay
+	oapiVCRegisterArea(AID_VC_MASTER_ALARM3, _R(1752, 167, 1797, 203), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex2);
+
+	oapiVCRegisterArea(AID_VC_CWS_GNLIGHTS, _R(1750, 56, 1803, 132), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_OPT_SHAFTDISPLAY, _R(520, 144, 571, 156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_OPT_TRUNDISPLAY, _R(648, 94, 699, 106), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY2, _R(1050, 1076, 1155, 1252), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS2, _R(906, 1081, 1008, 1201), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_EVENT_TIMER306, _R(220, 149, 238, 220), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MISSION_CLOCK306, _R(337, 129, 360, 272), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 	// Initialize surfaces
 
@@ -387,87 +729,156 @@ bool Saturn::clbkLoadVC (int id)
 {
 	TRACESETUP("Saturn::clbkLoadVC");
 
-	InVC = true;
-	InPanel = false;
+	// Set VC view to last saved position
+	if (FirstTimestep || !InVC) {
+		id = viewpos;
+	}
+
+	//Reset Clip Radius settings
+	SetClipRadius(0.0);
 
 	//if ((viewpos >= SATVIEW_ENG1) && (viewpos <= SATVIEW_ENG6))
 	//	return true;
-
-	// Test stuff
-	//SURFHANDLE tex# = oapiGetTextureHandle (vcmeshidentifier, meshgroup#);
-	//int i;
-	//SetCameraDefaultDirection (_V(0,0,1));
-	//default camera direction: forward
-	//SetCameraShiftRange (_V(#,#,#), _V(#,#,#), _V(#,#,#));
-	// leaning forward/left/right
-
-	InitVC();
-	RegisterActiveAreas();
 
 	switch (id) {
 
 	case SATVIEW_LEFTSEAT:
 		viewpos = SATVIEW_LEFTSEAT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(-1, SATVIEW_CENTERSEAT, -1, -1);
+		SetCameraMovement(_V(0.0, -0.3, 0.0), 0, 0, _V(-0.3, -0.3, 0.1), 90 * RAD, 0, _V(0.25, -0.19, 0.15), 0, 0);
+		oapiVCSetNeighbours(-1, SATVIEW_CENTERSEAT, SATVIEW_LEFTDOCK, SATVIEW_LEBLEFT);
+		InVC = true;
+		InPanel = false;
 		SetView(true);
+		SetCOASMesh();
 
+		RegisterActiveAreas();
 
 		return true;
 
 	case SATVIEW_CENTERSEAT:
 		viewpos = SATVIEW_CENTERSEAT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(SATVIEW_LEFTSEAT, SATVIEW_RIGHTSEAT, -1, -1);
+		SetCameraMovement(_V(-0.0, -0.15, 0.0), 0, 0, _V(-0.3, 0.0, 0.0), 0, 0, _V(0.3, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(SATVIEW_LEFTSEAT, SATVIEW_RIGHTSEAT, SATVIEW_UPPER_CENTER, SATVIEW_LOWER_CENTER);
+		InVC = true;
+		InPanel = false;
 		SetView(true);
 
+		RegisterActiveAreas();
 
 		return true;
 
 	case SATVIEW_RIGHTSEAT:
 		viewpos = SATVIEW_RIGHTSEAT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(SATVIEW_CENTERSEAT, -1, -1, -1);
+		SetCameraMovement(_V(-0.0, -0.3, 0.0), 0, 0, _V(-0.3, 0.0, 0.0), 0, 0, _V(0.3, -0.3, 0.1), -90 * RAD, 0);
+		oapiVCSetNeighbours(SATVIEW_CENTERSEAT, -1, SATVIEW_RIGHTDOCK, SATVIEW_LEBRIGHT);
+		InVC = true;
+		InPanel = false;
 		SetView(true);
 
+		RegisterActiveAreas();
 
 		return true;
 
 	case SATVIEW_GNPANEL:
 		viewpos = SATVIEW_GNPANEL;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
-		SetCameraShiftRange(_V(-0.4, 0, 0), _V(0, 0, 0), _V(0, 0, 0));
+		oapiVCSetNeighbours(SATVIEW_LEBLEFT, SATVIEW_LEBRIGHT, SATVIEW_TUNNEL, -1);
+		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
+		InVC = true;
+		InPanel = false;
+		SetView(true);
 
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		//oapiVCSetNeighbours(-1, LMVIEW_LMP, -1, LMVIEW_LPD);
+		PanelId = SATPANEL_TELESCOPE;
 
-
+		RegisterActiveAreas();
 
 		return true;
 
 	case SATVIEW_LEFTDOCK:
 		viewpos = SATVIEW_LEFTDOCK;
-		SetCameraRotationRange(0, 0, 0, 0);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(-1, SATVIEW_RIGHTDOCK, -1, SATVIEW_LEFTSEAT);
+		InVC = true;
+		InPanel = false;
+		SetView(true);
+		SetCOASMesh();
 
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		//oapiVCSetNeighbours(-1, LMVIEW_LMP, -1, LMVIEW_LPD);
-
-
+		RegisterActiveAreas();
 
 		return true;
 
-	case SATVIEW_RIGHTDOCK: // Limited eye movement
+	case SATVIEW_RIGHTDOCK:
 		viewpos = SATVIEW_RIGHTDOCK;
-		SetCameraRotationRange(0, 0, 0, 0);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(SATVIEW_LEFTDOCK, -1, -1, SATVIEW_RIGHTSEAT);
+		InVC = true;
+		InPanel = false;
+		SetView(true);
 
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		//oapiVCSetNeighbours(-1, LMVIEW_LMP, -1, LMVIEW_LPD);
+		RegisterActiveAreas();
+
+		return true;
+
+	case SATVIEW_LEBLEFT:
+		viewpos = SATVIEW_LEBLEFT;
+		SetCameraMovement(_V(0.0, 1.4, -0.2), -20 * RAD, 0, _V(-0.1, 0.7, -0.3), -20 * RAD, 0, _V(-0.1, 0.55, 0.2), 0, 20 * RAD);
+		oapiVCSetNeighbours(-1, SATVIEW_GNPANEL, SATVIEW_LEFTSEAT, -1);
+		InVC = true;
+		InPanel = false;
+		SetView(true);
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case SATVIEW_LEBRIGHT:
+		viewpos = SATVIEW_LEBRIGHT;
+		SetCameraMovement(_V(0.0, 0.4, 0.1), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, -0.15, -0.35), 0, 0);
+		oapiVCSetNeighbours(SATVIEW_GNPANEL, -1, SATVIEW_RIGHTSEAT, -1);
+		InVC = true;
+		InPanel = false;
+		SetView(true);
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case SATVIEW_UPPER_CENTER:
+		viewpos = SATVIEW_UPPER_CENTER;
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.2, -0.03, -0.1), 0, 20 * RAD, _V(-0.2, -0.03, -0.1), 0, 20 * RAD);
+		oapiVCSetNeighbours(-1, -1, -1, SATVIEW_CENTERSEAT);
+		InVC = true;
+		InPanel = false;
+		SetView(true);
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case SATVIEW_LOWER_CENTER:
+		viewpos = SATVIEW_LOWER_CENTER;
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(-1, -1, SATVIEW_CENTERSEAT, SATVIEW_TUNNEL);
+		InVC = true;
+		InPanel = false;
+		SetView(true);
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case SATVIEW_TUNNEL:
+		viewpos = SATVIEW_TUNNEL;
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(-0.2, -0.1, 0.0), 90 * RAD, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(-1, -1, SATVIEW_LOWER_CENTER, SATVIEW_GNPANEL);
+		InVC = true;
+		InPanel = false;
+		SetView(true);
+
+		RegisterActiveAreas();
 
 		return true;
 
@@ -480,24 +891,43 @@ void Saturn::RegisterActiveAreas() {
 
 	int i = 0;
 
+	//
+	// Initialize surfaces
+	//
+	InitVC();
+
 	VECTOR3 ofs = _V(0.0, 0.0, 0.0);
-	if (vcidx != -1) GetMeshOffset(vcidx, ofs);
 
-	/*if (stage < 12) {
-		ofs.z = 43.65;
-	} else if (stage < 20) {
-		ofs.z = 28.5;
-	} else if (stage < 30) {
-		ofs.z = 15.25;
-	} else if (stage < 40) {
-		ofs.z = 2.1;
-	} else if (stage < 42) {
-		ofs.z = 0.0;
+	if (SaturnType == SAT_SATURNV) {
+		if (stage < 12) {
+			ofs.z = 43.65;
+		} else if (stage < 20) {
+			ofs.z = 28.5;
+		} else if (stage < 30) {
+			ofs.z = 15.25;
+		} else if (stage < 40) {
+			ofs.z = 2.1;
+		} else if (stage < 42) {
+			ofs.z = 0.0;
+		} else {
+			ofs.z = -1.2;
+		}
 	} else {
-		ofs.z = -1.2;
-	}*/
+		if (stage < 12) {
+			ofs.z = 35.15;
+		} else if (stage < 30) {
+			ofs.z = 15.2;
+		} else if (stage < 40) {
+			ofs.z = 2.1;
+		} else if (stage < 42) {
+			ofs.z = 0.0;
+		} else {
+			ofs.z = -1.2;
+		}
+	}
 
-	//sprintf(oapiDebugString(), "OFS %lf", ofs.z);
+	//Apply center of gravity offset here
+	ofs -= currentCoG;
 
 	//
 	// Register active areas for switches/animations here
@@ -507,35 +937,126 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_FDAI_RIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
+	// Clickspot to cycle seats folded/unfolded
+	oapiVCRegisterArea(AID_VC_SEATSCYCLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_SEATSCYCLE, _V(-0.9187, 0.200999, -0.258652) + ofs, 0.05);
+
+	// Side Hatch
+	const VECTOR3 SideHatchLocation = { 0.2436, 1.1710, 0.1699 };
+	const VECTOR3 SideHatch_HandleRot1Location = { 0.3076, 1.3543, -0.1137 };
+	const VECTOR3 SideHatch_HandleRot2Location = { 0.2348, 1.2453, 0.0608 };
+	const VECTOR3 SideHatch_VentValveLocation = { -0.2637, 1.1932, 0.1462 };
+	const VECTOR3 SideHatch_openLocation = { -0.4243, 1.7647, 0.6818 };
+	const VECTOR3 SideHatch_HandleRot1_openLocation = { -0.4944, 2.0370, 0.4730 };
+	const VECTOR3 SideHatch_HandleRot2_openLocation = { -0.4556, 1.8491, 0.5764 };
+	const VECTOR3 SideHatch_VentValve_openLocation = { -0.4557, 1.4090, 0.3188 };
+
+	if (!SideHatch.IsOpen()) {
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatchLocation + ofs, 0.1);
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_GEARBOX_SEL, SideHatch_HandleRot1Location + ofs, ROT);
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, SideHatch_HandleRot2Location + ofs, ROT);
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValveLocation + ofs, ROT);
+
+	} else {
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatch_openLocation + ofs, 0.1);
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_GEARBOX_SEL, SideHatch_HandleRot1_openLocation + ofs, ROT);
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, SideHatch_HandleRot2_openLocation + ofs, ROT);
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValve_openLocation + ofs, ROT);
+	}
+
+	// Forward Hatch
+	const VECTOR3 FwdHatch_Location = { -0.1495, 0.0705, 1.0980 };
+	const VECTOR3 FwdHatch_Equal_ValveLocation = { 0.0011, -0.0000, 1.0773 };
+
+	oapiVCRegisterArea(AID_VC_FWDHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_HANDLE, FwdHatch_Location + ofs, 0.1);
+
+	if (!ForwardHatch.IsOpen()) {
+		oapiVCRegisterArea(AID_VC_FWDHATCH_PRESS_EQU_VLV, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_PRESS_EQU_VLV, FwdHatch_Equal_ValveLocation + ofs, ROT);
+	}
+
+    // COAS
+	const VECTOR3 COASLocation = { -0.5232, 1.1292, 0.1087 };
+	oapiVCRegisterArea(AID_VC_COAS, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_COAS, COASLocation + ofs, 0.05);
+
+	// THC Handle
+	oapiVCRegisterArea(AID_VC_THC_HANDLE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_THC_HANDLE, THChandleLocation + ofs, ROT);
+
+	// Panel 600-602
+
+	oapiVCRegisterArea(AID_VC_SWITCH_P600_01, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P600_01, Sw_P600_01Location + P600_CLICK + ofs, SWITCH);
+
+	oapiVCRegisterArea(AID_VC_SWITCH_P600_02, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P600_02, Sw_P600_02Location + P600_CLICK + ofs, SWITCH);
+
+	// ORDEAL Rotary
+
+	oapiVCRegisterArea(AID_VC_ORDEAL_ROT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ORDEAL_ROT, _V(-0.92382, 1.00681, -0.08822) + ofs, _V(-0.905273, 0.989085, -0.048251) + ofs, _V(-0.959113, 0.975162, -0.08578) + ofs, _V(-0.941077, 0.957305, -0.046165) + ofs);
+
+	// Altimeter
+	oapiVCRegisterArea(AID_VC_ALTIMETER, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
+	// Panel 163
+	oapiVCRegisterArea(AID_VC_SWITCH_P163_01, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P163_01, Switch_P163Location + LEBFLOOR_CLICK + ofs, SWITCH);
+
+	// PLVC switch
+	oapiVCRegisterArea(AID_VC_SWITCH_PLVC, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_PLVC, Switch_PLVCLocation + LEBLEFT_CLICK + ofs, SWITCH);
+
+	// RSI Needle
+	oapiVCRegisterArea(AID_VC_EMS_RSI, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
 	// Panel 1
 	for (i = 0; i < P1_SWITCHCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_SWITCH_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P1_01 + i, P1_TOGGLE_POS[i] + P1_3_CLICK + ofs, 0.006);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P1_01 + i, P1_TOGGLE_POS[i] + P1_3_CLICK + ofs, SWITCH);
 	}
 
 	for (i = 0; i < P1_ROTCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_ROT_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P1_01 + i, P1_ROT_POS[i] + ofs, 0.02);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P1_01 + i, P1_ROT_POS[i] + ofs, ROT);
 	}
 
 	for (i = 0; i < P1_PUSHBCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_PUSHB_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P1_01 + i, P1_PUSHB_POS[i] + ofs, 0.008);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P1_01 + i, P1_PUSHB_POS[i] + ofs, PUSHB);
 	}
 
 	for (i = 0; i < P1_TWCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_TW_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P1_01 + i, P1_TW_POS[i] + P1_3_TWCLICK + ofs, 0.01);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P1_01 + i, P1_TW_POS[i] + P1_3_TWCLICK + ofs, TW);
 	}
 
 	oapiVCRegisterArea(AID_VC_EMS_DVSET, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_EMS_DVSET, _V(-0.507344, 0.732746, 0.370513) + ofs, 0.025);
 
-	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM, _V(-0.775435, 0.709185, 0.361746) + ofs, 0.008);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM, _V(-0.775435, 0.709185, 0.361746) + ofs, PUSHB);
 
 	oapiVCRegisterArea(AID_VC_ASCPROLL, PANEL_REDRAW_NEVER, PANEL_MOUSE_PRESSED | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ASCPROLL, _V(-0.993077, 0.360405, 0.251007) + ofs, _V(-0.982356, 0.360405, 0.251007) + ofs, _V(-0.993077, 0.339763, 0.244102) + ofs, _V(-0.982356, 0.339763, 0.244102) + ofs);
@@ -554,25 +1075,25 @@ void Saturn::RegisterActiveAreas() {
 	for (i = 0; i < P2_SWITCHCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_SWITCH_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS[i] + P1_3_CLICK + ofs, 0.008);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS[i] + P1_3_CLICK + ofs, SWITCH);
 	}
 
 	for (i = 0; i < P2_ROTCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_ROT_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P2_01 + i, P2_ROT_POS[i] + ofs, 0.02);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P2_01 + i, P2_ROT_POS[i] + ofs, ROT);
 	}
 
 	for (i = 0; i < P2_PUSHBCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_VC_PUSHB_P2_01 + i, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P2_01 + i, P2_PUSHB_POS[i] + ofs, 0.008);
+		oapiVCRegisterArea(AID_VC_PUSHB_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P2_01 + i, P2_PUSHB_POS[i] + ofs, PUSHB);
 	}
 
 	for (i = 0; i < P2_TWCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_TW_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P2_01 + i, P2_TW_POS[i] + P1_3_TWCLICK + ofs, 0.01);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P2_01 + i, P2_TW_POS[i] + P1_3_TWCLICK + ofs, TW);
 	}
 
 	// Panel 3
@@ -580,23 +1101,270 @@ void Saturn::RegisterActiveAreas() {
 	for (i = 0; i < P3_SWITCHCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_SWITCH_P3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P3_01 + i, P3_TOGGLE_POS[i] + P1_3_CLICK + ofs, 0.008);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P3_01 + i, P3_TOGGLE_POS[i] + P1_3_CLICK + ofs, SWITCH);
 	}
 
 	for (i = 0; i < P3_ROTCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_ROT_P3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P3_01 + i, P3_ROT_POS[i] + ofs, 0.02);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P3_01 + i, P3_ROT_POS[i] + ofs, ROT);
 	}
 
 	for (i = 0; i < P3_TWCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_TW_P3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P3_01 + i, P3_TW_POS[i] + P1_3_TWCLICK + ofs, 0.01);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P3_01 + i, P3_TW_POS[i] + P1_3_TWCLICK + ofs, TW);
 	}
 
-	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM2, _V(0.720346, 0.621423, 0.332349) + ofs, 0.008);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM2, _V(0.720346, 0.621423, 0.332349) + ofs, PUSHB);
 
+	// Panel 4
+
+	for (i = 0; i < P4_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P4_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P4_01 + i, P4_TOGGLE_POS[i] + P4_CLICK + ofs, SWITCH);
+	}
+
+	for (i = 0; i < P4_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P4_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P4_01 + i, P4_ROT_POS[i] + ofs, ROT);
+	}
+
+	for (i = 0; i < P4_CBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_CB_P4_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_P4_01 + i, P4_CB_POS[i] + ofs, CB);
+	}
+
+	// Panel 5
+
+	for (i = 0; i < P5_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P5_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P5_01 + i, P5_TOGGLE_POS[i] + P5_CLICK + ofs, SWITCH);
+	}
+
+	for (i = 0; i < P5_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P5_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P5_01 + i, P5_ROT_POS[i] + ofs, ROT);
+	}
+
+	for (i = 0; i < P5_CBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_CB_P5_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_P5_01 + i, P5_CB_POS[i] + ofs, CB);
+	}
+
+	// Panel 6
+
+	for (i = 0; i < P6_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P6_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P6_01 + i, P6_TOGGLE_POS[i] + P6_CLICK + ofs, SWITCH);
+	}
+
+	for (i = 0; i < P6_TWCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_TW_P6_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P6_01 + i, P6_TW_POS[i] + P6_TWCLICK + ofs, TW);
+	}
+
+	// Panel 7
+	for (i = 0; i < P7_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P7_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P7_01 + i, P7_TOGGLE_POS[i] + P7_CLICK + ofs, SWITCH);
+	}
+
+	for (i = 0; i < P7_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P7_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P7_01 + i, P7_ROT_POS[i] + ofs, ROT);
+	}
+
+	// Panel 8
+	for (i = 0; i < P8_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P8_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P8_01 + i, P8_TOGGLE_POS[i] + P8_CLICK + ofs, SWITCH);
+	}
+
+	for (i = 0; i < P8_CBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_CB_P8_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_P8_01 + i, P8_CB_POS[i] + ofs, CB);
+	}
+
+	for (i = 0; i < P8_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P8_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P8_01 + i, P8_ROT_POS[i] + ofs, ROT);
+	}
+
+	// Panel 9
+	for (i = 0; i < P9_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P9_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P9_01 + i, P9_TOGGLE_POS[i] + P9_CLICK + ofs, SWITCH);
+	}
+
+	for (i = 0; i < P9_TWCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_TW_P9_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P9_01 + i, P9_TW_POS[i] + P9_TWCLICK + ofs, TW);
+	}
+
+	// Panel 10
+	for (i = 0; i < P10_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P10_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P10_01 + i, P10_TOGGLE_POS[i] + P10_CLICK + ofs, SWITCH);
+	}
+
+	for (i = 0; i < P10_TWCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_TW_P10_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P10_01 + i, P10_TW_POS[i] + P10_TWCLICK + ofs, TW);
+	}
+
+	// Panel 12
+	for (i = 0; i < P12_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P12_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P12_01 + i, P12_ROT_POS[i] + ofs, ROT);
+	}
+
+	// Panel 13
+	for (i = 0; i < P13_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P13_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P13_01 + i, P13_TOGGLE_POS[i] + P13_CLICK + ofs, SWITCH);
+	}
+
+	// Panel 15
+	for (i = 0; i < P15_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P15_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P15_01 + i, P15_TOGGLE_POS[i] + P15_CLICK + ofs, SWITCH);
+	}
+
+	// Panel 16
+	for (i = 0; i < P16_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P16_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P16_01 + i, P16_TOGGLE_POS[i] + P16_CLICK + ofs, SWITCH);
+	}
+
+	// Panel 100
+	for (i = 0; i < P100_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P100_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P100_01 + i, P100_TOGGLE_POS[i] + LEBFLOOR_CLICK + ofs, SWITCH);
+	}
+
+	for (i = 0; i < P100_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P100_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P100_01 + i, P100_ROT_POS[i] + ofs, ROT);
+	}
+
+	// Panel 101
+	for (i = 0; i < P101_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P101_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P101_01 + i, P101_TOGGLE_POS[i] + P101_CLICK + ofs, SWITCH);
+	}
+
+	for (i = 0; i < P101_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P101_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P101_01 + i, P101_ROT_POS[i] + ofs, ROT);
+	}
+
+	//Panel 122
+
+	for (i = 0; i < P122_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P122_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P122_01 + i, P122_TOGGLE_POS[i] + LEBFLOOR_CLICK + ofs, SWITCH);
+	}
+
+	for (i = 0; i < P122_PUSHBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_PUSHB_P122_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P122_01 + i, P122_PUSHB_POS[i] + ofs, PUSHB);
+	}
+
+	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM3, _V(0.103894, -0.69915, 0.029394) + ofs, PUSHB);
+
+	// Panel 306
+	for (i = 0; i < P306_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P306_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P306_01 + i, P306_TOGGLE_POS[i] + P306_CLICK + ofs, SWITCH);
+	}
+
+	// Panel 325
+	const VECTOR3 Prim_Gly_HandleLocation = { -1.1482, 0.9682, -0.2071 };
+
+	oapiVCRegisterArea(AID_VC_Cab_Press_Rel_Handle1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Cab_Press_Rel_Handle1, Cab_Press_Rel_Handle1Location + P325_CLICK + ofs, 0.04);
+	//oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Cab_Press_Rel_Handle1, _V(-1.1716, 0.797558, -0.2383) + ofs, _V(-1.26138, 0.797558, -0.225946) + ofs, _V(-1.17143, 0.749602, -0.2383) + ofs, _V(-1.26138, 0.749602, -0.225946) + ofs);
+
+	oapiVCRegisterArea(AID_VC_Cab_Press_Rel_Handle2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	//oapiVCSetAreaClickmode_Spherical(AID_VC_Cab_Press_Rel_Handle2, Cab_Press_Rel_Handle2Location + P325_CLICK + ofs, 0.04);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Cab_Press_Rel_Handle2, _V(-1.10395, 0.716629, -0.2383) + ofs, _V(-1.26248, 0.716629, -0.218411) + ofs, _V(-1.10413, 0.664093, -0.2383) + ofs, _V(-1.26248, 0.664093, -0.218411) + ofs);
+
+	oapiVCRegisterArea(AID_VC_Prim_Gly_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Prim_Gly_Handle, Prim_Gly_HandleLocation + ofs, 0.02);
+
+	// Panel 326
+	for (i = 0; i < P326_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P326_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P326_01 + i, P326_ROT_POS[i] + ofs, ROT);
+	}
+
+	// LEB Right wall
+
+	for (i = 0; i < LEB_R_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_LEB_R_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_LEB_R_01 + i, LEB_R_ROT_POS[i] + ofs, ROT);
+	}
+
+	for (i = 0; i < LEB_R1_CBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_CB_LEB_R1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_LEB_R1_01 + i, LEB_R1_CB_POS[i] + ofs, CB);
+	}
+
+	for (i = 0; i < LEB_R2_CBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_CB_LEB_R2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_LEB_R2_01 + i, LEB_R2_CB_POS[i] + ofs, CB);
+	}
+
+	// LEB Left wall
+
+	for (i = 0; i < 21; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_LEB_L_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_LEB_L_01 + i, LEB_L_ROT_POS[i] + ofs, ROT);
+	}
+
+	// Rotary 22 (Suit Test) needs a different click-spot then the mesh origin
+	oapiVCRegisterArea(AID_VC_ROT_LEB_L_22, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_LEB_L_22, _V(-1.07633, 0.156535, -0.281039) + ofs, ROT);
+
+	for (i = 0; i < LEB_L_PUSHBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_PUSHB_LEB_L_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_LEB_L_01 + i, LEB_L_PUSHB_POS[i] + ofs, 0.012);
+	}
 }
 
 // --------------------------------------------------------------
@@ -609,7 +1377,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 
 	case AID_VC_MASTER_ALARM:
 	case AID_VC_MASTER_ALARM2:
-	//case AID_VC_MASTER_ALARM3:
+	case AID_VC_MASTER_ALARM3:
 
 		return cws.CheckMasterAlarmMouseClick(event);
 
@@ -656,7 +1424,33 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		ascp.YawClick(event, mx, my);
 		return true;
 	}
+	case AID_VC_SEATSCYCLE:
+	{
+		if (VCSeatsfolded) {
+			VCSeatsfolded = false;
+		}
+		else {
+			VCSeatsfolded = true;
+		}
 
+		SwitchClick();
+		SetVCSeatsMesh();
+		return true;
+	}
+
+	case AID_VC_FWDHATCH_HANDLE:
+		ForwardHatch.Toggle();
+		return true;
+
+	case AID_VC_COAS:
+		if (coasEnabled) {
+			coasEnabled = false;
+		} else {
+			coasEnabled = true;
+		}
+		SwitchClick();
+		SetCOASMesh();
+		return true;
 	}
 
 	return MainPanelVC.VCMouseEvent(id, event, p);
@@ -670,6 +1464,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 {
 	TRACESETUP("Saturn::clbkVCRedrawEvent");
 	//int i;
+	SetCameraCatchAngle(5.0*RAD);
 
 	switch (id) {
 	//case areaidentifier
@@ -679,14 +1474,12 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_VC_FDAI_LEFT:
 	{
 		VECTOR3 euler_rates;
-		VECTOR3 attitude;
 		VECTOR3 errors;
 
 		euler_rates = eda.GetFDAI1AttitudeRate();
-		attitude = eda.GetFDAI1Attitude();
 		errors = eda.GetFDAI1AttitudeError();
 
-		AnimateFDAI(attitude, euler_rates, errors, anim_fdaiR_L, anim_fdaiP_L, anim_fdaiY_L, anim_fdaiRerror_L, anim_fdaiPerror_L, anim_fdaiYerror_L, anim_fdaiRrate_L, anim_fdaiPrate_L, anim_fdaiYrate_L);
+		fdaiLeft.AnimateFDAI(euler_rates, errors, anim_fdaiR_L, anim_fdaiP_L, anim_fdaiY_L, anim_fdaiRerror_L, anim_fdaiPerror_L, anim_fdaiYerror_L, anim_fdaiRrate_L, anim_fdaiPrate_L, anim_fdaiYrate_L);
 
 		return true;
 	}
@@ -694,23 +1487,23 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_VC_FDAI_RIGHT:
 	{
 		VECTOR3 euler_rates;
-		VECTOR3 attitude;
 		VECTOR3 errors;
 
 		euler_rates = eda.GetFDAI2AttitudeRate();
-		attitude = eda.GetFDAI2Attitude();
 		errors = eda.GetFDAI2AttitudeError();
 
-		AnimateFDAI(attitude, euler_rates, errors, anim_fdaiR_R, anim_fdaiP_R, anim_fdaiY_R, anim_fdaiRerror_R, anim_fdaiPerror_R, anim_fdaiYerror_R, anim_fdaiRrate_R, anim_fdaiPrate_R, anim_fdaiYrate_R);
+		fdaiRight.AnimateFDAI(euler_rates, errors, anim_fdaiR_R, anim_fdaiP_R, anim_fdaiY_R, anim_fdaiRerror_R, anim_fdaiPerror_R, anim_fdaiYerror_R, anim_fdaiRrate_R, anim_fdaiPrate_R, anim_fdaiYrate_R);
 
 		return true;
 	}
 
 	case AID_VC_DSKY_DISPLAY:
+	case AID_VC_DSKY_DISPLAY2:
 		dsky.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP]);
 		return true;
 
 	case AID_VC_DSKY_LIGHTS:
+	case AID_VC_DSKY_LIGHTS2:
 		dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS]);
 		return true;
 
@@ -729,6 +1522,10 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_VC_MASTER_ALARM2:
 		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_RIGHT);
+		return true;
+
+	case AID_VC_MASTER_ALARM3:
+		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_NONE);
 		return true;
 
 	case AID_VC_LVENG_LIGHTS:
@@ -829,9 +1626,13 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		MissionTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2], true);
 		return true;
 
-	/*case AID_MISSION_CLOCK306:
-		MissionTimer306Display.Render90(surf, srf[SRF_DIGITAL90], true);
-		return true;*/
+	case AID_VC_MISSION_CLOCK306:
+		MissionTimer306Display.Render90(surf, srf[SRF_VC_DIGITAL90], true);
+		return true;
+
+	case AID_VC_EVENT_TIMER306:
+		EventTimer306Display.Render90(surf, srf[SRF_VC_EVENT_TIMER_DIGITS90]);
+		return true;
 
 	case AID_VC_EVENT_TIMER:
 		EventTimerDisplay.Render(surf, srf[SRF_VC_EVENT_TIMER_DIGITS]);
@@ -843,6 +1644,10 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_VC_CWS_LIGHTS_RIGHT:
 		cws.RenderLights(surf, srf[SRF_VC_CW_LIGHTS], false);
+		return true;
+
+	case AID_VC_CWS_GNLIGHTS:
+		cws.RenderGNLights(surf, srf[SRF_VC_CWS_GNLIGHTS]);
 		return true;
 
 	case AID_VC_SEQUENCERSWITCHES:
@@ -907,10 +1712,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32, 69, 82, 12, 22, 10);
 			break;
 		}
+	}
 
+	case AID_VC_EMS_RSI:
 		ems.DrawSwitchVC(id, event, surf);
 		return true;
-	}
 
 	case AID_VC_EMS_DVSET:
 		EMSDvSetSwitch.DrawSwitchVC(id, event, surf);
@@ -929,9 +1735,17 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		ascp.PaintYawDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
 		return true;
 
-	/*case AID_MASTER_ALARM3:
-		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_NONE);
-		return true;*/
+	case AID_VC_OPT_SHAFTDISPLAY:
+		optics.PaintShaftDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		return true;
+
+	case AID_VC_OPT_TRUNDISPLAY:
+		optics.PaintTrunnionDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		return true;
+
+	case AID_VC_ALTIMETER:
+		Altimeter.DrawSwitchVC(id, event, surf);
+		return true;
 
 	/*default:
 		return false;*/
@@ -941,33 +1755,40 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//return false;
 }
 
+#define JostleAxis(offset, noiseamp) \
+	j = ((double) ((rand() & 32767) - 16384) * noiseamp*sqdt) / 16384.0; \
+	offset += j; \
+	if(dtmul>1.0) \
+		offset = 0.0; \
+	else \
+		offset = offset-dtmul*offset;
 
-void Saturn::JostleViewpoint(double amount)
+void Saturn::JostleViewpoint(double noiselat, double noiselon, double noisefreq, double dt, double accoffsx, double accoffsy, double accoffsz)
+{	
+	double j, sqdt=sqrt(dt), dtmul= noisefreq*dt;
+	JostleAxis(NoiseOffsetx, noiselat);
+	JostleAxis(NoiseOffsety, noiselat);
+	JostleAxis(NoiseOffsetz, noiselon);
 
-{
-	double j = ((double) ((rand() & 65535) - 32768) * amount) / 3276800.0;
-	ViewOffsetx += j;
+	ViewOffsetx = NoiseOffsetx + accoffsx;
+	ViewOffsety = NoiseOffsety + accoffsy;
+	ViewOffsetz = NoiseOffsetz + accoffsz;
+	//sprintf(oapiDebugString(), "Offsx:%8.4lf Offsy:%8.4lf Offsz:%8.4lf accoffsz:%8.4lf ", ViewOffsetx, ViewOffsety, ViewOffsetz, accoffsz);
 
-	j = ((double) ((rand() & 65535) - 32768) * amount) / 3276800.0;
-	ViewOffsety += j;
-
-	j = ((double) ((rand() & 65535) - 32768) * amount) / 3276800.0;
-	ViewOffsetz += j;
-
-	if (ViewOffsetx > 0.10)
-		ViewOffsetx = 0.10;
-	if (ViewOffsetx < -0.10)
-		ViewOffsetx = -0.10;
+	if (ViewOffsetx > 0.20)
+		ViewOffsetx = 0.20;
+	if (ViewOffsetx < -0.20)
+		ViewOffsetx = -0.20;
 
 	if (ViewOffsety > 0.10)
 		ViewOffsety = 0.10;
 	if (ViewOffsety < -0.10)
 		ViewOffsety = -0.10;
 
-	if (ViewOffsetz > 0.05)
-		ViewOffsetz = 0.05;
-	if (ViewOffsetz < -0.05)
-		ViewOffsetz = -0.05;
+	if (ViewOffsetz > 0.2)
+		ViewOffsetz = 0.2;
+	if (ViewOffsetz < -0.2)
+		ViewOffsetz = -0.2;
 
 	SetView();
 }
@@ -997,10 +1818,17 @@ void Saturn::SetView(double offset, bool update_direction)
 	TRACESETUP("Saturn::SetView");
 	CurrentViewOffset = offset;
 
+	// VC Offset
+	VECTOR3 ofs_vc = _V(0.0, 0.0, offset);
+	if (vcidx != -1) {
+		GetMeshOffset(vcidx, ofs_vc);
+		ofs_vc.z = ofs_vc.z - 0.15;
+	}
+
 	//
 	// Engineering cameras
 	//
-	/*if (viewpos >= SATVIEW_ENG1)
+	if (viewpos >= SATVIEW_ENG1)
 	{
 		VECTOR3 e1 = _V(0, 0, 0), e2 = _V(0, 0, 0), e3 = _V(0, 0, 0), e4 = _V(0, 0, 0), e5 = _V(0, 0, 0), e6 = _V(0, 0, 0);	
 		VECTOR3 v1 = _V(0, 0, 0), v2 = _V(0, 0, 0), v3 = _V(0, 0, 0), v4 = _V(0, 0, 0), v5 = _V(0, 0, 0), v6 = _V(0, 0, 0);
@@ -1103,7 +1931,7 @@ void Saturn::SetView(double offset, bool update_direction)
 	// 2D panel 
 	// Direction/rotation range is in clbkLoadPanel
 	//
-	else*/ if (InPanel) {
+	else if (InPanel) {
 		if (PanelId == SATPANEL_LEFT_RNDZ_WINDOW) {
 			v = _V(-0.605, 1.045, offset - 3.0); // Adjusted to line up with docking target
 
@@ -1140,27 +1968,47 @@ void Saturn::SetView(double offset, bool update_direction)
 	else {
 		switch (viewpos) {
 			case SATVIEW_LEFTSEAT:
-				v = _V(-0.6, 0.9, offset);
+				v = _V(-0.6, 0.85, ofs_vc.z + 0.1);
 				break;
 
 			case SATVIEW_CENTERSEAT:
-				v = _V(0, 0.9, offset);
+				v = _V(0, 0.85, ofs_vc.z + 0.1);
 				break;
 
 			case SATVIEW_RIGHTSEAT:
-				v = _V(0.6, 0.9, offset);
+				v = _V(0.6, 0.85, ofs_vc.z + 0.1);
 				break;
 
 			case SATVIEW_LEFTDOCK:
-				v = _V(-0.65, 1.05, 0.25 + offset);
+				v = _V(-0.6, 1.05, 0.1 + ofs_vc.z); // Adjusted to line up with LM docking target
 				break;
 			
 			case SATVIEW_RIGHTDOCK:
-				v = _V(0.65, 1.05, 0.25 + offset);
+				v = _V(0.6, 1.05, 0.1 + ofs_vc.z);
 				break;
 
 			case SATVIEW_GNPANEL:
-				v = _V(0.0, -0.15, 0.5 + offset);
+				v = _V(-0.05, -0.15, 0.3 + ofs_vc.z);
+				break;
+
+			case SATVIEW_LEBLEFT:
+				v = _V(-0.8, - 0.5, ofs_vc.z - 0.4);
+				break;
+
+			case SATVIEW_LEBRIGHT:
+				v = _V(0.8, -0.4, ofs_vc.z + 0.1);
+				break;
+
+			case SATVIEW_LOWER_CENTER:
+				v = _V(0.0, 0.1, 0.65 + ofs_vc.z);
+				break;
+
+			case SATVIEW_UPPER_CENTER:
+				v = _V(0, 1.35, ofs_vc.z - 0.0);
+				break;
+
+			case SATVIEW_TUNNEL:
+				v = _V(0.0, 0.0, 0.8 + ofs_vc.z - 0.1);
 				break;
 		}
 
@@ -1168,6 +2016,16 @@ void Saturn::SetView(double offset, bool update_direction)
 			SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 			if (viewpos == SATVIEW_GNPANEL) {
 				SetCameraDefaultDirection(_V(0.0,-1.0, 0.0));
+			} else if (viewpos == SATVIEW_LEBRIGHT) {
+				SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
+			} else if (viewpos == SATVIEW_LEBLEFT) {
+				SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
+			} else if (viewpos == SATVIEW_LOWER_CENTER) {
+				SetCameraDefaultDirection(_V(0.0, 1.0, 0.0), 180 * RAD);
+			} else if (viewpos == SATVIEW_UPPER_CENTER) {
+				SetCameraDefaultDirection(_V(0.0, 0.0, -1.0));
+			} else if (viewpos == SATVIEW_LEFTSEAT || viewpos == SATVIEW_CENTERSEAT || viewpos == SATVIEW_RIGHTSEAT) {
+				SetCameraDefaultDirection(_V(0.00, -sin(P1_3_TILT), cos(P1_3_TILT)));
 			} else {
 				SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 			}
@@ -1178,11 +2036,8 @@ void Saturn::SetView(double offset, bool update_direction)
 		v.y += ViewOffsety;
 		v.z += ViewOffsetz;
 	}
-	SetCameraOffset(v);
 
-	VCCameraOffset.x = v.x - VCMeshOffset.x;
-	VCCameraOffset.y = v.y - VCMeshOffset.y;
-	VCCameraOffset.z = v.z - VCMeshOffset.z;
+	SetCameraOffset(v - _V(currentCoG.x, currentCoG.y, 0.0)); //We already use the mesh offset in the z-axis
 
 	//
 	// FOV handling
@@ -1194,7 +2049,7 @@ void Saturn::SetView(double offset, bool update_direction)
 				FovSave = oapiCameraAperture();
 				FovFixed = true;
 			}
-			oapiCameraSetAperture(1 * RAD);
+			oapiCameraSetAperture(atan(0.000029418*PanelPixelHeight)); //1.8deg FOV for 534px; tan(0.9*PI/180)/534 = 2.9418e-5
 
 		}
 		else if (InPanel && PanelId == SATPANEL_TELESCOPE) { // Telescope
@@ -1202,7 +2057,8 @@ void Saturn::SetView(double offset, bool update_direction)
 				FovSave = oapiCameraAperture();
 				FovFixed = true;
 			}
-			oapiCameraSetAperture(30 * RAD);
+			oapiCameraSetAperture(atan(0.0010811*PanelPixelHeight)); //60deg FOV for 534px; tan(30*PI/180)/534 = 1.0811e-3
+
 		}
 		else {
 			if (FovFixed) {
@@ -1535,6 +2391,7 @@ void Saturn::DefineVCAnimations()
 	AccelGMeter.DefineMeshGroup(VC_GRP_Needle_P1_06);
 
 	const VECTOR3 rsiref = { -0.680414, 0.71462, 0.365469 };
+
 	ems.SetReference(rsiref, P1_3_ROT_AXIS);
 	ems.DefineMeshGroup(VC_GRP_RSI_Indicator);
 
@@ -1906,24 +2763,80 @@ void Saturn::DefineVCAnimations()
 	GHAServoElecSwitch.DefineMeshGroup(VC_GRP_Sw_P2_90);
 
 	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P2_01);
+	DskySwitchVerb.SetDirection(P1_3_PB_VECT);
+	DskySwitchVerb.DefineMeshGroup(VC_GRP_PB_P2_01);
+
 	MainPanelVC.AddSwitch(&DskySwitchNoun, AID_VC_PUSHB_P2_02);
+	DskySwitchNoun.SetDirection(P1_3_PB_VECT);
+	DskySwitchNoun.DefineMeshGroup(VC_GRP_PB_P2_02);
+
 	MainPanelVC.AddSwitch(&DskySwitchPlus, AID_VC_PUSHB_P2_03);
+	DskySwitchPlus.SetDirection(P1_3_PB_VECT);
+	DskySwitchPlus.DefineMeshGroup(VC_GRP_PB_P2_03);
+
 	MainPanelVC.AddSwitch(&DskySwitchMinus, AID_VC_PUSHB_P2_04);
+	DskySwitchMinus.SetDirection(P1_3_PB_VECT);
+	DskySwitchMinus.DefineMeshGroup(VC_GRP_PB_P2_04);
+
 	MainPanelVC.AddSwitch(&DskySwitchZero, AID_VC_PUSHB_P2_05);
+	DskySwitchZero.SetDirection(P1_3_PB_VECT);
+	DskySwitchZero.DefineMeshGroup(VC_GRP_PB_P2_05);
+
 	MainPanelVC.AddSwitch(&DskySwitchOne, AID_VC_PUSHB_P2_06);
+	DskySwitchOne.SetDirection(P1_3_PB_VECT);
+	DskySwitchOne.DefineMeshGroup(VC_GRP_PB_P2_06);
+
 	MainPanelVC.AddSwitch(&DskySwitchTwo, AID_VC_PUSHB_P2_07);
+	DskySwitchTwo.SetDirection(P1_3_PB_VECT);
+	DskySwitchTwo.DefineMeshGroup(VC_GRP_PB_P2_07);
+
 	MainPanelVC.AddSwitch(&DskySwitchThree, AID_VC_PUSHB_P2_08);
+	DskySwitchThree.SetDirection(P1_3_PB_VECT);
+	DskySwitchThree.DefineMeshGroup(VC_GRP_PB_P2_08);
+
 	MainPanelVC.AddSwitch(&DskySwitchFour, AID_VC_PUSHB_P2_09);
+	DskySwitchFour.SetDirection(P1_3_PB_VECT);
+	DskySwitchFour.DefineMeshGroup(VC_GRP_PB_P2_09);
+
 	MainPanelVC.AddSwitch(&DskySwitchFive, AID_VC_PUSHB_P2_10);
+	DskySwitchFive.SetDirection(P1_3_PB_VECT);
+	DskySwitchFive.DefineMeshGroup(VC_GRP_PB_P2_10);
+
 	MainPanelVC.AddSwitch(&DskySwitchSix, AID_VC_PUSHB_P2_11);
+	DskySwitchSix.SetDirection(P1_3_PB_VECT);
+	DskySwitchSix.DefineMeshGroup(VC_GRP_PB_P2_11);
+
 	MainPanelVC.AddSwitch(&DskySwitchSeven, AID_VC_PUSHB_P2_12);
+	DskySwitchSeven.SetDirection(P1_3_PB_VECT);
+	DskySwitchSeven.DefineMeshGroup(VC_GRP_PB_P2_12);
+
 	MainPanelVC.AddSwitch(&DskySwitchEight, AID_VC_PUSHB_P2_13);
+	DskySwitchEight.SetDirection(P1_3_PB_VECT);
+	DskySwitchEight.DefineMeshGroup(VC_GRP_PB_P2_13);
+
 	MainPanelVC.AddSwitch(&DskySwitchNine, AID_VC_PUSHB_P2_14);
+	DskySwitchNine.SetDirection(P1_3_PB_VECT);
+	DskySwitchNine.DefineMeshGroup(VC_GRP_PB_P2_14);
+
 	MainPanelVC.AddSwitch(&DskySwitchClear, AID_VC_PUSHB_P2_15);
+	DskySwitchClear.SetDirection(P1_3_PB_VECT);
+	DskySwitchClear.DefineMeshGroup(VC_GRP_PB_P2_15);
+
 	MainPanelVC.AddSwitch(&DskySwitchProg, AID_VC_PUSHB_P2_16);
+	DskySwitchProg.SetDirection(P1_3_PB_VECT);
+	DskySwitchProg.DefineMeshGroup(VC_GRP_PB_P2_16);
+
 	MainPanelVC.AddSwitch(&DskySwitchKeyRel, AID_VC_PUSHB_P2_17);
+	DskySwitchKeyRel.SetDirection(P1_3_PB_VECT);
+	DskySwitchKeyRel.DefineMeshGroup(VC_GRP_PB_P2_17);
+
 	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P2_18);
+	DskySwitchEnter.SetDirection(P1_3_PB_VECT);
+	DskySwitchEnter.DefineMeshGroup(VC_GRP_PB_P2_18);
+
 	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P2_19);
+	DskySwitchReset.SetDirection(P1_3_PB_VECT);
+	DskySwitchReset.DefineMeshGroup(VC_GRP_PB_P2_19);
 
 	const VECTOR3	POSTLDGVENT_VECT = { 0.00, 0.005*cos(P1_3_TILT + (90.0 * RAD)), 0.005*sin(P1_3_TILT + (90.0 * RAD)) };
 	MainPanelVC.AddSwitch(&PostLDGVentValveLever, AID_VC_POSTLDGVENTHANDLE);
@@ -2024,12 +2937,12 @@ void Saturn::DefineVCAnimations()
 
 	MainPanelVC.AddSwitch(&SuitPressMeter);
 	SuitPressMeter.SetReference(NEEDLE_POS);
-	SuitPressMeter.SetRotationRange(RAD * 39.3);
+	SuitPressMeter.SetRotationRange(RAD * 37.5);
 	SuitPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_15);
 
 	MainPanelVC.AddSwitch(&CabinPressMeter);
 	CabinPressMeter.SetReference(NEEDLE_POS);
-	CabinPressMeter.SetRotationRange(RAD * 39.3);
+	CabinPressMeter.SetRotationRange(RAD * 37.5);
 	CabinPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_16);
 
 	MainPanelVC.AddSwitch(&PartPressCO2Meter);
@@ -2562,11 +3475,1062 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&SPSInjectorValve3Indicator, AID_VC_SPS_INJ_VLV);
 	MainPanelVC.AddSwitch(&SPSInjectorValve4Indicator, AID_VC_SPS_INJ_VLV);
 
+	// Panel 4
 
-    MainPanelVC.DefineVCAnimations(vcidx);
+	const VECTOR3 P4_SW_AXIS = { 0.88699091775187, 0.460460338294568, -0.03497697361619 };
+
+	MainPanelVC.AddSwitch(&SPSGaugingSwitch, AID_VC_SWITCH_P4_01);
+	SPSGaugingSwitch.SetReference(P4_TOGGLE_POS[0], P4_SW_AXIS);
+	SPSGaugingSwitch.DefineMeshGroup(VC_GRP_Sw_P4_01);
+
+	MainPanelVC.AddSwitch(&TelcomGroup1Switch, AID_VC_SWITCH_P4_02);
+	TelcomGroup1Switch.SetReference(P4_TOGGLE_POS[1], P4_SW_AXIS);
+	TelcomGroup1Switch.DefineMeshGroup(VC_GRP_Sw_P4_02);
+
+	MainPanelVC.AddSwitch(&TelcomGroup2Switch, AID_VC_SWITCH_P4_03);
+	TelcomGroup2Switch.SetReference(P4_TOGGLE_POS[2], P4_SW_AXIS);
+	TelcomGroup2Switch.DefineMeshGroup(VC_GRP_Sw_P4_03);
+
+	MainPanelVC.AddSwitch(&SuitCompressor1Switch, AID_VC_SWITCH_P4_04);
+	SuitCompressor1Switch.SetReference(P4_TOGGLE_POS[3], P4_SW_AXIS);
+	SuitCompressor1Switch.DefineMeshGroup(VC_GRP_Sw_P4_04);
+
+	MainPanelVC.AddSwitch(&SuitCompressor2Switch, AID_VC_SWITCH_P4_05);
+	SuitCompressor2Switch.SetReference(P4_TOGGLE_POS[4], P4_SW_AXIS);
+	SuitCompressor2Switch.DefineMeshGroup(VC_GRP_Sw_P4_05);
+
+	const VECTOR3	P4_ROT_AXIS = { -0.44660808466206, 0.853175444492311, -0.269504878675383 };
+
+	MainPanelVC.AddSwitch(&EcsGlycolPumpsSwitch, AID_VC_ROT_P4_01);
+	EcsGlycolPumpsSwitch.SetReference(P4_ROT_POS[0], P4_ROT_AXIS);
+	EcsGlycolPumpsSwitch.DefineMeshGroup(VC_GRP_Rot_P4_01);
+
+	const VECTOR3 cb_P4_vector = { 0.44660808466206 * 0.003, -0.853175444492311 * 0.003, 0.269504878675383 * 0.003 };
+
+	CircuitBrakerSwitch* breakerspanel4[P4_CBCOUNT] = { &SuitCompressorsAc1ACircuitBraker, &SuitCompressorsAc1BCircuitBraker, &SuitCompressorsAc1CCircuitBraker, &SuitCompressorsAc2ACircuitBraker, &SuitCompressorsAc2BCircuitBraker, &SuitCompressorsAc2CCircuitBraker, &ECSGlycolPumpsAc1ACircuitBraker, &ECSGlycolPumpsAc1BCircuitBraker, &ECSGlycolPumpsAc1CCircuitBraker,
+		&ECSGlycolPumpsAc2ACircuitBraker, &ECSGlycolPumpsAc2BCircuitBraker, &ECSGlycolPumpsAc2CCircuitBraker };
+
+	for (int i = 0; i < P4_CBCOUNT; i++)
+	{
+		MainPanelVC.AddSwitch(breakerspanel4[i], AID_VC_CB_P4_01 + i);
+		breakerspanel4[i]->SetDirection(cb_P4_vector);
+		breakerspanel4[i]->DefineMeshGroup(VC_GRP_CB_P4_01 + i);
+	}
+
+	// Panel 5
+
+	const VECTOR3 P5_SW_AXIS = { 0.517790715821878, 0.220780935148721, -0.826528011191105 };
+
+	MainPanelVC.AddSwitch(&FuelCellPumps1Switch, AID_VC_SWITCH_P5_01);
+	FuelCellPumps1Switch.SetReference(P5_TOGGLE_POS[0], P5_SW_AXIS);
+	FuelCellPumps1Switch.DefineMeshGroup(VC_GRP_Sw_P5_01);
+
+	MainPanelVC.AddSwitch(&FuelCellPumps2Switch, AID_VC_SWITCH_P5_02);
+	FuelCellPumps2Switch.SetReference(P5_TOGGLE_POS[1], P5_SW_AXIS);
+	FuelCellPumps2Switch.DefineMeshGroup(VC_GRP_Sw_P5_02);
+
+	MainPanelVC.AddSwitch(&FuelCellPumps3Switch, AID_VC_SWITCH_P5_03);
+	FuelCellPumps3Switch.SetReference(P5_TOGGLE_POS[2], P5_SW_AXIS);
+	FuelCellPumps3Switch.DefineMeshGroup(VC_GRP_Sw_P5_03);
+
+	MainPanelVC.AddSwitch(&GNPowerSwitch, AID_VC_SWITCH_P5_04);
+	GNPowerSwitch.SetReference(P5_TOGGLE_POS[3], P5_SW_AXIS);
+	GNPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P5_04);
+
+	MainPanelVC.AddSwitch(&MainBusTieBatAcSwitch, AID_VC_SWITCH_P5_05);
+	MainBusTieBatAcSwitch.SetReference(P5_TOGGLE_POS[4], P5_SW_AXIS);
+	MainBusTieBatAcSwitch.DefineMeshGroup(VC_GRP_Sw_P5_05);
+
+	MainPanelVC.AddSwitch(&MainBusTieBatBcSwitch, AID_VC_SWITCH_P5_06);
+	MainBusTieBatBcSwitch.SetReference(P5_TOGGLE_POS[5], P5_SW_AXIS);
+	MainBusTieBatBcSwitch.DefineMeshGroup(VC_GRP_Sw_P5_06);
+
+	MainPanelVC.AddSwitch(&BatCHGRSwitch, AID_VC_SWITCH_P5_07);
+	BatCHGRSwitch.SetReference(P5_TOGGLE_POS[6], P5_SW_AXIS);
+	BatCHGRSwitch.DefineMeshGroup(VC_GRP_Sw_P5_07);
+
+	MainPanelVC.AddSwitch(&NonessBusSwitch, AID_VC_SWITCH_P5_08);
+	NonessBusSwitch.SetReference(P5_TOGGLE_POS[7], P5_SW_AXIS);
+	NonessBusSwitch.DefineMeshGroup(VC_GRP_Sw_P5_08);
+
+	MainPanelVC.AddSwitch(&InteriorLightsFloodDimSwitch, AID_VC_SWITCH_P5_09);
+	InteriorLightsFloodDimSwitch.SetReference(P5_TOGGLE_POS[8], P5_SW_AXIS);
+	InteriorLightsFloodDimSwitch.DefineMeshGroup(VC_GRP_Sw_P5_09);
+
+	MainPanelVC.AddSwitch(&InteriorLightsFloodFixedSwitch, AID_VC_SWITCH_P5_10);
+	InteriorLightsFloodFixedSwitch.SetReference(P5_TOGGLE_POS[9], P5_SW_AXIS);
+	InteriorLightsFloodFixedSwitch.DefineMeshGroup(VC_GRP_Sw_P5_10);
+
+	const VECTOR3	P5_ROT_AXIS = { -0.846089265473375, -0.002307516178545, -0.533036237248285 };
+
+	MainPanelVC.AddSwitch(&RightIntegralRotarySwitch, AID_VC_ROT_P5_01);
+	RightIntegralRotarySwitch.SetReference(P5_ROT_POS[0], P5_ROT_AXIS);
+	RightIntegralRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P5_01);
+
+	MainPanelVC.AddSwitch(&RightFloodRotarySwitch, AID_VC_ROT_P5_02);
+	RightFloodRotarySwitch.SetReference(P5_ROT_POS[1], P5_ROT_AXIS);
+	RightFloodRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P5_02);
+
+	const VECTOR3 cb_p5_vector = { 0.846089265473375 * 0.003, 0.002307516178545 * 0.003, 0.533036237248285 * 0.003 };
+
+	CircuitBrakerSwitch* breakerspanel5[P5_CBCOUNT] = { &EpsSensorSignalDcMnaCircuitBraker, &EpsSensorSignalDcMnbCircuitBraker, &EpsSensorSignalAc1CircuitBraker, &EpsSensorSignalAc2CircuitBraker, &CWMnaCircuitBraker, &CWMnbCircuitBraker, &MnbLMPWR1CircuitBraker, &InverterControl1CircuitBraker, &InverterControl2CircuitBraker,
+		&InverterControl3CircuitBraker, &EPSSensorUnitDcBusACircuitBraker, &EPSSensorUnitDcBusBCircuitBraker, &EPSSensorUnitAcBus1CircuitBraker, &EPSSensorUnitAcBus2CircuitBraker, &BATRLYBusBatACircuitBraker, &BATRLYBusBatBCircuitBraker, &MnbLMPWR2CircuitBraker, &ControllerAc1CircuitBraker, &ControllerAc2CircuitBraker,
+		&CONTHTRSMnACircuitBraker, &CONTHTRSMnBCircuitBraker, &HTRSOVLDBatACircuitBraker, &HTRSOVLDBatBCircuitBraker, &BatteryChargerBatACircuitBraker, &BatteryChargerBatBCircuitBraker, &BatteryChargerMnACircuitBraker, &BatteryChargerMnBCircuitBraker, &BatteryChargerAcPwrCircuitBraker, &InstrumentLightingESSMnACircuitBraker,
+		&InstrumentLightingESSMnBCircuitBraker, &InstrumentLightingNonESSCircuitBraker, &InstrumentLightingSCIEquipSEP1CircuitBraker, &InstrumentLightingSCIEquipSEP2CircuitBraker, &InstrumentLightingSCIEquipHatchCircuitBraker, &ECSPOTH2OHTRMnACircuitBraker, &ECSPOTH2OHTRMnBCircuitBraker, &ECSH2OAccumMnACircuitBraker,
+		&ECSH2OAccumMnBCircuitBraker, &ECSTransducerWastePOTH2OMnACircuitBraker, &ECSTransducerWastePOTH2OMnBCircuitBraker, &ECSTransducerPressGroup1MnACircuitBraker, &ECSTransducerPressGroup1MnBCircuitBraker, &ECSTransducerPressGroup2MnACircuitBraker, &ECSTransducerPressGroup2MnBCircuitBraker, &ECSTransducerTempMnACircuitBraker,
+		&ECSTransducerTempMnBCircuitBraker, &ECSSecCoolLoopAc1CircuitBraker, &ECSSecCoolLoopAc2CircuitBraker, &ECSSecCoolLoopRADHTRMnACircuitBraker, &ECSSecCoolLoopXducersMnACircuitBraker, &ECSSecCoolLoopXducersMnBCircuitBraker, &ECSWasteH2OUrineDumpHTRMnACircuitBraker, &ECSWasteH2OUrineDumpHTRMnBCircuitBraker, &ECSCabinFanAC1ACircuitBraker,
+		&ECSCabinFanAC1BCircuitBraker, &ECSCabinFanAC1CCircuitBraker, &ECSCabinFanAC2ACircuitBraker, &ECSCabinFanAC2BCircuitBraker, &ECSCabinFanAC2CCircuitBraker, &GNPowerAc1CircuitBraker, &GNPowerAc2CircuitBraker, &GNIMUMnACircuitBraker, &GNIMUMnBCircuitBraker, &GNIMUHTRMnACircuitBraker, &GNIMUHTRMnBCircuitBraker, &GNComputerMnACircuitBraker,
+		&GNComputerMnBCircuitBraker, &GNOpticsMnACircuitBraker, &GNOpticsMnBCircuitBraker };
+
+	for (int i = 0; i < P5_CBCOUNT; i++)
+	{
+		MainPanelVC.AddSwitch(breakerspanel5[i], AID_VC_CB_P5_01 + i);
+		breakerspanel5[i]->SetDirection(cb_p5_vector);
+		breakerspanel5[i]->DefineMeshGroup(VC_GRP_CB_P5_01 + i);
+	}
+
+	// Panel 6
+
+	const VECTOR3 P6_SW_AXIS = { 0.300206537322247, 0.544287959888755, -0.783343252775642 };
+
+	MainPanelVC.AddSwitch(&RightModeIntercomSwitch, AID_VC_SWITCH_P6_01);
+	RightModeIntercomSwitch.SetReference(P6_TOGGLE_POS[0], P6_SW_AXIS);
+	RightModeIntercomSwitch.DefineMeshGroup(VC_GRP_Sw_P6_01);
+
+	MainPanelVC.AddSwitch(&RightPadCommSwitch, AID_VC_SWITCH_P6_02);
+	RightPadCommSwitch.SetReference(P6_TOGGLE_POS[1], P6_SW_AXIS);
+	RightPadCommSwitch.DefineMeshGroup(VC_GRP_Sw_P6_02);
+
+	MainPanelVC.AddSwitch(&RightSBandSwitch, AID_VC_SWITCH_P6_03);
+	RightSBandSwitch.SetReference(P6_TOGGLE_POS[2], P6_SW_AXIS);
+	RightSBandSwitch.DefineMeshGroup(VC_GRP_Sw_P6_03);
+
+	MainPanelVC.AddSwitch(&RightAudioPowerSwitch, AID_VC_SWITCH_P6_04);
+	RightAudioPowerSwitch.SetReference(P6_TOGGLE_POS[3], P6_SW_AXIS);
+	RightAudioPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P6_04);
+
+	MainPanelVC.AddSwitch(&RightIntercomSwitch, AID_VC_SWITCH_P6_05);
+	RightIntercomSwitch.SetReference(P6_TOGGLE_POS[4], P6_SW_AXIS);
+	RightIntercomSwitch.DefineMeshGroup(VC_GRP_Sw_P6_05);
+
+	MainPanelVC.AddSwitch(&RightVHFAMSwitch, AID_VC_SWITCH_P6_06);
+	RightVHFAMSwitch.SetReference(P6_TOGGLE_POS[5], P6_SW_AXIS);
+	RightVHFAMSwitch.DefineMeshGroup(VC_GRP_Sw_P6_06);
+
+	MainPanelVC.AddSwitch(&AudioControlSwitch, AID_VC_SWITCH_P6_07);
+	AudioControlSwitch.SetReference(P6_TOGGLE_POS[6], P6_SW_AXIS);
+	AudioControlSwitch.DefineMeshGroup(VC_GRP_Sw_P6_07);
+
+	MainPanelVC.AddSwitch(&SuitPowerSwitch, AID_VC_SWITCH_P6_08);
+	SuitPowerSwitch.SetReference(P6_TOGGLE_POS[7], P6_SW_AXIS);
+	SuitPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P6_08);
+
+
+	MainPanelVC.AddSwitch(&ModeIntercomVOXSensThumbwheelSwitch, AID_VC_TW_P6_01);
+	ModeIntercomVOXSensThumbwheelSwitch.SetReference(P6_TW_POS[0], P6_SW_AXIS);
+	ModeIntercomVOXSensThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P6_01);
+
+	MainPanelVC.AddSwitch(&PadCommVolumeThumbwheelSwitch, AID_VC_TW_P6_02);
+	PadCommVolumeThumbwheelSwitch.SetReference(P6_TW_POS[1], P6_SW_AXIS);
+	PadCommVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P6_02);
+
+	MainPanelVC.AddSwitch(&SBandVolumeThumbwheelSwitch, AID_VC_TW_P6_03);
+	SBandVolumeThumbwheelSwitch.SetReference(P6_TW_POS[2], P6_SW_AXIS);
+	SBandVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P6_03);
+
+	MainPanelVC.AddSwitch(&PowerMasterVolumeThumbwheelSwitch, AID_VC_TW_P6_04);
+	PowerMasterVolumeThumbwheelSwitch.SetReference(P6_TW_POS[3], P6_SW_AXIS);
+	PowerMasterVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P6_04);
+
+	MainPanelVC.AddSwitch(&IntercomVolumeThumbwheelSwitch, AID_VC_TW_P6_05);
+	IntercomVolumeThumbwheelSwitch.SetReference(P6_TW_POS[4], P6_SW_AXIS);
+	IntercomVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P6_05);
+
+	MainPanelVC.AddSwitch(&VHFAMVolumeThumbwheelSwitch, AID_VC_TW_P6_06);
+	VHFAMVolumeThumbwheelSwitch.SetReference(P6_TW_POS[5], P6_SW_AXIS);
+	VHFAMVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P6_06);
+
+	// Panel 7
+
+	const VECTOR3 P7_SW_AXIS = { 0.887943158453019, -0.459835186361606, 0.010418672672886 };
+
+	MainPanelVC.AddSwitch(&EDSPowerSwitch, AID_VC_SWITCH_P7_01);
+	EDSPowerSwitch.SetReference(P7_TOGGLE_POS[0], P7_SW_AXIS);
+	EDSPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P7_01);
+
+	MainPanelVC.AddSwitch(&TVCServoPower1Switch, AID_VC_SWITCH_P7_02);
+	TVCServoPower1Switch.SetReference(P7_TOGGLE_POS[1], P7_SW_AXIS);
+	TVCServoPower1Switch.DefineMeshGroup(VC_GRP_Sw_P7_02);
+
+	MainPanelVC.AddSwitch(&TVCServoPower2Switch, AID_VC_SWITCH_P7_03);
+	TVCServoPower2Switch.SetReference(P7_TOGGLE_POS[2], P7_SW_AXIS);
+	TVCServoPower2Switch.DefineMeshGroup(VC_GRP_Sw_P7_03);
+
+	MainPanelVC.AddSwitch(&LogicPowerSwitch, AID_VC_SWITCH_P7_04);
+	LogicPowerSwitch.SetReference(P7_TOGGLE_POS[3], P7_SW_AXIS);
+	LogicPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P7_04);
+
+	MainPanelVC.AddSwitch(&SIGCondDriverBiasPower1Switch, AID_VC_SWITCH_P7_05);
+	SIGCondDriverBiasPower1Switch.SetReference(P7_TOGGLE_POS[4], P7_SW_AXIS);
+	SIGCondDriverBiasPower1Switch.DefineMeshGroup(VC_GRP_Sw_P7_05);
+
+	MainPanelVC.AddSwitch(&SIGCondDriverBiasPower2Switch, AID_VC_SWITCH_P7_06);
+	SIGCondDriverBiasPower2Switch.SetReference(P7_TOGGLE_POS[5], P7_SW_AXIS);
+	SIGCondDriverBiasPower2Switch.DefineMeshGroup(VC_GRP_Sw_P7_06);
+
+	const VECTOR3	P7_ROT_AXIS = { 0.447544925948547, 0.846191424802758, -0.289246628066756 };
+
+	MainPanelVC.AddSwitch(&FDAIPowerRotarySwitch, AID_VC_ROT_P7_01);
+	FDAIPowerRotarySwitch.SetReference(P7_ROT_POS[0], P7_ROT_AXIS);
+	FDAIPowerRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P7_01);
+
+	MainPanelVC.AddSwitch(&SCSElectronicsPowerRotarySwitch, AID_VC_ROT_P7_02);
+	SCSElectronicsPowerRotarySwitch.SetReference(P7_ROT_POS[1], P7_ROT_AXIS);
+	SCSElectronicsPowerRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P7_02);
+
+	MainPanelVC.AddSwitch(&BMAGPowerRotary1Switch, AID_VC_ROT_P7_03);
+	BMAGPowerRotary1Switch.SetReference(P7_ROT_POS[2], P7_ROT_AXIS);
+	BMAGPowerRotary1Switch.DefineMeshGroup(VC_GRP_Rot_P7_03);
+
+	MainPanelVC.AddSwitch(&BMAGPowerRotary2Switch, AID_VC_ROT_P7_04);
+	BMAGPowerRotary2Switch.SetReference(P7_ROT_POS[3], P7_ROT_AXIS);
+	BMAGPowerRotary2Switch.DefineMeshGroup(VC_GRP_Rot_P7_04);
+
+	MainPanelVC.AddSwitch(&DirectO2RotarySwitch, AID_VC_ROT_P7_05);
+	DirectO2RotarySwitch.SetReference(P7_ROT_POS[4], P7_ROT_AXIS);
+	DirectO2RotarySwitch.DefineMeshGroup(VC_GRP_Rot_P7_05);
+
+	// Panel 8
+
+	const VECTOR3 P8_SW_AXIS = { 0.522444235332028, -0.207197823992405, 0.82711612407276 };
+
+	MainPanelVC.AddSwitch(&AcRollA1Switch, AID_VC_SWITCH_P8_01);
+	AcRollA1Switch.SetReference(P8_TOGGLE_POS[0], P8_SW_AXIS);
+	AcRollA1Switch.DefineMeshGroup(VC_GRP_Sw_P8_01);
+
+	MainPanelVC.AddSwitch(&AcRollC1Switch, AID_VC_SWITCH_P8_02);
+	AcRollC1Switch.SetReference(P8_TOGGLE_POS[1], P8_SW_AXIS);
+	AcRollC1Switch.DefineMeshGroup(VC_GRP_Sw_P8_02);
+
+	MainPanelVC.AddSwitch(&AcRollA2Switch, AID_VC_SWITCH_P8_03);
+	AcRollA2Switch.SetReference(P8_TOGGLE_POS[2], P8_SW_AXIS);
+	AcRollA2Switch.DefineMeshGroup(VC_GRP_Sw_P8_03);
+
+	MainPanelVC.AddSwitch(&AcRollC2Switch, AID_VC_SWITCH_P8_04);
+	AcRollC2Switch.SetReference(P8_TOGGLE_POS[3], P8_SW_AXIS);
+	AcRollC2Switch.DefineMeshGroup(VC_GRP_Sw_P8_04);
+
+	MainPanelVC.AddSwitch(&BdRollB1Switch, AID_VC_SWITCH_P8_05);
+	BdRollB1Switch.SetReference(P8_TOGGLE_POS[4], P8_SW_AXIS);
+	BdRollB1Switch.DefineMeshGroup(VC_GRP_Sw_P8_05);
+
+	MainPanelVC.AddSwitch(&BdRollD1Switch, AID_VC_SWITCH_P8_06);
+	BdRollD1Switch.SetReference(P8_TOGGLE_POS[5], P8_SW_AXIS);
+	BdRollD1Switch.DefineMeshGroup(VC_GRP_Sw_P8_06);
+
+	MainPanelVC.AddSwitch(&BdRollB2Switch, AID_VC_SWITCH_P8_07);
+	BdRollB2Switch.SetReference(P8_TOGGLE_POS[6], P8_SW_AXIS);
+	BdRollB2Switch.DefineMeshGroup(VC_GRP_Sw_P8_07);
+
+	MainPanelVC.AddSwitch(&BdRollD2Switch, AID_VC_SWITCH_P8_08);
+	BdRollD2Switch.SetReference(P8_TOGGLE_POS[7], P8_SW_AXIS);
+	BdRollD2Switch.DefineMeshGroup(VC_GRP_Sw_P8_08);
+
+	MainPanelVC.AddSwitch(&PitchA3Switch, AID_VC_SWITCH_P8_09);
+	PitchA3Switch.SetReference(P8_TOGGLE_POS[8], P8_SW_AXIS);
+	PitchA3Switch.DefineMeshGroup(VC_GRP_Sw_P8_09);
+
+	MainPanelVC.AddSwitch(&PitchC3Switch, AID_VC_SWITCH_P8_10);
+	PitchC3Switch.SetReference(P8_TOGGLE_POS[9], P8_SW_AXIS);
+	PitchC3Switch.DefineMeshGroup(VC_GRP_Sw_P8_10);
+
+	MainPanelVC.AddSwitch(&PitchA4Switch, AID_VC_SWITCH_P8_11);
+	PitchA4Switch.SetReference(P8_TOGGLE_POS[10], P8_SW_AXIS);
+	PitchA4Switch.DefineMeshGroup(VC_GRP_Sw_P8_11);
+
+	MainPanelVC.AddSwitch(&PitchC4Switch, AID_VC_SWITCH_P8_12);
+	PitchC4Switch.SetReference(P8_TOGGLE_POS[11], P8_SW_AXIS);
+	PitchC4Switch.DefineMeshGroup(VC_GRP_Sw_P8_12);
+
+	MainPanelVC.AddSwitch(&YawB3Switch, AID_VC_SWITCH_P8_13);
+	YawB3Switch.SetReference(P8_TOGGLE_POS[12], P8_SW_AXIS);
+	YawB3Switch.DefineMeshGroup(VC_GRP_Sw_P8_13);
+
+	MainPanelVC.AddSwitch(&YawD3Switch, AID_VC_SWITCH_P8_14);
+	YawD3Switch.SetReference(P8_TOGGLE_POS[13], P8_SW_AXIS);
+	YawD3Switch.DefineMeshGroup(VC_GRP_Sw_P8_14);
+
+	MainPanelVC.AddSwitch(&YawB4Switch, AID_VC_SWITCH_P8_15);
+	YawB4Switch.SetReference(P8_TOGGLE_POS[14], P8_SW_AXIS);
+	YawB4Switch.DefineMeshGroup(VC_GRP_Sw_P8_15);
+
+	MainPanelVC.AddSwitch(&YawD4Switch, AID_VC_SWITCH_P8_16);
+	YawD4Switch.SetReference(P8_TOGGLE_POS[15], P8_SW_AXIS);
+	YawD4Switch.DefineMeshGroup(VC_GRP_Sw_P8_16);
+
+	MainPanelVC.AddSwitch(&FloodDimSwitch, AID_VC_SWITCH_P8_17);
+	FloodDimSwitch.SetReference(P8_TOGGLE_POS[16], P8_SW_AXIS);
+	FloodDimSwitch.DefineMeshGroup(VC_GRP_Sw_P8_17);
+
+	MainPanelVC.AddSwitch(&FloodFixedSwitch, AID_VC_SWITCH_P8_18);
+	FloodFixedSwitch.SetReference(P8_TOGGLE_POS[17], P8_SW_AXIS);
+	FloodFixedSwitch.DefineMeshGroup(VC_GRP_Sw_P8_18);
+
+	MainPanelVC.AddSwitch(&FloatBagSwitch1, AID_VC_SWITCH_P8_19);
+	FloatBagSwitch1.SetReference(P8_TOGGLE_POS[18], P8_SW_AXIS);
+	FloatBagSwitch1.DefineMeshGroup(VC_GRP_Sw_P8_19);
+
+	MainPanelVC.AddSwitch(&FloatBagSwitch2, AID_VC_SWITCH_P8_20);
+	FloatBagSwitch2.SetReference(P8_TOGGLE_POS[19], P8_SW_AXIS);
+	FloatBagSwitch2.DefineMeshGroup(VC_GRP_Sw_P8_20);
+
+	MainPanelVC.AddSwitch(&FloatBagSwitch3, AID_VC_SWITCH_P8_21);
+	FloatBagSwitch3.SetReference(P8_TOGGLE_POS[20], P8_SW_AXIS);
+	FloatBagSwitch3.DefineMeshGroup(VC_GRP_Sw_P8_21);
+
+	MainPanelVC.AddSwitch(&SECSLogic1Switch, AID_VC_SWITCH_P8_22);
+	SECSLogic1Switch.SetReference(P8_TOGGLE_POS[21], P8_SW_AXIS);
+	SECSLogic1Switch.DefineMeshGroup(VC_GRP_Sw_P8_22);
+
+	MainPanelVC.AddSwitch(&SECSLogic2Switch, AID_VC_SWITCH_P8_23);
+	SECSLogic2Switch.SetReference(P8_TOGGLE_POS[22], P8_SW_AXIS);
+	SECSLogic2Switch.DefineMeshGroup(VC_GRP_Sw_P8_23);
+
+	MainPanelVC.AddSwitch(&PyroArmASwitch, AID_VC_SWITCH_P8_24);
+	PyroArmASwitch.SetReference(P8_TOGGLE_POS[23], P8_SW_AXIS);
+	PyroArmASwitch.DefineMeshGroup(VC_GRP_Sw_P8_24);
+
+	MainPanelVC.AddSwitch(&PyroArmBSwitch, AID_VC_SWITCH_P8_25);
+	PyroArmBSwitch.SetReference(P8_TOGGLE_POS[24], P8_SW_AXIS);
+	PyroArmBSwitch.DefineMeshGroup(VC_GRP_Sw_P8_25);
+
+	const VECTOR3	P8_ROT_AXIS = { 0.844819075554255, 0.0, -0.535052081184303 };
+
+	MainPanelVC.AddSwitch(&NumericRotarySwitch, AID_VC_ROT_P8_01);
+	NumericRotarySwitch.SetReference(P8_ROT_POS[0], P8_ROT_AXIS);
+	NumericRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P8_01);
+
+	MainPanelVC.AddSwitch(&FloodRotarySwitch, AID_VC_ROT_P8_02);
+	FloodRotarySwitch.SetReference(P8_ROT_POS[1], P8_ROT_AXIS);
+	FloodRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P8_02);
+
+	MainPanelVC.AddSwitch(&IntegralRotarySwitch, AID_VC_ROT_P8_03);
+	IntegralRotarySwitch.SetReference(P8_ROT_POS[2], P8_ROT_AXIS);
+	IntegralRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P8_03);
+
+	const VECTOR3 cb_p8_vector = { -0.844819075554255 * 0.003, 0.0, 0.535052081184303 * 0.003 };
+
+	CircuitBrakerSwitch* breakerspanel8[P8_CBCOUNT] = { &StabContSystemTVCAc1CircuitBraker, &StabContSystemAc1CircuitBraker, &StabContSystemAc2CircuitBraker, &ECATVCAc2CircuitBraker, &DirectUllMnACircuitBraker, &DirectUllMnBCircuitBraker, &ContrDirectMnA1CircuitBraker, &ContrDirectMnB1CircuitBraker, &ContrDirectMnA2CircuitBraker,
+		&ContrDirectMnB2CircuitBraker, &ACRollMnACircuitBraker, &ACRollMnBCircuitBraker, &BDRollMnACircuitBraker, &BDRollMnBCircuitBraker, &PitchMnACircuitBraker, &PitchMnBCircuitBraker, &YawMnACircuitBraker, &YawMnBCircuitBraker, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker, &LogicBus12MnACircuitBraker,
+		&LogicBus34MnACircuitBraker, &LogicBus14MnBCircuitBraker, &LogicBus23MnBCircuitBraker, &SystemMnACircuitBraker, &SystemMnBCircuitBraker, &CMHeater1MnACircuitBraker, &CMHeater2MnBCircuitBraker, &SMHeatersAMnBCircuitBraker, &SMHeatersCMnBCircuitBraker, &SMHeatersBMnACircuitBraker, &SMHeatersDMnACircuitBraker, &PrplntIsolMnACircuitBraker, &PrplntIsolMnBCircuitBraker,
+		&RCSLogicMnACircuitBraker, &RCSLogicMnBCircuitBraker, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &DockProbeMnACircuitBraker, &DockProbeMnBCircuitBraker, &GaugingMnACircuitBraker, &GaugingMnBCircuitBraker, &GaugingAc1CircuitBraker, &GaugingAc2CircuitBraker, &HeValveMnACircuitBraker, &HeValveMnBCircuitBraker, &PitchBatACircuitBraker, &PitchBatBCircuitBraker,
+		&YawBatACircuitBraker, &YawBatBCircuitBraker, &PilotValveMnACircuitBraker, &PilotValveMnBCircuitBraker, &FloatBag1BatACircuitBraker, &FloatBag2BatBCircuitBraker, &FloatBag3FLTPLCircuitBraker, &SECSLogicBatACircuitBraker, &SECSLogicBatBCircuitBraker, &SECSArmBatACircuitBraker, &SECSArmBatBCircuitBraker, &EDS1BatACircuitBraker, &EDS2BatCCircuitBraker,
+	    &EDS3BatBCircuitBraker, &ELSBatACircuitBraker, &ELSBatBCircuitBraker, &FLTPLCircuitBraker };
+
+	for (int i = 0; i < P8_CBCOUNT; i++)
+	{
+		MainPanelVC.AddSwitch(breakerspanel8[i], AID_VC_CB_P8_01 + i);
+		breakerspanel8[i]->SetDirection(cb_p8_vector);
+		breakerspanel8[i]->DefineMeshGroup(VC_GRP_CB_P8_01 + i);
+	}
+
+	// Panel 9
+
+	const VECTOR3 P9_SW_AXIS = { 0.263822320021041, -0.523246728773619, 0.810315151213663 };
+
+	MainPanelVC.AddSwitch(&LeftModeIntercomSwitch, AID_VC_SWITCH_P9_01);
+	LeftModeIntercomSwitch.SetReference(P9_TOGGLE_POS[0], P9_SW_AXIS);
+	LeftModeIntercomSwitch.DefineMeshGroup(VC_GRP_Sw_P9_01);
+
+	MainPanelVC.AddSwitch(&LeftPadCommSwitch, AID_VC_SWITCH_P9_02);
+	LeftPadCommSwitch.SetReference(P9_TOGGLE_POS[1], P9_SW_AXIS);
+	LeftPadCommSwitch.DefineMeshGroup(VC_GRP_Sw_P9_02);
+
+	MainPanelVC.AddSwitch(&LeftSBandSwitch, AID_VC_SWITCH_P9_03);
+	LeftSBandSwitch.SetReference(P9_TOGGLE_POS[2], P9_SW_AXIS);
+	LeftSBandSwitch.DefineMeshGroup(VC_GRP_Sw_P9_03);
+
+	MainPanelVC.AddSwitch(&LeftAudioPowerSwitch, AID_VC_SWITCH_P9_04);
+	LeftAudioPowerSwitch.SetReference(P9_TOGGLE_POS[3], P9_SW_AXIS);
+	LeftAudioPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P9_04);
+
+	MainPanelVC.AddSwitch(&LeftIntercomSwitch, AID_VC_SWITCH_P9_05);
+	LeftIntercomSwitch.SetReference(P9_TOGGLE_POS[4], P9_SW_AXIS);
+	LeftIntercomSwitch.DefineMeshGroup(VC_GRP_Sw_P9_05);
+
+	MainPanelVC.AddSwitch(&LeftVHFAMSwitch, AID_VC_SWITCH_P9_06);
+	LeftVHFAMSwitch.SetReference(P9_TOGGLE_POS[5], P9_SW_AXIS);
+	LeftVHFAMSwitch.DefineMeshGroup(VC_GRP_Sw_P9_06);
+
+	MainPanelVC.AddSwitch(&LeftAudioControlSwitch, AID_VC_SWITCH_P9_07);
+	LeftAudioControlSwitch.SetReference(P9_TOGGLE_POS[6], P9_SW_AXIS);
+	LeftAudioControlSwitch.DefineMeshGroup(VC_GRP_Sw_P9_07);
+
+	MainPanelVC.AddSwitch(&LeftSuitPowerSwitch, AID_VC_SWITCH_P9_08);
+	LeftSuitPowerSwitch.SetReference(P9_TOGGLE_POS[7], P9_SW_AXIS);
+	LeftSuitPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P9_08);
+
+	MainPanelVC.AddSwitch(&VHFRNGSwitch, AID_VC_SWITCH_P9_09);
+	VHFRNGSwitch.SetReference(P9_TOGGLE_POS[8], P9_SW_AXIS);
+	VHFRNGSwitch.DefineMeshGroup(VC_GRP_Sw_P9_09);
+
+	MainPanelVC.AddSwitch(&LeftModeIntercomVOXSensThumbwheelSwitch, AID_VC_TW_P9_01);
+	LeftModeIntercomVOXSensThumbwheelSwitch.SetReference(P9_TW_POS[0], P9_SW_AXIS);
+	LeftModeIntercomVOXSensThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P9_01);
+
+	MainPanelVC.AddSwitch(&LeftPadCommVolumeThumbwheelSwitch, AID_VC_TW_P9_02);
+	LeftPadCommVolumeThumbwheelSwitch.SetReference(P9_TW_POS[1], P9_SW_AXIS);
+	LeftPadCommVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P9_02);
+
+	MainPanelVC.AddSwitch(&LeftSBandVolumeThumbwheelSwitch, AID_VC_TW_P9_03);
+	LeftSBandVolumeThumbwheelSwitch.SetReference(P9_TW_POS[2], P9_SW_AXIS);
+	LeftSBandVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P9_03);
+
+	MainPanelVC.AddSwitch(&LeftPowerMasterVolumeThumbwheelSwitch, AID_VC_TW_P9_04);
+	LeftPowerMasterVolumeThumbwheelSwitch.SetReference(P9_TW_POS[3], P9_SW_AXIS);
+	LeftPowerMasterVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P9_04);
+
+	MainPanelVC.AddSwitch(&LeftIntercomVolumeThumbwheelSwitch, AID_VC_TW_P9_05);
+	LeftIntercomVolumeThumbwheelSwitch.SetReference(P9_TW_POS[4], P9_SW_AXIS);
+	LeftIntercomVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P9_05);
+
+	MainPanelVC.AddSwitch(&LeftVHFAMVolumeThumbwheelSwitch, AID_VC_TW_P9_06);
+	LeftVHFAMVolumeThumbwheelSwitch.SetReference(P9_TW_POS[5], P9_SW_AXIS);
+	LeftVHFAMVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P9_06);
+
+	// Panel 10
+
+	const VECTOR3 P10_SW_AXIS = { -1, 0, 0 };
+
+	MainPanelVC.AddSwitch(&ModeIntercomSwitch, AID_VC_SWITCH_P10_01);
+	ModeIntercomSwitch.SetReference(P10_TOGGLE_POS[0], P10_SW_AXIS);
+	ModeIntercomSwitch.DefineMeshGroup(VC_GRP_Sw_P10_01);
+
+	MainPanelVC.AddSwitch(&PadComSwitch, AID_VC_SWITCH_P10_02);
+	PadComSwitch.SetReference(P10_TOGGLE_POS[1], P10_SW_AXIS);
+	PadComSwitch.DefineMeshGroup(VC_GRP_Sw_P10_02);
+
+	MainPanelVC.AddSwitch(&SBandSwitch, AID_VC_SWITCH_P10_03);
+	SBandSwitch.SetReference(P10_TOGGLE_POS[2], P10_SW_AXIS);
+	SBandSwitch.DefineMeshGroup(VC_GRP_Sw_P10_03);
+
+	MainPanelVC.AddSwitch(&CenterSuitPowerSwitch, AID_VC_SWITCH_P10_04);
+	CenterSuitPowerSwitch.SetReference(P10_TOGGLE_POS[3], P10_SW_AXIS);
+	CenterSuitPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P10_04);
+
+	MainPanelVC.AddSwitch(&CenterAudioControlSwitch, AID_VC_SWITCH_P10_05);
+	CenterAudioControlSwitch.SetReference(P10_TOGGLE_POS[4], P10_SW_AXIS);
+	CenterAudioControlSwitch.DefineMeshGroup(VC_GRP_Sw_P10_05);
+
+	MainPanelVC.AddSwitch(&PowerAudioSwitch, AID_VC_SWITCH_P10_06);
+	PowerAudioSwitch.SetReference(P10_TOGGLE_POS[5], P10_SW_AXIS);
+	PowerAudioSwitch.DefineMeshGroup(VC_GRP_Sw_P10_06);
+
+	MainPanelVC.AddSwitch(&IntercomSwitch, AID_VC_SWITCH_P10_07);
+	IntercomSwitch.SetReference(P10_TOGGLE_POS[6], P10_SW_AXIS);
+	IntercomSwitch.DefineMeshGroup(VC_GRP_Sw_P10_07);
+
+	MainPanelVC.AddSwitch(&VHFAMSwitch, AID_VC_SWITCH_P10_08);
+	VHFAMSwitch.SetReference(P10_TOGGLE_POS[7], P10_SW_AXIS);
+	VHFAMSwitch.DefineMeshGroup(VC_GRP_Sw_P10_08);
+
+	MainPanelVC.AddSwitch(&LeftAudioVOXSensThumbwheel, AID_VC_TW_P10_01);
+	LeftAudioVOXSensThumbwheel.SetReference(P10_TW_POS[0], P10_SW_AXIS);
+	LeftAudioVOXSensThumbwheel.DefineMeshGroup(VC_GRP_TW_P10_01);
+
+	MainPanelVC.AddSwitch(&LeftAudioPadComVolumeThumbwheel, AID_VC_TW_P10_02);
+	LeftAudioPadComVolumeThumbwheel.SetReference(P10_TW_POS[1], P10_SW_AXIS);
+	LeftAudioPadComVolumeThumbwheel.DefineMeshGroup(VC_GRP_TW_P10_02);
+
+	MainPanelVC.AddSwitch(&LeftAudioSBandVolumeThumbwheel, AID_VC_TW_P10_03);
+	LeftAudioSBandVolumeThumbwheel.SetReference(P10_TW_POS[2], P10_SW_AXIS);
+	LeftAudioSBandVolumeThumbwheel.DefineMeshGroup(VC_GRP_TW_P10_03);
+
+	MainPanelVC.AddSwitch(&RightAudioMasterVolumeThumbwheel, AID_VC_TW_P10_04);
+	RightAudioMasterVolumeThumbwheel.SetReference(P10_TW_POS[3], P10_SW_AXIS);
+	RightAudioMasterVolumeThumbwheel.DefineMeshGroup(VC_GRP_TW_P10_04);
+
+	MainPanelVC.AddSwitch(&RightAudioIntercomVolumeThumbwheel, AID_VC_TW_P10_05);
+	RightAudioIntercomVolumeThumbwheel.SetReference(P10_TW_POS[4], P10_SW_AXIS);
+	RightAudioIntercomVolumeThumbwheel.DefineMeshGroup(VC_GRP_TW_P10_05);
+
+	MainPanelVC.AddSwitch(&RightAudioVHFAMVolumeThumbwheel, AID_VC_TW_P10_06);
+	RightAudioVHFAMVolumeThumbwheel.SetReference(P10_TW_POS[5], P10_SW_AXIS);
+	RightAudioVHFAMVolumeThumbwheel.DefineMeshGroup(VC_GRP_TW_P10_06);
+
+	// Panel 12
+
+	const VECTOR3	P12_ROT_AXIS = { 0.690769935975231, -0.667400604807913, -0.278232507545052 };
+
+	MainPanelVC.AddSwitch(&LMTunnelVentValve, AID_VC_ROT_P12_01);
+	LMTunnelVentValve.SetReference(P12_ROT_POS[0], P12_ROT_AXIS);
+	LMTunnelVentValve.DefineMeshGroup(VC_GRP_Rot_P12_01);
+
+	NEEDLE_POS = { -0.3174, 0.1993, 0.4694 };
+
+	MainPanelVC.AddSwitch(&LMDPGauge);
+	LMDPGauge.SetReference(NEEDLE_POS, P12_ROT_AXIS);
+	LMDPGauge.SetRotationRange(RAD * 75);
+	LMDPGauge.DefineMeshGroup(VC_GRP_Needle_P12_01);
+
+	// Panel 13
+
+	const VECTOR3 P13_SW_AXIS = { 0.385804106483757, -0.378054512596731, 0.841564006434162 };
+
+	MainPanelVC.AddSwitch(&ORDEALFDAI1Switch, AID_VC_SWITCH_P13_01);
+	ORDEALFDAI1Switch.SetReference(P13_TOGGLE_POS[0], P13_SW_AXIS);
+	ORDEALFDAI1Switch.DefineMeshGroup(VC_GRP_Sw_P13_01);
+
+	MainPanelVC.AddSwitch(&ORDEALFDAI2Switch, AID_VC_SWITCH_P13_02);
+	ORDEALFDAI2Switch.SetReference(P13_TOGGLE_POS[1], P13_SW_AXIS);
+	ORDEALFDAI2Switch.DefineMeshGroup(VC_GRP_Sw_P13_02);
+
+	MainPanelVC.AddSwitch(&ORDEALEarthSwitch, AID_VC_SWITCH_P13_03);
+	ORDEALEarthSwitch.SetReference(P13_TOGGLE_POS[2], P13_SW_AXIS);
+	ORDEALEarthSwitch.DefineMeshGroup(VC_GRP_Sw_P13_03);
+
+	MainPanelVC.AddSwitch(&ORDEALLightingSwitch, AID_VC_SWITCH_P13_04);
+	ORDEALLightingSwitch.SetReference(P13_TOGGLE_POS[3], P13_SW_AXIS);
+	ORDEALLightingSwitch.DefineMeshGroup(VC_GRP_Sw_P13_04);
+
+	MainPanelVC.AddSwitch(&ORDEALModeSwitch, AID_VC_SWITCH_P13_05);
+	ORDEALModeSwitch.SetReference(P13_TOGGLE_POS[4], P13_SW_AXIS);
+	ORDEALModeSwitch.DefineMeshGroup(VC_GRP_Sw_P13_05);
+
+	MainPanelVC.AddSwitch(&ORDEALSlewSwitch, AID_VC_SWITCH_P13_06);
+	ORDEALSlewSwitch.SetReference(P13_TOGGLE_POS[5], P13_SW_AXIS);
+	ORDEALSlewSwitch.DefineMeshGroup(VC_GRP_Sw_P13_06);
+
+	const VECTOR3	P13_ROT_AXIS = { 0.54191307344258, -0.645820796385401, -0.53781569314045 };
+	const VECTOR3 ORDEAL_RotLocation = { -0.9256, 0.9741, -0.0737 };
+
+	MainPanelVC.AddSwitch(&ORDEALAltSetRotary, AID_VC_ORDEAL_ROT);
+	ORDEALAltSetRotary.SetReference(ORDEAL_RotLocation, P13_ROT_AXIS);
+	ORDEALAltSetRotary.DefineMeshGroup(VC_GRP_ORDEAL_Rot);
+
+	// Panel 15
+
+	const VECTOR3 P15_SW_AXIS = { 0.263822320021041, -0.523246728773619, 0.810315151213663 };
+	const VECTOR3 P15_COVER_AXIS = { 0.358290506720357, -0.354736633295221, 0.863591242308791 };
+
+	MainPanelVC.AddSwitch(&LeftCOASPowerSwitch, AID_VC_SWITCH_P15_01);
+	LeftCOASPowerSwitch.SetReference(P15_TOGGLE_POS[0], P15_SW_AXIS);
+	LeftCOASPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P15_01);
+
+	MainPanelVC.AddSwitch(&LeftUtilityPowerSwitch, AID_VC_SWITCH_P15_02);
+	LeftUtilityPowerSwitch.SetReference(P15_TOGGLE_POS[1], P15_SW_AXIS);
+	LeftUtilityPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P15_02);
+
+	MainPanelVC.AddSwitch(&PostLandingBCNLTSwitch, AID_VC_SWITCH_P15_03);
+	PostLandingBCNLTSwitch.SetReference(P15_TOGGLE_POS[2], P15_SW_AXIS);
+	PostLandingBCNLTSwitch.DefineMeshGroup(VC_GRP_Sw_P15_03);
+
+	MainPanelVC.AddSwitch(&PostLandingDYEMarkerSwitch, AID_VC_SWITCH_P15_04);
+	PostLandingDYEMarkerSwitch.SetReference(P15_TOGGLE_POS[3], _V(-0.774513, 0.881142, 0.309977), P15_SW_AXIS, P15_COVER_AXIS);
+	PostLandingDYEMarkerSwitch.DefineMeshGroup(VC_GRP_Sw_P15_04, VC_GRP_SwitchCover_P15_01);
+
+	MainPanelVC.AddSwitch(&PostLandingVentSwitch, AID_VC_SWITCH_P15_05);
+	PostLandingVentSwitch.SetReference(P15_TOGGLE_POS[4], P15_SW_AXIS);
+	PostLandingVentSwitch.DefineMeshGroup(VC_GRP_Sw_P15_05);
+
+	const VECTOR3 P16_SW_AXIS = { 0.440928737513677, 0.332607488651675, -0.833639074736436 };
+
+	MainPanelVC.AddSwitch(&RightDockingTargetSwitch, AID_VC_SWITCH_P16_01);
+	RightDockingTargetSwitch.SetReference(P16_TOGGLE_POS[0], P16_SW_AXIS);
+	RightDockingTargetSwitch.DefineMeshGroup(VC_GRP_Sw_P16_01);
+
+	MainPanelVC.AddSwitch(&RightUtilityPowerSwitch, AID_VC_SWITCH_P16_02);
+	RightUtilityPowerSwitch.SetReference(P16_TOGGLE_POS[1], P16_SW_AXIS);
+	RightUtilityPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P16_02);
+
+	MainPanelVC.AddSwitch(&RightCOASPowerSwitch, AID_VC_SWITCH_P16_03);
+	RightCOASPowerSwitch.SetReference(P16_TOGGLE_POS[2], P16_SW_AXIS);
+	RightCOASPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P16_03);
+
+	// Panel 100
+
+	MainPanelVC.AddSwitch(&UtilityPowerSwitch, AID_VC_SWITCH_P100_01);
+	UtilityPowerSwitch.SetReference(P100_TOGGLE_POS[0], _V(1, 0, 0));
+	UtilityPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P100_01);
+
+	MainPanelVC.AddSwitch(&Panel100FloodDimSwitch, AID_VC_SWITCH_P100_02);
+	Panel100FloodDimSwitch.SetReference(P100_TOGGLE_POS[1], _V(1, 0, 0));
+	Panel100FloodDimSwitch.DefineMeshGroup(VC_GRP_Sw_P100_02);
+
+	MainPanelVC.AddSwitch(&Panel100FloodFixedSwitch, AID_VC_SWITCH_P100_03);
+	Panel100FloodFixedSwitch.SetReference(P100_TOGGLE_POS[2], _V(1, 0, 0));
+	Panel100FloodFixedSwitch.DefineMeshGroup(VC_GRP_Sw_P100_03);
+
+	MainPanelVC.AddSwitch(&GNPowerOpticsSwitch, AID_VC_SWITCH_P100_04);
+	GNPowerOpticsSwitch.SetReference(P100_TOGGLE_POS[3], _V(1, 0, 0));
+	GNPowerOpticsSwitch.DefineMeshGroup(VC_GRP_Sw_P100_04);
+
+	MainPanelVC.AddSwitch(&GNPowerIMUSwitch, AID_VC_SWITCH_P100_05);
+	GNPowerIMUSwitch.SetReference(P100_TOGGLE_POS[4], _V(-0.581695, -0.697935, 0.239086), _V(1, 0, 0), _V(1, 0, 0));
+	GNPowerIMUSwitch.DefineMeshGroup(VC_GRP_Sw_P100_05, VC_GRP_SwitchCover_P100_01);
+
+	MainPanelVC.AddSwitch(&Panel100RNDZXPDRSwitch, AID_VC_SWITCH_P100_06);
+	Panel100RNDZXPDRSwitch.SetReference(P100_TOGGLE_POS[5], _V(1, 0, 0));
+	Panel100RNDZXPDRSwitch.DefineMeshGroup(VC_GRP_Sw_P100_06);
+
+	const VECTOR3	P100_ROT_AXIS = { 0, 1, 0 };
+
+	MainPanelVC.AddSwitch(&Panel100NumericRotarySwitch, AID_VC_ROT_P100_01);
+	Panel100NumericRotarySwitch.SetReference(P100_ROT_POS[0], P100_ROT_AXIS);
+	Panel100NumericRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P100_01);
+
+	MainPanelVC.AddSwitch(&Panel100FloodRotarySwitch, AID_VC_ROT_P100_02);
+	Panel100FloodRotarySwitch.SetReference(P100_ROT_POS[1], P100_ROT_AXIS);
+	Panel100FloodRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P100_02);
+
+	MainPanelVC.AddSwitch(&Panel100IntegralRotarySwitch, AID_VC_ROT_P100_03);
+	Panel100IntegralRotarySwitch.SetReference(P100_ROT_POS[2], P100_ROT_AXIS);
+	Panel100IntegralRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P100_03);
+
+	// Panel 101
+
+	MainPanelVC.AddSwitch(&RNDZXPDRSwitch, AID_VC_SWITCH_P101_01);
+	RNDZXPDRSwitch.SetReference(P101_TOGGLE_POS[0], _V(1, 0, 0));
+	RNDZXPDRSwitch.DefineMeshGroup(VC_GRP_Sw_P101_01);
+
+	MainPanelVC.AddSwitch(&CMRCSHTRSSwitch, AID_VC_SWITCH_P101_02);
+	CMRCSHTRSSwitch.SetReference(P101_TOGGLE_POS[1], _V(1, 0, 0));
+	CMRCSHTRSSwitch.DefineMeshGroup(VC_GRP_Sw_P101_02);
+
+	MainPanelVC.AddSwitch(&WasteH2ODumpSwitch, AID_VC_SWITCH_P101_03);
+	WasteH2ODumpSwitch.SetReference(P101_TOGGLE_POS[2], _V(1, 0, 0));
+	WasteH2ODumpSwitch.DefineMeshGroup(VC_GRP_Sw_P101_03);
+
+	MainPanelVC.AddSwitch(&UrineDumpSwitch, AID_VC_SWITCH_P101_04);
+	UrineDumpSwitch.SetReference(P101_TOGGLE_POS[3], _V(1, 0, 0));
+	UrineDumpSwitch.DefineMeshGroup(VC_GRP_Sw_P101_04);
+
+	const VECTOR3	P101_ROT_AXIS = { 0, 0.938288430820701, -0.345853756070434 };
+
+	MainPanelVC.AddSwitch(&LeftSystemTestRotarySwitch, AID_VC_ROT_P101_01);
+	LeftSystemTestRotarySwitch.SetReference(P101_ROT_POS[0], P101_ROT_AXIS);
+	LeftSystemTestRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P101_01);
+
+	MainPanelVC.AddSwitch(&RightSystemTestRotarySwitch, AID_VC_ROT_P101_02);
+	RightSystemTestRotarySwitch.SetReference(P101_ROT_POS[1], P101_ROT_AXIS);
+	RightSystemTestRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P101_02);
+
+	NEEDLE_POS = { -0.4320, -0.5961, 0.5486 };
+
+	MainPanelVC.AddSwitch(&SystemTestVoltMeter);
+	SystemTestVoltMeter.SetReference(NEEDLE_POS, P101_ROT_AXIS);
+	SystemTestVoltMeter.SetRotationRange(RAD * 225);
+	SystemTestVoltMeter.DefineMeshGroup(VC_GRP_Needle_P101_01);
+
+	// Panel 122
+
+	MainPanelVC.AddSwitch(&OpticsZeroSwitch, AID_VC_SWITCH_P122_01);
+	OpticsZeroSwitch.SetReference(P122_TOGGLE_POS[0], _V(1, 0, 0));
+	OpticsZeroSwitch.DefineMeshGroup(VC_GRP_Sw_P122_01);
+
+	MainPanelVC.AddSwitch(&ControllerTelescopeTrunnionSwitch, AID_VC_SWITCH_P122_02);
+	ControllerTelescopeTrunnionSwitch.SetReference(P122_TOGGLE_POS[1], _V(1, 0, 0));
+	ControllerTelescopeTrunnionSwitch.DefineMeshGroup(VC_GRP_Sw_P122_02);
+
+	MainPanelVC.AddSwitch(&ControllerCouplingSwitch, AID_VC_SWITCH_P122_03);
+	ControllerCouplingSwitch.SetReference(P122_TOGGLE_POS[2], _V(1, 0, 0));
+	ControllerCouplingSwitch.DefineMeshGroup(VC_GRP_Sw_P122_03);
+
+	MainPanelVC.AddSwitch(&OpticsModeSwitch, AID_VC_SWITCH_P122_04);
+	OpticsModeSwitch.SetReference(P122_TOGGLE_POS[3], _V(1, 0, 0));
+	OpticsModeSwitch.DefineMeshGroup(VC_GRP_Sw_P122_04);
+
+	MainPanelVC.AddSwitch(&ControllerSpeedSwitch, AID_VC_SWITCH_P122_05);
+	ControllerSpeedSwitch.SetReference(P122_TOGGLE_POS[4], _V(1, 0, 0));
+	ControllerSpeedSwitch.DefineMeshGroup(VC_GRP_Sw_P122_05);
+
+	MainPanelVC.AddSwitch(&ConditionLampsSwitch, AID_VC_SWITCH_P122_06);
+	ConditionLampsSwitch.SetReference(P122_TOGGLE_POS[5], _V(1, 0, 0));
+	ConditionLampsSwitch.DefineMeshGroup(VC_GRP_Sw_P122_06);
+
+	MainPanelVC.AddSwitch(&UPTLMSwitch, AID_VC_SWITCH_P122_07);
+	UPTLMSwitch.SetReference(P122_TOGGLE_POS[6], _V(1, 0, 0));
+	UPTLMSwitch.DefineMeshGroup(VC_GRP_Sw_P122_07);
+
+	const VECTOR3 pb_P122_vector = {0 , -0.001, 0 };
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchVerb, AID_VC_PUSHB_P122_01);
+	Dsky2SwitchVerb.SetDirection(pb_P122_vector);
+	Dsky2SwitchVerb.DefineMeshGroup(VC_GRP_PB_P122_01);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchNoun, AID_VC_PUSHB_P122_02);
+	Dsky2SwitchNoun.SetDirection(pb_P122_vector);
+	Dsky2SwitchNoun.DefineMeshGroup(VC_GRP_PB_P122_02);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchPlus, AID_VC_PUSHB_P122_03);
+	Dsky2SwitchPlus.SetDirection(pb_P122_vector);
+	Dsky2SwitchPlus.DefineMeshGroup(VC_GRP_PB_P122_03);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchMinus, AID_VC_PUSHB_P122_04);
+	Dsky2SwitchMinus.SetDirection(pb_P122_vector);
+	Dsky2SwitchMinus.DefineMeshGroup(VC_GRP_PB_P122_04);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchZero, AID_VC_PUSHB_P122_05);
+	Dsky2SwitchZero.SetDirection(pb_P122_vector);
+	Dsky2SwitchZero.DefineMeshGroup(VC_GRP_PB_P122_05);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchOne, AID_VC_PUSHB_P122_06);
+	Dsky2SwitchOne.SetDirection(pb_P122_vector);
+	Dsky2SwitchOne.DefineMeshGroup(VC_GRP_PB_P122_06);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchTwo, AID_VC_PUSHB_P122_07);
+	Dsky2SwitchTwo.SetDirection(pb_P122_vector);
+	Dsky2SwitchTwo.DefineMeshGroup(VC_GRP_PB_P122_07);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchThree, AID_VC_PUSHB_P122_08);
+	Dsky2SwitchThree.SetDirection(pb_P122_vector);
+	Dsky2SwitchThree.DefineMeshGroup(VC_GRP_PB_P122_08);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchFour, AID_VC_PUSHB_P122_09);
+	Dsky2SwitchFour.SetDirection(pb_P122_vector);
+	Dsky2SwitchFour.DefineMeshGroup(VC_GRP_PB_P122_09);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchFive, AID_VC_PUSHB_P122_10);
+	Dsky2SwitchFive.SetDirection(pb_P122_vector);
+	Dsky2SwitchFive.DefineMeshGroup(VC_GRP_PB_P122_10);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchSix, AID_VC_PUSHB_P122_11);
+	Dsky2SwitchSix.SetDirection(pb_P122_vector);
+	Dsky2SwitchSix.DefineMeshGroup(VC_GRP_PB_P122_11);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchSeven, AID_VC_PUSHB_P122_12);
+	Dsky2SwitchSeven.SetDirection(pb_P122_vector);
+	Dsky2SwitchSeven.DefineMeshGroup(VC_GRP_PB_P122_12);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchEight, AID_VC_PUSHB_P122_13);
+	Dsky2SwitchEight.SetDirection(pb_P122_vector);
+	Dsky2SwitchEight.DefineMeshGroup(VC_GRP_PB_P122_13);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchNine, AID_VC_PUSHB_P122_14);
+	Dsky2SwitchNine.SetDirection(pb_P122_vector);
+	Dsky2SwitchNine.DefineMeshGroup(VC_GRP_PB_P122_14);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchClear, AID_VC_PUSHB_P122_15);
+	Dsky2SwitchClear.SetDirection(pb_P122_vector);
+	Dsky2SwitchClear.DefineMeshGroup(VC_GRP_PB_P122_15);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchProg, AID_VC_PUSHB_P122_16);
+	Dsky2SwitchProg.SetDirection(pb_P122_vector);
+	Dsky2SwitchProg.DefineMeshGroup(VC_GRP_PB_P122_16);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchKeyRel, AID_VC_PUSHB_P122_17);
+	Dsky2SwitchKeyRel.SetDirection(pb_P122_vector);
+	Dsky2SwitchKeyRel.DefineMeshGroup(VC_GRP_PB_P122_17);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchEnter, AID_VC_PUSHB_P122_18);
+	Dsky2SwitchEnter.SetDirection(pb_P122_vector);
+	Dsky2SwitchEnter.DefineMeshGroup(VC_GRP_PB_P122_18);
+
+	MainPanelVC.AddSwitch(&Dsky2SwitchReset, AID_VC_PUSHB_P122_19);
+	Dsky2SwitchReset.SetDirection(pb_P122_vector);
+	Dsky2SwitchReset.DefineMeshGroup(VC_GRP_PB_P122_19);
+
+	// Panel 306
+	const VECTOR3	P306_SW_AXIS = { 0, -1, 0 };
+
+	MainPanelVC.AddSwitch(&EventTimerUpDown306Switch, AID_VC_SWITCH_P306_01);
+	EventTimerUpDown306Switch.SetReference(P306_TOGGLE_POS[0], P306_SW_AXIS);
+	EventTimerUpDown306Switch.DefineMeshGroup(VC_GRP_Sw_P306_01);
+
+	MainPanelVC.AddSwitch(&EventTimerControl306Switch, AID_VC_SWITCH_P306_02);
+	EventTimerControl306Switch.SetReference(P306_TOGGLE_POS[1], P306_SW_AXIS);
+	EventTimerControl306Switch.DefineMeshGroup(VC_GRP_Sw_P306_02);
+
+	MainPanelVC.AddSwitch(&EventTimer306MinutesSwitch, AID_VC_SWITCH_P306_03);
+	EventTimer306MinutesSwitch.SetReference(P306_TOGGLE_POS[2], P306_SW_AXIS);
+	EventTimer306MinutesSwitch.DefineMeshGroup(VC_GRP_Sw_P306_03);
+
+	MainPanelVC.AddSwitch(&EventTimer306SecondsSwitch, AID_VC_SWITCH_P306_04);
+	EventTimer306SecondsSwitch.SetReference(P306_TOGGLE_POS[3], P306_SW_AXIS);
+	EventTimer306SecondsSwitch.DefineMeshGroup(VC_GRP_Sw_P306_04);
+
+	MainPanelVC.AddSwitch(&MissionTimer306HoursSwitch, AID_VC_SWITCH_P306_05);
+	MissionTimer306HoursSwitch.SetReference(P306_TOGGLE_POS[4], P306_SW_AXIS);
+	MissionTimer306HoursSwitch.DefineMeshGroup(VC_GRP_Sw_P306_05);
+
+	MainPanelVC.AddSwitch(&MissionTimer306MinutesSwitch, AID_VC_SWITCH_P306_06);
+	MissionTimer306MinutesSwitch.SetReference(P306_TOGGLE_POS[5], P306_SW_AXIS);
+	MissionTimer306MinutesSwitch.DefineMeshGroup(VC_GRP_Sw_P306_06);
+
+	MainPanelVC.AddSwitch(&MissionTimer306SecondsSwitch, AID_VC_SWITCH_P306_07);
+	MissionTimer306SecondsSwitch.SetReference(P306_TOGGLE_POS[6], P306_SW_AXIS);
+	MissionTimer306SecondsSwitch.DefineMeshGroup(VC_GRP_Sw_P306_07);
+
+	MainPanelVC.AddSwitch(&MissionTimer306Switch, AID_VC_SWITCH_P306_08);
+	MissionTimer306Switch.SetReference(P306_TOGGLE_POS[7], P306_SW_AXIS);
+	MissionTimer306Switch.DefineMeshGroup(VC_GRP_Sw_P306_08);
+
+	// Panel 325
+	const VECTOR3	PRIMGLYHANDLE_VECT = { 0, 0, -0.01 };
+	const VECTOR3	P325_HANDLE_AXIS = { 0, 1, 0 };
+
+	MainPanelVC.AddSwitch(&GlycolToRadiatorsLever, AID_VC_Prim_Gly_Handle);
+	GlycolToRadiatorsLever.SetDirection(PRIMGLYHANDLE_VECT);
+	GlycolToRadiatorsLever.DefineMeshGroup(VC_GRP_Prim_Gly_Handle);
+
+	MainPanelVC.AddSwitch(&CabinPressureReliefLever1, AID_VC_Cab_Press_Rel_Handle1);
+	CabinPressureReliefLever1.SetReference(Cab_Press_Rel_Handle1Location, P325_HANDLE_AXIS);
+	CabinPressureReliefLever1.SetRotationRange(50 * RAD);
+	CabinPressureReliefLever1.DefineMeshGroup(VC_GRP_Cab_Press_Rel_Handle1);
+
+	MainPanelVC.AddSwitch(&CabinPressureReliefLever2, AID_VC_Cab_Press_Rel_Handle2);
+	CabinPressureReliefLever2.SetReference(Cab_Press_Rel_Handle2Location, P325_HANDLE_AXIS);
+	CabinPressureReliefLever2.SetRotationRange(55 * RAD);
+	CabinPressureReliefLever2.DefineMeshGroup(VC_GRP_Cab_Press_Rel_Handle2);
+
+	// Panel 326
+
+	const VECTOR3	P326_ROT_AXIS = { 0, 0, 1 };
+
+	MainPanelVC.AddSwitch(&GlycolReservoirInletRotary, AID_VC_ROT_P326_01);
+	GlycolReservoirInletRotary.SetReference(P326_ROT_POS[0], P326_ROT_AXIS);
+	GlycolReservoirInletRotary.DefineMeshGroup(VC_GRP_Rot_P326_01);
+
+	MainPanelVC.AddSwitch(&GlycolReservoirBypassRotary, AID_VC_ROT_P326_02);
+	GlycolReservoirBypassRotary.SetReference(P326_ROT_POS[1], P326_ROT_AXIS);
+	GlycolReservoirBypassRotary.DefineMeshGroup(VC_GRP_Rot_P326_02);
+
+	MainPanelVC.AddSwitch(&GlycolReservoirOutletRotary, AID_VC_ROT_P326_03);
+	GlycolReservoirOutletRotary.SetReference(P326_ROT_POS[2], P326_ROT_AXIS);
+	GlycolReservoirOutletRotary.DefineMeshGroup(VC_GRP_Rot_P326_03);
+
+	MainPanelVC.AddSwitch(&OxygenRepressPackageRotary, AID_VC_ROT_P326_04);
+	OxygenRepressPackageRotary.SetReference(P326_ROT_POS[3], P326_ROT_AXIS);
+	OxygenRepressPackageRotary.DefineMeshGroup(VC_GRP_Rot_P326_04);
+
+	MainPanelVC.AddSwitch(&OxygenSMSupplyRotary, AID_VC_ROT_P326_05);
+	OxygenSMSupplyRotary.SetReference(P326_ROT_POS[4], P326_ROT_AXIS);
+	OxygenSMSupplyRotary.DefineMeshGroup(VC_GRP_Rot_P326_05);
+
+	MainPanelVC.AddSwitch(&OxygenSurgeTankRotary, AID_VC_ROT_P326_06);
+	OxygenSurgeTankRotary.SetReference(P326_ROT_POS[5], P326_ROT_AXIS);
+	OxygenSurgeTankRotary.DefineMeshGroup(VC_GRP_Rot_P326_06);
+
+
+	// LEB Right wall
+
+	const VECTOR3 rot_leb_r_vector = { -1, 0, 0 };
+
+	MainPanelVC.AddSwitch(&WasteMGMTOvbdDrainDumpRotary, AID_VC_ROT_LEB_R_01);
+	WasteMGMTOvbdDrainDumpRotary.SetReference(LEB_R_ROT_POS[0], rot_leb_r_vector);
+	WasteMGMTOvbdDrainDumpRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Right_01);
+
+	MainPanelVC.AddSwitch(&WasteMGMTBatteryVentRotary, AID_VC_ROT_LEB_R_02);
+	WasteMGMTBatteryVentRotary.SetReference(LEB_R_ROT_POS[1], rot_leb_r_vector);
+	WasteMGMTBatteryVentRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Right_02);
+
+	MainPanelVC.AddSwitch(&WasteMGMTStoageVentRotary, AID_VC_ROT_LEB_R_03);
+	WasteMGMTStoageVentRotary.SetReference(LEB_R_ROT_POS[2], rot_leb_r_vector);
+	WasteMGMTStoageVentRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Right_03);
+
+	const VECTOR3 cb_leb_r_vector = { 0.003, 0.0, 0.0 };
+
+	CircuitBrakerSwitch* breakersleb1[LEB_R1_CBCOUNT] = {
+
+		/*Panel 229*/ &EPSMnBGroup1CircuitBraker, &EPSMnAGroup1CircuitBraker, &TimersMnACircuitBraker, &TimersMnBCircuitBraker, &EPSMnAGroup2CircuitBraker, &EPSMnBGroup2CircuitBraker, &SPSLineHtrsMnACircuitBraker, &SPSLineHtrsMnBCircuitBraker, &EPSMnAGroup3CircuitBraker,
+		&EPSMnBGroup3CircuitBraker, &O2VacIonPumpsMnACircuitBraker, &O2VacIonPumpsMnBCircuitBraker, &EPSMnAGroup4CircuitBraker, &EPSMnBGroup4CircuitBraker, &MainReleasePyroACircuitBraker, &MainReleasePyroBCircuitBraker, &EPSMnAGroup5CircuitBraker, &EPSMnBGroup5CircuitBraker, &UtilityCB1, &UtilityCB2, 
+		&EPSBatBusACircuitBraker, &EPSBatBusBCircuitBraker,
+
+		/*Panel 225*/ &PCMTLMGroup1CB, &PCMTLMGroup2CB, &FLTBusMNACB, &FLTBusMNBCB, &PMPPowerPrimCB, &PMPPowerAuxCB, &VHFStationAudioLCB, &VHFStationAudioCTRCB, &VHFStationAudioRCB, &UDLCB, &HGAFLTBus1CB, &HGAGroup2CB, &SBandFMXMTRFLTBusCB, &SBandFMXMTRGroup1CB,
+		&CentralTimingEquipMNACB, &CentralTimingEquipMNBCB, &RNDZXPNDRFLTBusCB, &SIGCondrFLTBusCB, &SBandPWRAmpl1FLTBusCB, &SBandPWRAmpl1Group1CB, &SBandPWRAmpl2FLTBusCB, &SBandPWRAmpl2Group1CB, 
+
+		/*Panel 226*/ &FuelCell1PumpsACCB, &FuelCell1ReacsCB, &FuelCell1BusContCB, &FuelCell1PurgeCB, &FuelCell1RadCB, &CryogenicH2HTR1CB, &CryogenicH2HTR2CB, &FuelCell2PumpsACCB, &FuelCell2ReacsCB, &FuelCell2BusContCB, &FuelCell2PurgeCB, &FuelCell2RadCB, &CryogenicO2HTR1CB, &CryogenicO2HTR2CB, 
+		&FuelCell3PumpsACCB, &FuelCell3ReacsCB, &FuelCell3BusContCB, &FuelCell3PurgeCB, &FuelCell3RadCB, &CryogenicQTYAmpl1CB, &CryogenicQTYAmpl2CB, &CryogenicFanMotorsAC1ACB, &CryogenicFanMotorsAC1BCB, &CryogenicFanMotorsAC1CCB, &CryogenicFanMotorsAC2ACB, &CryogenicFanMotorsAC2BCB, &CryogenicFanMotorsAC2CCB, 
+		&LightingRndzMNACB, &LightingRndzMNBCB, &LightingFloodMNACB, &LightingFloodMNBCB, &LightingFloodFLTPLCB, &LightingNumIntLEBCB, &LightingNumIntLMDCCB, &LightingNumIntRMDCCB, &RunEVATRGTAC1CB, &RunEVATRGTAC2CB };
+
+	for (int i = 0; i < LEB_R1_CBCOUNT; i++)
+	{
+		MainPanelVC.AddSwitch(breakersleb1[i], AID_VC_CB_LEB_R1_01 + i);
+		breakersleb1[i]->SetDirection(cb_leb_r_vector);
+		breakersleb1[i]->DefineMeshGroup(VC_GRP_CB_LEB_Right1_01 + i);
+	}
+
+	CircuitBrakerSwitch* breakersleb2[LEB_R2_CBCOUNT] = {
+		/*Panel 250*/ &BatBusAToPyroBusTieCircuitBraker, &PyroASeqACircuitBraker, &BatBusBToPyroBusTieCircuitBraker, &PyroBSeqBCircuitBraker, &BatAPWRCircuitBraker, &BatBPWRCircuitBraker, &BatCPWRCircuitBraker, &BatCtoBatBusACircuitBraker, &BatCtoBatBusBCircuitBraker, &BatCCHRGCircuitBraker,
+
+		/*Panel 275-278*/ &MainABatBusACircuitBraker, &MainABatCCircuitBraker, &MainBBatCCircuitBraker, &MainBBatBusBCircuitBraker, &FlightPostLandingBatBusACircuitBraker, &FlightPostLandingBatBusBCircuitBraker, &FlightPostLandingBatCCircuitBraker, &FlightPostLandingMainACircuitBraker, 
+		&FlightPostLandingMainBCircuitBraker, &InverterPower1MainACircuitBraker, &InverterPower2MainBCircuitBraker, &InverterPower3MainACircuitBraker, &InverterPower3MainBCircuitBraker,
+		&Panel276CB1, &Panel276CB2, &Panel276CB3, &Panel276CB4, &UprightingSystemCompressor1CircuitBraker, &UprightingSystemCompressor2CircuitBraker, &SIVBLMSepPyroACircuitBraker, &SIVBLMSepPyroBCircuitBraker };
+
+	for (int i = 0; i < LEB_R2_CBCOUNT; i++)
+	{
+		MainPanelVC.AddSwitch(breakersleb2[i], AID_VC_CB_LEB_R2_01 + i);
+		breakersleb2[i]->SetDirection(cb_leb_r_vector);
+		breakersleb2[i]->DefineMeshGroup(VC_GRP_CB_LEB_Right2_01 + i);
+	}
+
+	// LEB Left Wall
+
+	const VECTOR3 rot_leb_l_vector = { 1, 0, 0 };
+
+	MainPanelVC.AddSwitch(&OxygenSurgeTankValveRotary, AID_VC_ROT_LEB_L_01);
+	OxygenSurgeTankValveRotary.SetReference(LEB_L_ROT_POS[0], rot_leb_l_vector);
+	OxygenSurgeTankValveRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_01);
+
+	MainPanelVC.AddSwitch(&GlycolToRadiatorsRotary, AID_VC_ROT_LEB_L_02);
+	GlycolToRadiatorsRotary.SetReference(LEB_L_ROT_POS[1], rot_leb_l_vector);
+	GlycolToRadiatorsRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_02);
+
+	MainPanelVC.AddSwitch(&GlycolRotary, AID_VC_ROT_LEB_L_03);
+	GlycolRotary.SetReference(LEB_L_ROT_POS[2], rot_leb_l_vector);
+	GlycolRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_03);
+
+	MainPanelVC.AddSwitch(&AccumRotary, AID_VC_ROT_LEB_L_04);
+	AccumRotary.SetReference(LEB_L_ROT_POS[3], rot_leb_l_vector);
+	AccumRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_04);
+
+	MainPanelVC.AddSwitch(&SuitHeatExchangerPrimaryGlycolRotary, AID_VC_ROT_LEB_L_05);
+	SuitHeatExchangerPrimaryGlycolRotary.SetReference(LEB_L_ROT_POS[4], rot_leb_l_vector);
+	SuitHeatExchangerPrimaryGlycolRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_05);
+
+	MainPanelVC.AddSwitch(&SuitFlowReliefRotary, AID_VC_ROT_LEB_L_06);
+	SuitFlowReliefRotary.SetReference(LEB_L_ROT_POS[5], rot_leb_l_vector);
+	SuitFlowReliefRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_06);
+
+	MainPanelVC.AddSwitch(&PrimaryGlycolEvapInletTempRotary, AID_VC_ROT_LEB_L_07);
+	PrimaryGlycolEvapInletTempRotary.SetReference(LEB_L_ROT_POS[6], rot_leb_l_vector);
+	PrimaryGlycolEvapInletTempRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_07);
+
+	MainPanelVC.AddSwitch(&SuitHeatExchangerSecondaryGlycolRotary, AID_VC_ROT_LEB_L_08);
+	SuitHeatExchangerSecondaryGlycolRotary.SetReference(LEB_L_ROT_POS[7], rot_leb_l_vector);
+	SuitHeatExchangerSecondaryGlycolRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_08);
+
+	MainPanelVC.AddSwitch(&EvapWaterControlPrimaryRotary, AID_VC_ROT_LEB_L_09);
+	EvapWaterControlPrimaryRotary.SetReference(LEB_L_ROT_POS[8], rot_leb_l_vector);
+	EvapWaterControlPrimaryRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_09);
+
+	MainPanelVC.AddSwitch(&EvapWaterControlSecondaryRotary, AID_VC_ROT_LEB_L_10);
+	EvapWaterControlSecondaryRotary.SetReference(LEB_L_ROT_POS[9], rot_leb_l_vector);
+	EvapWaterControlSecondaryRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_10);
+
+	MainPanelVC.AddSwitch(&WaterAccumulator1Rotary, AID_VC_ROT_LEB_L_11);
+	WaterAccumulator1Rotary.SetReference(LEB_L_ROT_POS[10], rot_leb_l_vector);
+	WaterAccumulator1Rotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_11);
+
+	MainPanelVC.AddSwitch(&WaterAccumulator2Rotary, AID_VC_ROT_LEB_L_12);
+	WaterAccumulator2Rotary.SetReference(LEB_L_ROT_POS[11], rot_leb_l_vector);
+	WaterAccumulator2Rotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_12);
+
+	MainPanelVC.AddSwitch(&SelectorInletValveRotary, AID_VC_ROT_LEB_L_13);
+	SelectorInletValveRotary.SetReference(LEB_L_ROT_POS[12], rot_leb_l_vector);
+	SelectorInletValveRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_13);
+
+	MainPanelVC.AddSwitch(&SelectorOutletValveRotary, AID_VC_ROT_LEB_L_14);
+	SelectorOutletValveRotary.SetReference(LEB_L_ROT_POS[13], rot_leb_l_vector);
+	SelectorOutletValveRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_14);
+
+	MainPanelVC.AddSwitch(&EmergencyCabinPressureRotary, AID_VC_ROT_LEB_L_15);
+	EmergencyCabinPressureRotary.SetReference(LEB_L_ROT_POS[14], rot_leb_l_vector);
+	EmergencyCabinPressureRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_15);
+
+	MainPanelVC.AddSwitch(&CabinRepressValveRotary, AID_VC_ROT_LEB_L_16);
+	CabinRepressValveRotary.SetReference(LEB_L_ROT_POS[15], rot_leb_l_vector);
+	CabinRepressValveRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_16);
+
+	MainPanelVC.AddSwitch(&WasteTankServicingRotary, AID_VC_ROT_LEB_L_17);
+	WasteTankServicingRotary.SetReference(LEB_L_ROT_POS[16], rot_leb_l_vector);
+	WasteTankServicingRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_17);
+
+	MainPanelVC.AddSwitch(&PotableTankInletRotary, AID_VC_ROT_LEB_L_18);
+	PotableTankInletRotary.SetReference(LEB_L_ROT_POS[17], rot_leb_l_vector);
+	PotableTankInletRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_18);
+
+	MainPanelVC.AddSwitch(&WasteTankInletRotary, AID_VC_ROT_LEB_L_19);
+	WasteTankInletRotary.SetReference(LEB_L_ROT_POS[18], rot_leb_l_vector);
+	WasteTankInletRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_19);
+
+	MainPanelVC.AddSwitch(&PressureReliefRotary, AID_VC_ROT_LEB_L_20);
+	PressureReliefRotary.SetReference(LEB_L_ROT_POS[19], rot_leb_l_vector);
+	PressureReliefRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_20);
+
+	MainPanelVC.AddSwitch(&O2DemandRegulatorRotary, AID_VC_ROT_LEB_L_21);
+	O2DemandRegulatorRotary.SetReference(LEB_L_ROT_POS[20], rot_leb_l_vector);
+	O2DemandRegulatorRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_21);
+
+	MainPanelVC.AddSwitch(&SuitTestRotary, AID_VC_ROT_LEB_L_22);
+	SuitTestRotary.SetReference(LEB_L_ROT_POS[21], rot_leb_l_vector);
+	SuitTestRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_22);
+
+	const VECTOR3 pb_leb_l_vector = { -0.001, 0, 0 };
+	const VECTOR3 handle_leb_l_vector = { -0.01, 0, 0 };
+
+	MainPanelVC.AddSwitch(&SuitCircuitReturnValveLever, AID_VC_PUSHB_LEB_L_01);
+	SuitCircuitReturnValveLever.SetDirection(handle_leb_l_vector);
+	SuitCircuitReturnValveLever.DefineMeshGroup(VC_GRP_PB_LEB_Left_01);
+
+	MainPanelVC.AddSwitch(&O2MainRegulatorASwitch, AID_VC_PUSHB_LEB_L_02);
+	O2MainRegulatorASwitch.SetDirection(handle_leb_l_vector);
+	O2MainRegulatorASwitch.DefineMeshGroup(VC_GRP_PB_LEB_Left_02);
+
+	MainPanelVC.AddSwitch(&O2MainRegulatorBSwitch, AID_VC_PUSHB_LEB_L_03);
+	O2MainRegulatorBSwitch.SetDirection(handle_leb_l_vector);
+	O2MainRegulatorBSwitch.DefineMeshGroup(VC_GRP_PB_LEB_Left_03);
+
+	MainPanelVC.AddSwitch(&EmergencyCabinPressureTestSwitch, AID_VC_PUSHB_LEB_L_04);
+	EmergencyCabinPressureTestSwitch.SetDirection(pb_leb_l_vector);
+	EmergencyCabinPressureTestSwitch.DefineMeshGroup(VC_GRP_PB_LEB_Left_04);
+
+	// Side Hatch
+	MainPanelVC.AddSwitch(&HatchToggle, AID_VC_SIDEHATCH_HANDLE);
+	MainPanelVC.AddSwitch(&HatchGearBoxSelector, AID_VC_SIDEHATCH_GEARBOX_SEL);
+	MainPanelVC.AddSwitch(&HatchActuatorHandleSelector, AID_VC_SIDEHATCH_ACT_HANDLE_SEL);
+	MainPanelVC.AddSwitch(&HatchActuatorHandleSelectorOpen, AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN);
+	MainPanelVC.AddSwitch(&HatchVentValveRotary, AID_VC_SIDEHATCH_VENT_VALVE);
+
+	// Forward Hatch
+	MainPanelVC.AddSwitch(&PressEqualValve, AID_VC_FWDHATCH_PRESS_EQU_VLV);
+
+	// Panel 600
+	const VECTOR3	P600_SW_AXIS = { -1, 0, 0 };
+
+	MainPanelVC.AddSwitch(&HatchEmergencyO2ValveSwitch, AID_VC_SWITCH_P600_01);
+	HatchEmergencyO2ValveSwitch.SetReference(Sw_P600_01Location, P600_SW_AXIS);
+	HatchEmergencyO2ValveSwitch.SetRotationRange(RAD * 90);
+	HatchEmergencyO2ValveSwitch.DefineMeshGroup(VC_GRP_Sw_P600_01);
+
+	MainPanelVC.AddSwitch(&HatchRepressO2ValveSwitch, AID_VC_SWITCH_P600_02);
+	HatchRepressO2ValveSwitch.SetReference(Sw_P600_02Location, P600_SW_AXIS);
+	HatchRepressO2ValveSwitch.SetRotationRange(RAD * 90);
+	HatchRepressO2ValveSwitch.DefineMeshGroup(VC_GRP_Sw_P600_02);
+
+	NEEDLE_POS = { 0.2225, 1.3865, -0.5910 };
+	const VECTOR3	P600_ROT_AXIS = { 0.0011765750919, 0.019116914303107, 0.999816562804688 };
+
+	MainPanelVC.AddSwitch(&HatchOxygenRepressPressMeter);
+	HatchOxygenRepressPressMeter.SetReference(NEEDLE_POS, P600_ROT_AXIS);
+	HatchOxygenRepressPressMeter.SetRotationRange(RAD * 58);
+	HatchOxygenRepressPressMeter.DefineMeshGroup(VC_GRP_Needle_P600_01);
+
+	// THC Handle
+	const VECTOR3 thc_handle_axis = { 0.0, 0.945196207714068, -0.326502877357833 };
+	MainPanelVC.AddSwitch(&THCRotary, AID_VC_THC_HANDLE);
+	THCRotary.SetReference(THChandleLocation, thc_handle_axis);
+	THCRotary.DefineMeshGroup(VC_GRP_THChandle);
+
+	// Panel 163
+	MainPanelVC.AddSwitch(&SCIUtilPowerSwitch, AID_VC_SWITCH_P163_01);
+	SCIUtilPowerSwitch.SetReference(Switch_P163Location, _V(1, 0, 0));
+	SCIUtilPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P163_01);
+
+	// PLVC switch
+	MainPanelVC.AddSwitch(&PLVCSwitch, AID_VC_SWITCH_PLVC);
+	PLVCSwitch.SetReference(Switch_PLVCLocation, _V(0, -1, 0));
+	PLVCSwitch.DefineMeshGroup(VC_GRP_Sw_PLVC);
 
 	ems.DefineVCAnimations(vcidx);
 	EMSDvSetSwitch.DefineVCAnimations(vcidx);
+
+	SideHatch.DefineAnimationsVC(vcidx);
+	ForwardHatch.DefineAnimationsVC(vcidx);
+
+	Altimeter.DefineVCAnimations(vcidx);
+
+	MainPanelVC.DefineVCAnimations(vcidx);
 
 	InitFDAI(vcidx);
 }
@@ -2581,8 +4545,8 @@ void Saturn::InitFDAI(UINT mesh)
 	const VECTOR3 fdaiyawvaxis = { -0.00, sin(P1_3_TILT + (90.0 * RAD)), -cos(P1_3_TILT + (90.0 * RAD)) };
 	const VECTOR3 needlexvector = { 0.00, 0.05*cos(P1_3_TILT), 0.05*sin(P1_3_TILT) };
 	const VECTOR3 needleyvector = { 0.05, 0, 0 };
-	const VECTOR3 ratexvector = { 0.00, 0.062*cos(P1_3_TILT), 0.062*sin(P1_3_TILT) };
-	const VECTOR3 rateyvector = { 0.062, 0, 0 };
+	const VECTOR3 ratexvector = { 0.00, 0.078*cos(P1_3_TILT), 0.078*sin(P1_3_TILT) };
+	const VECTOR3 rateyvector = { 0.078, 0, 0 };
 	const VECTOR3 FDAI_PIVOT_L = { -0.673236, 0.563893, 0.385934 }; // L FDAI Pivot Point
 	const VECTOR3 FDAI_PIVOT_R = { -0.340246, 0.750031, 0.44815 }; // R FDAI Pivot Point
 
@@ -2672,41 +4636,4 @@ void Saturn::InitFDAI(UINT mesh)
 	AddAnimationComponent(anim_fdaiPrate_R, 0.0f, 1.0f, &mgt_pitchrate_R);
 	AddAnimationComponent(anim_fdaiYrate_R, 0.0f, 1.0f, &mgt_yawrate_R);
 }
-
-void Saturn::AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY) {
-
-	double fdai_proc[3];
-	double rate_proc[3];
-
-	// Drive FDAI ball
-	fdai_proc[0] = -attitude.x / PI2; // 1.0 - attitude.x / PI2;
-	fdai_proc[1] = attitude.y / PI2;
-	fdai_proc[2] = attitude.z / PI2;
-	if (fdai_proc[0] < 0) fdai_proc[0] += 1.0;
-	if (fdai_proc[1] < 0) fdai_proc[1] += 1.0;
-	if (fdai_proc[2] < 0) fdai_proc[2] += 1.0;
-	SetAnimation(animY, fdai_proc[2]);
-	SetAnimation(animR, fdai_proc[0]);
-	SetAnimation(animP, fdai_proc[1]);
-
-	// Drive error needles
-	SetAnimation(errorR, (errors.x + 46) / 92);
-	SetAnimation(errorP, (-errors.y + 46) / 92);
-	SetAnimation(errorY, (errors.z + 46) / 92);
-
-	// Drive rate needles
-	rate_proc[0] = (rates.z + 1) / 2;
-	rate_proc[1] = (rates.x + 1) / 2;
-	rate_proc[2] = (-rates.y + 1) / 2;
-	if (rate_proc[0] < 0) rate_proc[0] = 0;
-	if (rate_proc[1] < 0) rate_proc[1] = 0;
-	if (rate_proc[2] < 0) rate_proc[2] = 0;
-	if (rate_proc[0] > 1) rate_proc[0] = 1;
-	if (rate_proc[1] > 1) rate_proc[1] = 1;
-	if (rate_proc[2] > 1) rate_proc[1] = 1;
-	SetAnimation(rateR, rate_proc[0]);
-	SetAnimation(rateP, rate_proc[1]);
-	SetAnimation(rateY, rate_proc[2]);
-}
-
 

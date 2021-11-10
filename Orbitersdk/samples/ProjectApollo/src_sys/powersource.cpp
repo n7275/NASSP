@@ -475,18 +475,20 @@ void DCBusController::ConnectFuelCell(int fc, bool connect)
 }
 
 void DCBusController::refresh(double dt)
-
 {
+	const double DisconnectCurrent = 108.0; // Spec from CSM databook is 100 Amperes minimum for disconnect 
+	// at 112 Amperes the disconnect delay is 80 seconds; 108 seems like a good compromise to prevent disconnecting exactly at 100 due to transients
+
 	// Disconnect because of to high current
-	if (fuelcell1->Current() > 75.0 && fcPower.IsBusConnected(1) && busCont1->Voltage() > SP_MIN_DCVOLTAGE) {
+	if (fuelcell1->Current() > DisconnectCurrent && fcPower.IsBusConnected(1) && busCont1->Voltage() > SP_MIN_DCVOLTAGE) {
 		fcPower.WireToBus(1, NULL);
 		fcDisconnectAlarm[1] = true;
 	}
-	if (fuelcell2->Current() > 75.0 && fcPower.IsBusConnected(2) && busCont2->Voltage() > SP_MIN_DCVOLTAGE) {
+	if (fuelcell2->Current() > DisconnectCurrent && fcPower.IsBusConnected(2) && busCont2->Voltage() > SP_MIN_DCVOLTAGE) {
 		fcPower.WireToBus(2, NULL);
 		fcDisconnectAlarm[2] = true;
 	}
-	if (fuelcell3->Current() > 75.0 && fcPower.IsBusConnected(3) && busCont3->Voltage() > SP_MIN_DCVOLTAGE) {
+	if (fuelcell3->Current() > DisconnectCurrent && fcPower.IsBusConnected(3) && busCont3->Voltage() > SP_MIN_DCVOLTAGE) {
 		fcPower.WireToBus(3, NULL);
 		fcDisconnectAlarm[3] = true;
 	}
@@ -523,15 +525,9 @@ void DCBusController::refresh(double dt)
 		batPower.WireToBuses(NULL, NULL);
 	}
 
-	// The batteries are connected via diodes, so the battery voltage needs to be higher than the 
-	// fuel cell voltage to draw power
-	if (batPower.Voltage() > fcPower.Voltage() + .7)	// diode bias
-		busPower.WireToBus(2, &batPower);
-	else if (batPower.Voltage() < fcPower.Voltage())
-		busPower.WireToBus(2, NULL);
 
-	//if (!strcmp(name, "MainBusAController"))
-	//	sprintf(oapiDebugString(), "FC %.2f, BAT %.2f", fcPower.Voltage(), batPower.Voltage());
+	/*if (!strcmp(name, "MainBusAController"))
+		sprintf(oapiDebugString(), "FC %.2f, BAT %.2f", fcPower.Voltage(), batPower.Voltage());*/
 }
 
 bool DCBusController::IsFuelCellConnected(int fc)
@@ -859,87 +855,4 @@ void PowerDrainConnectorObject::Disconnected()
 
 {
 	PowerDrawn = PowerDraw = 0.0;
-}
-
-PowerDrainConnector::PowerDrainConnector()
-
-{
-	power_drain = 0;
-}
-
-PowerDrainConnector::~PowerDrainConnector()
-
-{
-}
-
-void PowerDrainConnector::SetPowerDrain(PowerDrainConnectorObject *p)
-
-{
-	power_drain = p;
-}
-
-void PowerDrainConnector::Disconnected()
-
-{
-	//
-	// If we've disconnected then stop drawing power.
-	//
-	if (power_drain)
-	{
-		power_drain->Disconnected();
-	}
-}
-
-bool PowerDrainConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
-
-{
-	//
-	// Sanity check.
-	//
-
-	if (m.destination != type)
-	{
-		return false;
-	}
-
-	PowerSourceMessageType messageType;
-
-	messageType = (PowerSourceMessageType) m.messageType;
-
-	switch (messageType)
-	{
-	case POWERCON_GET_VOLTAGE:
-		if (power_drain)
-		{
-			m.val1.dValue = power_drain->Voltage();
-			return true;
-		}
-		break;
-
-	case POWERCON_GET_CURRENT:
-		if (power_drain)
-		{
-			m.val1.dValue = power_drain->Current();
-			return true;
-		}
-		break;
-
-	case POWERCON_DRAW_POWER:
-		if (power_drain)
-		{
-			power_drain->ProcessDrawPower(m.val1.dValue);
-			return true;
-		}
-		break;
-
-	case POWERCON_UPDATE_FLOW:
-		if (power_drain)
-		{
-			power_drain->ProcessUpdateFlow(m.val1.dValue);
-			return true;
-		}
-		break;
-	}
-
-	return false;
 }

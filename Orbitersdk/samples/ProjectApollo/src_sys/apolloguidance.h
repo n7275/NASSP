@@ -40,6 +40,8 @@ class PanelSDK;
 #include "control.h"
 #include "yaAGC/agc_engine.h"
 #include "thread.h"
+#include <thread>
+#include <mutex>
 
 
 typedef std::bitset<16> ChannelValue;
@@ -281,6 +283,7 @@ public:
 	/// \param OtherVessel Pointer to the LEM so that the CSM can track it for rendevouz.
 	///
 	virtual void SetMissionInfo(std::string ProgramName, char *OtherName = 0);
+	virtual void SetOtherVesselName(char *OtherName);
 
 	///
 	/// \brief Initialise the Virtual AGC.
@@ -441,7 +444,7 @@ protected:
 	/// \brief Virtual AGC state.
 	///
 	agc_t vagc;
-	Mutex agcCycleMutex;
+	std::mutex agcCycleMutex;
 	Event timeStepEvent;
 	double thread_simt;
 	double thread_simdt;

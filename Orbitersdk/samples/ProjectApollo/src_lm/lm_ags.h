@@ -102,7 +102,6 @@ protected:
 	h_HeatLoad *asaHeat;
 	ThreePosSwitch *PowerSwitch;
 
-	bool PulsesSent;
 	bool Initialized;
 	bool Operate;
 
@@ -121,7 +120,7 @@ protected:
 class LEM_AEA{
 public:
 	LEM_AEA(PanelSDK &p, LEM_DEDA &display);							// Cons
-	void Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah); // Init
+	void Init(LEM *s, h_HeatLoad *aeah); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void Timestep(double simt, double simdt);
@@ -160,9 +159,11 @@ public:
 	bool GetTestModeFailure();
 	LEM *lem;					// Pointer at LEM
 	h_HeatLoad *aeaHeat;
-	h_HeatLoad *secaeaHeat;
 
 protected:
+
+	bool DeterminePowerState();
+
 	ags_t vags;
 	PowerMerge DCPower;
 	ThreePosSwitch *PowerSwitch;
@@ -177,6 +178,7 @@ protected:
 	bool AEAInitialized;
 	double LastCycled;
 	int ASACycleCounter;
+	bool powered;
 
 	//AEA attitude display
 	double sin_theta;
@@ -186,7 +188,7 @@ protected:
 	double sin_psi;
 	double cos_psi;
 
-	//AEA attitude error
+	//AEA attitude error in radians
 	VECTOR3 AGSAttitudeError;
 
 	//AEA lateral velocity in feet
@@ -198,10 +200,12 @@ protected:
 	std::queue<uint16_t> ags_queue;
 
 	const double ATTITUDESCALEFACTOR = pow(2.0, -17.0);
-	const double ATTITUDEERRORSCALEFACTOR = 0.5113269e-3*pow(2.0, -8.0);
+	const double ATTITUDEERRORSCALEFACTOR = 0.5113269e-3*pow(2.0, -8.0); //Least significant bit equals 0.5113269e-3 rad, shifted by 8 bits (word length 18 bits, error 10 bits, both with sign)
 	const double LATVELSCALEFACTOR = 100.0*pow(2.0, -16.0);
 	const double ALTSCALEFACTOR = 0.3048*2.345*pow(2.0, -3.0);
 	const double ALTRATESCALEFACTOR = 0.3048*pow(2.0, -4.0);
+
+	friend class ARCore;
 };
 
 // DATA ENTRY and DISPLAY ASSEMBLY (DEDA)

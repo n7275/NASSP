@@ -31,6 +31,7 @@
 // DS20060413 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
+#include "vesim.h"
 #include "dsky.h"
 #include "imu.h"
 #include "cdu.h"
@@ -52,6 +53,7 @@
 #include "lm_eps.h"
 #include "LEMcomputer.h"
 #include "lm_rr.h"
+#include "lm_aeaa.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -212,6 +214,33 @@ namespace mission
 {
 	class Mission;
 };
+
+// Vesim input IDs
+#define LM_AXIS_INPUT_ACAR           1
+#define LM_AXIS_INPUT_ACAP           2
+#define LM_AXIS_INPUT_ACAY           3
+#define LM_AXIS_INPUT_TTCAX          4
+#define LM_AXIS_INPUT_TTCAY          5
+#define LM_AXIS_INPUT_TTCAZ          6
+#define LM_BUTTON_ROT_LIN            7
+#define LM_AXIS_INPUT_THROTTLE       8
+#define LM_BUTTON_ENG_START          9
+#define LM_BUTTON_ENG_STOP          10
+#define LM_BUTTON_DES_RATE_PLUS     11
+#define LM_BUTTON_DES_RATE_MINUS    12
+#define LM_BUTTON_ABORT             13
+#define LM_BUTTON_ABORT_STAGE       14
+#define LM_BUTTON_ABORT_STAGE_GRD   15
+#define LM_BUTTON_DSKY_PRO          16
+#define LM_BUTTON_DSKY_ENTER        17
+#define LM_BUTTON_MDCTRL_PGNS       18
+#define LM_BUTTON_MDCTRL_PGNS_AUT   19
+#define LM_BUTTON_MDCTRL_PGNS_ATH   20
+#define LM_BUTTON_MDCTRL_PGNS_OFF   21
+#define LM_AXIS_THR_JET_LEVER       22
+
+// Callback for Vesim events
+void cbLMVesim(int inputID, int eventType, int newValue, void *pdata);
 
 ///
 /// \ingroup LEM
@@ -421,6 +450,8 @@ public:
 		SRF_INDICATORREDVC,
 		SRF_LEM_MASTERALARMVC,
 		SRF_DEDA_LIGHTSVC,
+		SRF_AOTFONT_VC,
+		SRF_ENGSTARTSTOP_VC,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -447,6 +478,7 @@ public:
 	void HideProbes();
 	void SetTrackLight();
 	void SetDockingLights();
+	void SetCOAS();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 	int GetApolloNo() { return ApolloNo; }
 	UINT GetStage() { return stage; }
@@ -496,6 +528,7 @@ public:
 	// Panel SDK
 	void SetPipeMaxFlow(char *pipe, double flow);
 	h_Pipe* GetLMTunnelPipe();
+	h_Valve* GetCSMO2HoseOutlet();
 	void ConnectTunnelToCabinVent();
 	double GetRCSQuadTempF(int index);
 	virtual void GetECSStatus(LEMECSStatus &ecs);
@@ -595,6 +628,7 @@ public:
 	DIDEVCAPS			 dx8_jscaps[2];   // Joystick capabilities
 	DIJOYSTATE2			 dx8_jstate[2];   // Joystick state
 	HRESULT				 dx8_failure;     // DX failure reason
+	Vesim vesim;                          ///< Vessel Specific Input Mngr
 	int rhc_id;							  // Joystick # for the RHC
 	int rhc_rot_id;						  // ID of ROTATOR axis to use for RHC Z-axis
 	int rhc_sld_id;                       // ID of SLIDER axis to use for throttle control from joystick configured as ACA
@@ -611,6 +645,7 @@ public:
 	bool thc_auto;						  ///< THC Z-axis auto detection
 	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
 	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
+	bool enableVESIM;                     ///< Vessel Specific Input Mgmt enabled
 	bool rhc_thctoggle_pressed;			  ///< Button pressed flag
 	int ttca_throttle_pos;                // TTCA THROTTLE-mode position
 	double ttca_throttle_pos_dig;		  // TTCA THROTTLE-mode position mapped to 0-1
@@ -634,7 +669,6 @@ protected:
     PanelSDK Panelsdk;
 
 	void UpdateMassAndCoG();
-	void RedrawPanel_Thrust (SURFHANDLE surf);
 	void RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf);
 	void RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
@@ -671,7 +705,6 @@ protected:
 	void SetPowerFailureLight(int m, bool state);
 	void SetStageSeqRelayLight(int m, bool state);
 	void InitFDAI(UINT mesh);
-	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
 
 	// LM touchdown points
 	// mass in kg, ro1 (distance from center of the middle points), ro2 (distance from center of footpad points), tdph (height of footpad points),
@@ -893,7 +926,7 @@ protected:
 	ToggleSwitch EngineDescentCommandOverrideSwitch;
 
 	SwitchRow ModeControlSwitchesRow;
-	PGNSSwitch ModeControlPGNSSwitch;
+	ThreePosSwitch ModeControlPGNSSwitch;
 	ThreePosSwitch ModeControlAGSSwitch;
     UnguardedIMUCageSwitch IMUCageSwitch;
 
@@ -1135,6 +1168,8 @@ protected:
 	// AC Inverter 1 feed
 	CircuitBrakerSwitch CDRInverter1CB;
 
+	bool CMPowerToCDRBusRelayA, CMPowerToCDRBusRelayB; //Relays 3K3 and 3K4
+
 	/////////////////
 	// LEM Panel 5 //
 	/////////////////
@@ -1189,9 +1224,10 @@ protected:
 	ThumbwheelSwitch CDRAudICSVol;
 	ThumbwheelSwitch CDRAudMasterVol;
 	ThumbwheelSwitch CDRAudVOXSens;
-	ThreePosSwitch CDRCOASSwitch;
+	CDRCOASPowerSwitch CDRCOASSwitch;
 
 	bool COASswitch;
+	int COASreticlevisible;   // 0 = OFF  1 = FWD  2 = OVHD
 
 	//////////////////
 	// LEM panel 14 //
@@ -1211,17 +1247,17 @@ protected:
 	ThreeSourceSwitch EPSEDVoltSelect;
 
 	SwitchRow DSCHiVoltageSwitchRow;
-	LEMBatterySwitch DSCSEBat1HVSwitch;
-	LEMBatterySwitch DSCSEBat2HVSwitch;
-	LEMBatterySwitch DSCCDRBat3HVSwitch;
-	LEMBatterySwitch DSCCDRBat4HVSwitch;	
-	LEMDeadFaceSwitch DSCBattFeedSwitch;
+	ThreePosSwitch DSCSEBat1HVSwitch;
+	ThreePosSwitch DSCSEBat2HVSwitch;
+	ThreePosSwitch DSCCDRBat3HVSwitch;
+	ThreePosSwitch DSCCDRBat4HVSwitch;
+	ThreePosSwitch DSCBattFeedSwitch;
 
 	SwitchRow DSCLoVoltageSwitchRow;
-	LEMBatterySwitch DSCSEBat1LVSwitch;
-	LEMBatterySwitch DSCSEBat2LVSwitch;
-	LEMBatterySwitch DSCCDRBat3LVSwitch;
-	LEMBatterySwitch DSCCDRBat4LVSwitch;	
+	ThreePosSwitch DSCSEBat1LVSwitch;
+	ThreePosSwitch DSCSEBat2LVSwitch;
+	ThreePosSwitch DSCCDRBat3LVSwitch;
+	ThreePosSwitch DSCCDRBat4LVSwitch;
 
 	SwitchRow DSCBatteryTBSwitchRow;
 	LEMDoubleSCEATalkback DSCBattery1TB;
@@ -1237,10 +1273,10 @@ protected:
 	LEMSCEATalkback ASCBattery6BTB;
 
 	SwitchRow ASCBatterySwitchRow;
-	LEMBatterySwitch ASCBat5SESwitch;
-	LEMBatterySwitch ASCBat5CDRSwitch;
-	LEMBatterySwitch ASCBat6CDRSwitch;
-	LEMBatterySwitch ASCBat6SESwitch;
+	ThreePosSwitch ASCBat5SESwitch;
+	ThreePosSwitch ASCBat5CDRSwitch;
+	ThreePosSwitch ASCBat6CDRSwitch;
+	ThreePosSwitch ASCBat6SESwitch;
 	ToggleSwitch UpDataSquelchSwitch;
 
 	SwitchRow Panel12AudioCtlSwitchRow;
@@ -1314,6 +1350,11 @@ protected:
 
 	SwitchRow ComYawMeterRow;
 	LEMSteerableAntennaYawMeter ComYawMeter;
+
+	PowerMerge DescentECAMainFeeder;
+	PowerMerge DescentECAContFeeder;
+	PowerMerge AscentECAMainFeeder;
+	PowerMerge AscentECAContFeeder;
 
 	//////////////////
 	// LEM panel 16 //
@@ -1501,9 +1542,17 @@ protected:
 	int CDRinPLSS;
 	int LMPinPLSS;
 
-#define LMVIEW_CDR		0
-#define LMVIEW_LMP		1
-#define LMVIEW_LPD		3
+#define LMVIEW_CDR		 0
+#define LMVIEW_LMP		 1
+#define LMVIEW_LPD		 2
+#define LMVIEW_DSKY		 3
+#define LMVIEW_CBLEFT    4
+#define LMVIEW_CBRIGHT   5
+#define LMVIEW_AOT		 6
+#define LMVIEW_FWDHATCH	 7
+#define LMVIEW_OVHDHATCH 8
+#define LMVIEW_ECS		 9
+#define LMVIEW_ECS2		 10
 
 #define VIEWANGLE 30
 
@@ -1760,18 +1809,20 @@ protected:
 	// Bus Cross Tie Multiplex (Not real object)
 	LEM_BusCrossTie BTC_MPX;
 
+	//Relay Junction Box
+	LEM_RelayJunctionBox rjb;
+
+	//Deadface Relay Box
+	LEM_DeadfaceRelayBox drb;
+
 	// XLUNAR Bus Controller
 	LEM_XLBControl BTC_XLunar;
 
 	// ECA
-	LEM_ECAch ECA_1a; // (DESCENT stage, LMP DC bus)
-	LEM_ECAch ECA_1b; // (DESCENT stage, LMP DC bus)
-	LEM_ECAch ECA_2a; // (DESCENT stage, CDR DC bus)
-	LEM_ECAch ECA_2b; // (DESCENT stage, CDR DC bus)
-	LEM_ECAch ECA_3a; // (ASCENT  stage, LMP DC bus)
-	LEM_ECAch ECA_3b; // (ASCENT  stage, CDR DC bus)
-	LEM_ECAch ECA_4a; // (ASCENT  stage, CDR DC bus)
-	LEM_ECAch ECA_4b; // (ASCENT  stage, LMP DC bus)
+	LEM_DescentECA ECA_1;
+	LEM_DescentECA ECA_2;
+	LEM_AscentECA ECA_3;
+	LEM_AscentECA ECA_4;
 
 	// Descent stage deadface bus stubs
 	DCbus DES_CDRs28VBusA;
@@ -1815,6 +1866,7 @@ protected:
 	LEM_ACA CDR_ACA;
 	LEM_RGA rga;
 	LEM_TTCA CDR_TTCA;
+	LEM_AEAA *aeaa;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;
@@ -1826,6 +1878,7 @@ protected:
 	LM_VHF VHF;
 	LM_SBAND SBand;
 	LM_DSEA DSEA;
+	LM_PCM PCM;
 
 	//Lighting
 	LEM_TLE tle;
@@ -1904,11 +1957,13 @@ protected:
 	friend class LEMDCVoltMeter;
 	friend class LEMDCAmMeter;
 	friend class LMOptics;
-	friend class LEMBatterySwitch;
-	friend class LEMDeadFaceSwitch;
 	friend class LEMInverterSwitch;
 	friend class LEM_BusCrossTie;
 	friend class LEM_XLBControl;
+	friend class LEM_DescentECASector;
+	friend class LEM_AscentECASector;
+	friend class LEM_RelayJunctionBox;
+	friend class LEM_DeadfaceRelayBox;
 	friend class LEM_LR;
 	friend class LEM_RR;
 	friend class LEM_RadarTape;
@@ -1921,6 +1976,7 @@ protected:
 	friend class LEM_DEDA;
 	friend class LEM_SteerableAnt;
 	friend class LM_VHF;
+	friend class LM_PCM;
 	friend class LM_SBAND;
 	friend class LM_DSEA;
 	friend class LEMMissionTimerSwitch;
@@ -1982,12 +2038,15 @@ protected:
 	friend class LEM_LCA;
 	friend class LEM_PFIRA;
 	friend class LEMCrewStatus;
+	friend class CDRCOASPowerSwitch;
 
 	friend class ApolloRTCCMFD;
 	friend class ARCore;
 	friend class ProjectApolloMFD;
 	friend class MCC;
 	friend class RTCC;
+
+	friend void cbLMVesim(int inputID, int eventType, int newValue, void *pdata);
 };
 
 extern MESHHANDLE hLMDescent;

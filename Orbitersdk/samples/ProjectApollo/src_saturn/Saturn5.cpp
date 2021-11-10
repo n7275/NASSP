@@ -755,13 +755,6 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 		break;
 
 	case LAUNCH_STAGE_SIVB:
-		SetThirdStage();
-		SetThirdStageEngines(-STG2O);
-		if (StageState >= 4) {
-			AddRCS_S4B();
-		}
-		break;
-
 	case STAGE_ORBIT_SIVB:
 		SetThirdStage();
 		SetThirdStageEngines(-STG2O);
@@ -824,11 +817,11 @@ void SaturnV::ConfigureStageMeshes(int stage_state)
 		break;
 
 	case CM_STAGE:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 
 	case CM_ENTRY_STAGE_THREE:
@@ -856,7 +849,7 @@ void SaturnV::ConfigureStageMeshes(int stage_state)
 		break;
 
 	case CM_ENTRY_STAGE:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 	}
 }
@@ -998,13 +991,6 @@ bool SaturnV::GetSIIPropellantDepletionEngineCutoff()
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
 
 	return sii->GetPropellantDepletionEngineCutoff();
-}
-
-bool SaturnV::GetSIIEngineOut()
-{
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
-
-	return sii->GetEngineOut();
 }
 
 void SaturnV::SIEDSCutoff(bool cut)

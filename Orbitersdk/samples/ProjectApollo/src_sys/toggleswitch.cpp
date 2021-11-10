@@ -377,18 +377,34 @@ bool TwoPositionSwitch::DoCheckMouseClickVC(int event, VECTOR3 &p)
 	//
 
 	if (event & PANEL_MOUSE_LBDOWN) {
-		if (state != TOGGLESWITCH_DOWN) {
-			SwitchTo(TOGGLESWITCH_DOWN, true);
-			Sclick.play();
-		}
-
-		else {
+		if (Sideways == 0 || Sideways == 2) {
 			if (state != TOGGLESWITCH_UP) {
 				SwitchTo(TOGGLESWITCH_UP, true);
 				Sclick.play();
 			}
 		}
+		else {
+			if (state != TOGGLESWITCH_DOWN) {
+				SwitchTo(TOGGLESWITCH_DOWN, true);
+				Sclick.play();
+			}
+		}
 	}
+	else if (event & PANEL_MOUSE_RBDOWN) {
+		if (Sideways == 1) {
+			if (state != TOGGLESWITCH_UP) {
+				SwitchTo(TOGGLESWITCH_UP, true);
+				Sclick.play();
+			}
+		}
+		else {
+			if (state != TOGGLESWITCH_DOWN) {
+				SwitchTo(TOGGLESWITCH_DOWN, true);
+				Sclick.play();
+			}
+		}
+	}
+
 	else if (IsSpringLoaded() && ((event & (PANEL_MOUSE_LBUP | PANEL_MOUSE_RBUP)) != 0) && !IsHeld()) {
 		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN);
 		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP);
@@ -1088,7 +1104,19 @@ bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
 
 bool CircuitBrakerSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
 {
-	return TwoPositionSwitch::CheckMouseClickVC(event, p);
+	int OldState = state;
+
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (state) {
+			SwitchTo(0);
+			Sclick.play();
+		}
+		else {
+			SwitchTo(1);
+			Sclick.play();
+		}
+	}
+	return true;
 }
 
 double CircuitBrakerSwitch::Voltage()
@@ -1873,7 +1901,7 @@ void GuardedToggleSwitch::DefineVCAnimations(UINT vc_idx)
 
 bool GuardedToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
-	if (event & PANEL_MOUSE_RBDOWN) {
+	if (event & PANEL_MOUSE_RBDOWN && p.x > 0.004) {
 
 		if (guardState) {
 			Guard();
@@ -1885,7 +1913,7 @@ bool GuardedToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 		return true;
 
 	}
-	else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
+	else if (event & (PANEL_MOUSE_DOWN | PANEL_MOUSE_UP)) {
 		if (guardState) {
 			return ToggleSwitch::CheckMouseClickVC(event, p);
 		}
@@ -2848,6 +2876,12 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 	}
 }
 
+void OrdealRotationalSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface) {
+
+	OurVessel->SetAnimation(anim_switch, ((double)value / 310) * 0.78);
+	//sprintf(oapiDebugString(), "ALT %d", value);
+}
+
 bool OrdealRotationalSwitch::CheckMouseClick(int event, int mx, int my) {
 
 	if (event & PANEL_MOUSE_LBDOWN) {
@@ -2857,6 +2891,32 @@ bool OrdealRotationalSwitch::CheckMouseClick(int event, int mx, int my) {
 
 		if (mx >(x + width) || my >(y + height))
 			return false;
+
+		lastX = mx;
+		mouseDown = true;
+
+	}
+	else if (((event & PANEL_MOUSE_LBPRESSED) != 0) && mouseDown) {
+		if (abs(mx - lastX) >= 2) {
+			value += (int)((mx - lastX) / 2.);
+			value = min(max(value, 10), 310);
+			lastX = mx;
+		}
+
+	}
+	else if (event & PANEL_MOUSE_LBUP) {
+		mouseDown = false;
+		return false;
+	}
+	SetValue((int)((value / 50.) + 0.5));
+	return true;
+}
+
+bool OrdealRotationalSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
+
+	int mx = (int)(p.x * (x + width));
+
+	if (event & PANEL_MOUSE_LBDOWN) {
 
 		lastX = mx;
 		mouseDown = true;
@@ -4967,33 +5027,6 @@ void CMCOpticsZeroSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 	{
 		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset - width, yOffset, width, height, SURF_PREDEF_CK);
 	}
-}
-
-//
-// LEM PGNS switch.
-//
-
-bool PGNSSwitch::SwitchTo(int newState, bool dontspring)
-{
-	if (AGCThreePoswitch::SwitchTo(newState,dontspring)) {
-		if (agc) {
-			bool Hold = false;
-			bool Auto = false;
-
-			if (IsCenter()) {
-				Hold = true;
-			}
-			else if (IsUp()) {
-				Auto = true;
-			}
-
-			agc->SetInputChannelBit(031, HoldFunction, Hold);
-			agc->SetInputChannelBit(031, FreeFunction, Auto);
-		}
-		return true;
-	}
-
-	return false;
 }
 
 bool ModeSelectSwitch::SwitchTo(int newState, bool dontspring)

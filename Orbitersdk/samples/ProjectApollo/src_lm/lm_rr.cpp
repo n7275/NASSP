@@ -42,7 +42,6 @@ LEM_RR::LEM_RR()
 	csm = NULL;
 	lem = NULL;
 	RREHeat = 0;
-	RRESECHeat = 0;
 	NoTrackSignal = false;
 	radarDataGood = false;
 
@@ -60,7 +59,7 @@ LEM_RR::~LEM_RR()
 	lem->lm_rr_to_csm_connector.Disconnect();
 }
 
-void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh) {
+void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *rrh) {
 	lem = s;
 
 	if (!csm)
@@ -76,7 +75,7 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	// Set up antenna.
 	// RR antenna is designed to operate between 10F and 75F
 	// The standby heater switches on below -40F and turns it off again at 0F
-	// The oprational heater switches on below 0F and turns it off again at 20F
+	// The operational heater switches on below 0F and turns it off again at 20F
 	//The RR assembly has multiple heater systems within, we will only concern ourselves with the antenna itself
 	// The CWEA complains if the temperature is outside of -54F to +148F
 	// Values in the constructor are name, pos, vol, isol
@@ -86,7 +85,6 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	antheater = anheat;
 	rrheat = rrh;
 	RREHeat = rreh;
-	RRESECHeat = secrreh;
 	antenna->isolation = 0.000001;
 	antenna->Area = 9187.8912; // Area of reflecting dish, probably good enough
 	trunnionAngle = -180.0 * RAD;
@@ -127,8 +125,6 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	RCVDpow = 0.0;
 	RCVDgain = 0.0;
 	RCVDPhase = 0.0;
-
-	if(lem){ lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, AntennaPower, AntennaGain*AntennaPolarValue, AntennaPhase); }//send inital data to the connector
 }
 
 bool LEM_RR::IsDCPowered()
@@ -764,16 +760,14 @@ void LEM_RR::Timestep(double simdt) {
 void LEM_RR::SystemTimestep(double simdt) {
 	if (IsDCPowered())
 	{
-		dc_source->DrawPower(117);
-		RREHeat->GenerateHeat(58.5);
-		RRESECHeat->GenerateHeat(58.5);
+		dc_source->DrawPower(117); //Total power draw 150W, 33W guessed for RR antenna section
+		RREHeat->GenerateHeat(117);
 	}
 
 	if (IsACPowered())
 	{
 		ac_source->DrawPower(13.8);
-		RREHeat->GenerateHeat(6.9);
-		RRESECHeat->GenerateHeat(6.9);
+		RREHeat->GenerateHeat(13.8);
 	}
 
 	if (abs(shaftVel) > 0.01*RAD)
@@ -827,7 +821,11 @@ void LEM_RR::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "RR_RADARDATAGOOD", radarDataGood);
 	papiWriteScenario_double(scn, "RR_RANGE", range);
 	papiWriteScenario_double(scn, "RR_RATE", rate);
-	oapiWriteLine(scn, end_str);
+	papiWriteScenario_double(scn, "RR_RCVDFREQ", RCVDfreq);
+	papiWriteScenario_double(scn, "RR_RCVDPOW", RCVDpow);
+	papiWriteScenario_double(scn, "RR_RCVDGAIN", RCVDgain);
+	papiWriteScenario_double(scn, "RR_RCVDPHASE", RCVDPhase);
+	oapiWriteLine(scn, end_str); 
 }
 
 void LEM_RR::LoadState(FILEHANDLE scn, char *end_str) {
@@ -846,5 +844,9 @@ void LEM_RR::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "RR_RADARDATAGOOD", radarDataGood);
 		papiReadScenario_double(line, "RR_RANGE", range);
 		papiReadScenario_double(line, "RR_RATE", rate);
+		papiReadScenario_double(line, "RR_RCVDFREQ", RCVDfreq);
+		papiReadScenario_double(line, "RR_RCVDPOW", RCVDpow);
+		papiReadScenario_double(line, "RR_RCVDGAIN", RCVDgain);
+		papiReadScenario_double(line, "RR_RCVDPHASE", RCVDPhase);
 	}
 }

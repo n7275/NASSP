@@ -53,7 +53,7 @@ namespace mission
 		//false = LM has no abort electronics assembly, true = LM has abort electronics assembly
 		virtual bool HasAEA() const;
 		//false = LM has no ascent engine arming assembly, = true = LM has ascent engine arming assembly
-		virtual bool HasAscEngArmAssy() const;
+		virtual bool LMHasAscEngArmAssy() const;
 		//false = LM has no legs, true = LM has legs
 		virtual bool LMHasLegs() const;
 		//false = CSM has no HGA, true = CSM has a HGA
@@ -68,6 +68,14 @@ namespace mission
 		virtual const std::string& GetAEAVersion() const;
 		//false = LM stage verify bit normal, true = inverted
 		bool IsLMStageBitInverted() const;
+		//Value of adjustable gain in pulse ratio modulator of the ATCA in the LM. 0.3 used for LM-4 and later, 0.1 for LM-3 and before
+		double GetATCA_PRM_Factor() const;
+		//Get matrix with coefficients for calculating the LM center of gravity as a quadratic function of mass
+		MATRIX3 GetLMCGCoefficients() const;
+		//CM to LM power connection version. 0 = connection doesn't work with LM staged, 1 = LM has a CB to bypass circuit to descent stage, 2 = circuit bypassed automatically at stating
+		int GetCMtoLMPowerConnectionVersion() const;
+		//Get CG of the empty SM (but including SM RCS) in inches
+		VECTOR3 GetCGOfEmptySM() const;
 	protected:
 		std::string strFileName;
 		std::string strMissionName;
@@ -82,11 +90,15 @@ namespace mission
 		int iLMDSKYVersion;
 		bool bHasLMProgramer;
 		bool bHasAEA;
-		bool bHasAscEngArmAssy;
+		bool bLMHasAscEngArmAssy;
 		bool bLMHasLegs;
 		bool bCSMHasHGA;
 		bool bCSMHasVHFRanging;
 		bool bInvertLMStageBit;
+		double dATCA_PRM_Factor;
+		MATRIX3 LM_CG_Coefficients;
+		int iCMtoLMPowerConnectionVersion;
+		VECTOR3 EmptySMCG;
 
 		void SetDefaultValues();
 	};

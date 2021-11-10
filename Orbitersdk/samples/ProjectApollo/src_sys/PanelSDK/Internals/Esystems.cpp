@@ -40,6 +40,7 @@ e_object::e_object()
 	Volts = 0.0;
 	Amperes = 0.0;
 	Hertz = 0.0;
+	parent = NULL;
 }
 
 void e_object::refresh(double dt)
@@ -269,22 +270,23 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	H2_purity = 0.9994; //set me somewhere else
 	O2_purity = 0.9999; //set me somewhere else
 
-	H2_max_impurities = 0.0504; //nominal impurities after 24hrs //set me somewhere else
-	O2_max_impurities = 0.106; //nominal impurities after 24hrs set me somewhere else
-
 	SetTemp(475.0); 
 	condenserTemp = 345.0;
 	tempTooLowCount = 0;
-	Volts = 31.0;
+	Volts = 28.0;
+	Amperes = 25.0;
 	power_load = 600.0; //2 amps is internal impedance		//TSCH Test 
 	max_power = r_watts; //max watts
-	clogg = 0.0; //no clog
+	cloggVoltageDrop = 0.0; //no clog
 	start_handle = 0; //stopped
 	purge_handle = -1; //no purging
 	status = i_status;		//2; //stopped
 	reaction = 0; //no chemical react.
 	SRC = NULL; //for now a FCell cannot have a source
 	running = 1; //ie. not running
+
+	voltsLastTimestep = 28.0;
+	ampsLastTimestep = 25.0;
 
 	H2_flow = 0;
 	O2_flow = 0;
@@ -317,7 +319,7 @@ void FCell::Reaction(double dt)
 	H2_flow = ((Amperes * MMASS[SUBSTANCE_H2]) / (2*FaradaysConstant)) * numCells * dt; //Faraday's 2nd law electrolysis. confirmed against CSM databook equation
 	O2_flow = H2_flow / H2RATIO * O2RATIO; //consume a stoichometeric amount of oxygen
 
-	reactant = H2_flow + O2_flow;
+	reactant = H2_flow + O2_flow; //will probably get removed in a later commit
 
 	// max. consumption
 	if (H2_flow > H2_maxflow) H2_flow = H2_maxflow;
@@ -326,16 +328,19 @@ void FCell::Reaction(double dt)
 	// results of reaction
 	double H2O_flow = O2_flow + H2_flow;
 
-	//heat generation
-	//double heat = (hydrogenHHV*numCells - Volts)*Amperes*dt;
-	//efficiency model calculated from APOLLO TRAINING | ELECTRICAL POWER SYSTEM STUDY GUIDE COURSE NO.A212, and referenced documents
-	double heat = (power_load / (0.9043642805859956 +
+	//efficiency and heat generation
+	//efficiency model calculated from APOLLO TRAINING | ELECTRICAL POWER SYSTEMSTUDY GUIDE COURSE NO.A212, and referenced documents
+	double heat = (power_load / (0.9063642805859956 +
 		-0.00040191337758397755 * power_load +
 		0.0000003368939782880486 * power_load * power_load +
-		-1.5580350625528442e-10 * power_load * power_load * power_load * +
+		-1.5580350625528442e-10 * power_load * power_load * power_load +
 		3.2902028095999155e-14 * power_load * power_load * power_load * power_load +
-		-2.581100488488906e-18 * power_load * power_load * power_load * power_load * power_load) - power_load) * dt; //I think this executes faster than calling pow()
-	
+		-2.581100488488906e-18 * power_load * power_load * power_load * power_load * power_load) - power_load)*dt; //I think this executes faster than calling pow()
+
+	/*if (!strcmp(name, "FUELCELL1"))
+	{
+		sprintf(oapiDebugString(), "HEAT: %lfW POWER: %lfW", heat/dt, power_load);
+	}*/
 
 	// purging
 	if (status == 3)
@@ -436,7 +441,9 @@ void FCell::UpdateFlow(double dt)
 		return;
 	}
 
-	if (power_load <= 1.0) { power_load = 1.0;} //prevent division by 0.
+	//Idle power load to prevent the fuel cells from causing divide by 0 (temporary fix)
+	if (power_load < 1.0)
+		power_load = 1.0;
 
 	//first we check the start_handle;
 	double loadResistance = 0.0;
@@ -446,7 +453,7 @@ void FCell::UpdateFlow(double dt)
 	if ((purge_handle == 2) && (status == 0 || status == 3)) status = 4; //O2 purging;
 	if ((purge_handle == -1) && (status == 3 || status == 4)) status = 0; //no purging;
 
-	// stopping if colder than the critical temperature (300 °F)
+	// stopping if colder than the critical temperature (300 Â°F)
 	// counter is because of temperature fluctuation at high time accelerations
 	if (Temp < 422.0) {
 		tempTooLowCount++;
@@ -504,29 +511,63 @@ void FCell::UpdateFlow(double dt)
 	case 0: // normal running
 
 		running = 0; //0 = running
-		loadResistance = (829.44) / (power_load); //829.44 = 28.8V^2 which is the voltage that DrawPower() expects. use this calculate the resistive load on the fuel cell
-		Volts = 31.0; //inital estimate for voltage
-
+		
 		//coefficients for 5th order approximation of fuel cell performance, taken from:
 		//CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-10
-		double A = 0.023951368224792 * Temp + 23.9241562583015;
+		double A = 0.023951368224792 * Temp + 23.9241562583015 - cloggVoltageDrop;
 		double B = 0.003480859912024 * Temp - 2.19986938582928;
 		double C = -0.0001779207513 * Temp + 0.104916556604259;
 		double D = 5.0656524872309E-06 * Temp - 0.002885372247954;
 		double E = -6.42229870072935E-08 * Temp + 3.58599071612147E-05;
 		double F = 3.02098031429142E-10 * Temp - 1.66275376548748E-07;
 
-		for (int ii = 0; ii < 5; ++ii) //use an iterative procedure to solve for voltage and current. with our guess of 31 volts these should converge in 3~5 steps
-		{
-			Amperes = (power_load / Volts);
-			Volts = A + B * Amperes + C * Amperes*Amperes + D * Amperes*Amperes*Amperes + E * Amperes*Amperes*Amperes*Amperes + F * Amperes*Amperes*Amperes*Amperes*Amperes;
-			power_load = Amperes * Volts; //recalculate power_load
-		}
+		loadResistance = 784.0 / (power_load); //<R_F>, 784 = (28.0V)^2 which is the voltage that DrawPower() expects. use this calculate the resistive load on the fuel cell
 
-		//"clogg" is used to make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
-		//Amperes -= (0.225*clogg);
-		//Volts -= -(0.52*clogg);
-		//power_load = Amperes * Volts; //recalculate power_load again after clogging
+		//use an iterative procedure to solve for voltage and current. Should converge in ~2-3 steps, see https://gist.github.com/n7275/46a399d648721367a2bead3a6c2ae9ff
+		int NumSteps = 0;
+		while(NumSteps < 10) //10 is an absolute maximum to prevent hangs, and really should never get much higher than ~6-7 during extream transients
+		{
+			Volts = A + B * Amperes + C * Amperes*Amperes + D * Amperes*Amperes*Amperes + E * Amperes*Amperes*Amperes*Amperes + F * Amperes*Amperes*Amperes*Amperes*Amperes;
+			Amperes = Volts / loadResistance;
+			++NumSteps;
+			if ((abs(Volts - voltsLastTimestep) < 0.00001) && (abs(Amperes - ampsLastTimestep) < 0.00001))
+			{
+				break;
+			}
+			voltsLastTimestep = Volts;
+			ampsLastTimestep = Amperes;
+		}
+		
+		power_load = Amperes * Volts; //recalculate power_load
+
+		/*if (!strcmp(name, "FUELCELL1"))
+		{
+		sprintf(oapiDebugString(), "Steps to Converge: %d", NumSteps);
+		}*/
+
+		/*	voltage divider schematic
+			
+			V+		//zero load theoretical potential
+			|
+			|
+			<R_F>	//fuel cell internal resistance
+			|
+			|
+			V_t		//terminal voltage
+			|
+			|
+			<R_L>	//load resistance
+			|
+			|
+			V0		//ground
+
+		*/
+
+		/*if (!strcmp(name, "FUELCELL1"))
+		{
+		sprintf(oapiDebugString(), "Current: %lfA, Potential: %lfA, Power %lfW, Clogg Potential Reduction %lfV", Amperes, Volts, power_load, -cloggVoltageDrop);
+		}*/
+
 
 		Reaction(dt);
 
@@ -539,7 +580,7 @@ void FCell::UpdateFlow(double dt)
 	//Conductive heat transfer
 	const double ConductiveHeatTransferCoefficient = 0.1825267; // w/K, calculated from CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-21
 	const double coolingPerAmpReactants = 0.39116; //w/A eventually fix substances so this isnt needed
-	//assume that the ambient internal temperature of the spacecraft is 300K, ~80°F, eventually we need to simulate this too 
+	//assume that the ambient internal temperature of the spacecraft is 300K, ~80ï¿½F, eventually we need to simulate this too 
 	thermic((320.0 - Temp) * ConductiveHeatTransferCoefficient * dt);	
 
 	double Q_N2_Blanket;
@@ -549,14 +590,14 @@ void FCell::UpdateFlow(double dt)
 
 	Q_N2_Blanket = (N2_Blanket->mass*N2_Blanket->c)*
 		(Temp - N2_Blanket->Temp)*
-		(1 - exp(-(2.5 * dt) / (N2_Blanket->mass*N2_Blanket->c))); //analytical heat transfer model, replaces old Eüler's method model
+		(1 - exp(-(2.5 * dt) / (N2_Blanket->mass*N2_Blanket->c))); //analytical heat transfer model, replaces old Eï¿½ler's method model
 
 	N2_Blanket->thermic(Q_N2_Blanket);
 	thermic(-Q_N2_Blanket);
 
 	Q_N2_StorageTank = (N2_storageTank->mass*N2_storageTank->c)*
 		(Temp - N2_storageTank->Temp)*
-		(1 - exp(-(0.8 * dt) / (N2_storageTank->mass*N2_storageTank->c))); //analytical heat transfer model, replaces old Eüler's method model
+		(1 - exp(-(0.8 * dt) / (N2_storageTank->mass*N2_storageTank->c))); //analytical heat transfer model, replaces old Eï¿½ler's method model
 	
 	N2_storageTank->thermic(Q_N2_StorageTank);
 	thermic(-Q_N2_StorageTank);
@@ -566,7 +607,7 @@ void FCell::UpdateFlow(double dt)
 
 	Q_O2_Source = (O2_SRC->parent->mass*O2_SRC->parent->c)*
 		(Temp - O2_SRC->parent->Temp)*
-		(1 - exp(-(O2ChamberHeatTransferCoeff * dt) / (O2_SRC->parent->mass*O2_SRC->parent->c))); //analytical heat transfer model, replaces old Eüler's method model
+		(1 - exp(-(O2ChamberHeatTransferCoeff * dt) / (O2_SRC->parent->mass*O2_SRC->parent->c))); //analytical heat transfer model, replaces old Eï¿½ler's method model
 	
 	O2_SRC->parent->thermic(Q_O2_Source);
 	O2_SRC->parent->space.composition->BoilAll(); /// \todo {fix substances so that this bad thermodynamics isnt needed}
@@ -574,7 +615,7 @@ void FCell::UpdateFlow(double dt)
 
 	Q_H2_Source = (H2_SRC->parent->mass*H2_SRC->parent->c)*
 		(Temp - H2_SRC->parent->Temp)*
-		(1 - exp(-(H2ChamberHeatTransferCoeff * dt) / (H2_SRC->parent->mass*H2_SRC->parent->c))); //analytical heat transfer model, replaces old Eüler's method model
+		(1 - exp(-(H2ChamberHeatTransferCoeff * dt) / (H2_SRC->parent->mass*H2_SRC->parent->c))); //analytical heat transfer model, replaces old Eï¿½ler's method model
 
 	H2_SRC->parent->thermic(Q_H2_Source);
 	H2_SRC->parent->space.composition->BoilAll(); /// \todo {fix substances so that this bad thermodynamics isnt needed}
@@ -619,7 +660,9 @@ void FCell::Clogging(double dt)
 
 	//O2 impurities effect voltage drop substantially more than H2(not detectable according to AOH)
 	//here we're simulating the effect by making the O2 clogging effect the voltage drop 25x as much as the H2
-	clogg = (25 * (O2_clogging / O2_max_impurities) + (H2_clogging / H2_max_impurities)) / 26.0;
+	cloggVoltageDrop = (25 * (O2_clogging / O2_max_impurities) + (H2_clogging / H2_max_impurities)) / 26.0;
+
+	cloggVoltageDrop *= cloggVoltageReduction;
 }
 
 void FCell::Load(char *line)
@@ -652,6 +695,15 @@ Battery::Battery(char *i_name, e_object *i_src, double i_power, double i_voltage
 	 power_load = 0.0;
 	 max_power = power = i_power;
 	 Volts = max_voltage;
+
+	 c = 0.15;
+	 batheat = 0.0;
+	 chargeheat = 0.0;
+}
+
+Battery::~Battery()
+{
+	parent->P_thermal->RemoveThermalObject(this);
 }
 
 void Battery::DrawPower(double watts)
@@ -686,14 +738,30 @@ double Battery::Current()
 	return 0.0;
 }
 
+double Battery::Temperature()
+{
+	if (IsEnabled())
+	{
+		return Temp;
+	}
+	
+	return 0.0;
+}
+
 void Battery::UpdateFlow(double dt)
 {
-	power -= power_load * dt;
+	power -= power_load * dt; //Draw from the batteries
 
 	if (Volts > 0.0) 
 		Amperes = (power_load / Volts);
 	else
 		Amperes = 0;
+
+	batheat = (internal_resistance * (Amperes * Amperes));	//Heat due to battery discharging based on draw current
+
+	//DrawPower(batheat); //Power loss to heat, we will add this back when the math is better established
+
+	thermic(batheat * dt); //1 joule = 1 watt * dt
 
 	// Reset power load
 	power_load = 0.0;
@@ -710,7 +778,8 @@ void Battery::UpdateFlow(double dt)
 	if (power < 0) { 
 		power = 0;
 		Amperes = 0;
-		Volts = 0 ;
+		Volts = 0;
+		Temp = 0;
 	}
 }
 
@@ -726,20 +795,32 @@ void Battery::refresh(double dt)
 		} else {
 			p = Volts * 2.2 / 0.01 * (max_voltage - Volts) / max_voltage;
 		}
+	
+		chargeheat = (internal_resistance * (SRC->Current() * SRC->Current()));	//Heat due to battery charging based on charge current
+
+		//p += chargeheat; //Power loss to heat, we will add this back when the math is better established
+
 		SRC->DrawPower(p);
 		power += p * dt;
+
+		thermic(chargeheat * dt); //1 joule = 1 watt * dt
 	}
 }
 
 void Battery::Load(char *line)
 {
-	sscanf(line,"    <BATTERY> %s %lf", name, &power);
+	double temp = 0;
+	sscanf(line, "    <BATTERY> %s %lf %lf", name, &power, &temp);
+	if (temp > 0)
+	{
+		SetTemp(temp);
+	}
 }
 
 void Battery::Save(FILEHANDLE scn)
 {
 	char cbuf[1000];
-	sprintf (cbuf, "%s %0.4f",name, power);
+	sprintf (cbuf, "%s %0.4f %0.4f",name, power, Temp);
 	oapiWriteScenario_string (scn, "    <BATTERY> ", cbuf);
 }
 
@@ -1255,7 +1336,7 @@ Cooling::Cooling(char *i_name,int i_pump,e_object *i_SRC,double thermal_prop,dou
 	max=max_t;
 	min=min_t;
 	nr_list=0;
-	coolant_temp = 300.0; // reasonable ambient temperature
+	coolant_temp=300.0; // reasonable ambient temperature
 	isolation=thermal_prop;
 	SRC=i_SRC;
 	loaded=0; //ie. not PLOADed
@@ -1302,7 +1383,7 @@ void Cooling::refresh(double dt)
 	{
 		heat_ex = (activelist[i]->mass*activelist[i]->c)*
 			(activelist[i]->Temp - activelist_c[i]->Temp)*
-			(1 - exp(-(activelength[i] * active_h[i] * isolation * dt) / (activelist[i]->mass*activelist[i]->c))); //analytical heat transfer model, replaces old Eüler's method model
+			(1 - exp(-(activelength[i] * active_h[i] * isolation * dt) / (activelist[i]->mass*activelist[i]->c))); //analytical heat transfer model, replaces old Eï¿½ler's method model
 
 		activelist[i]->thermic(-heat_ex);
 		activelist_c[i]->thermic(heat_ex);
@@ -1494,6 +1575,12 @@ void Boiler::refresh(double dt)
 			if ((tank->space.Press > valueMax) && (pumping))
 				pumping = 0;
 		}
+		else if (type == 2) { // CHILLER
+			if ((target->Temp > valueMin) && (!pumping))
+				pumping = 1;
+			if ((target->Temp < valueMax) && (pumping))
+				pumping = 0;
+		}
 	} else if (h_pump < 0)
 		pumping = 1; //force manual on
 	else
@@ -1505,7 +1592,11 @@ void Boiler::refresh(double dt)
 			return;
 		}
 		SRC->DrawPower(boiler_electrical_power);
-		target->thermic(boiler_power * dt); //1 joule = 1 watt * dt
+		if (type == 2) {
+			target->thermic(-boiler_power * dt); //cooling (1 joule = 1 watt * dt)
+		}
+		else
+			target->thermic(boiler_power * dt); //heating (1 joule = 1 watt * dt)
 	} else {
 		pumping = 0;
 	}
@@ -1587,4 +1678,60 @@ void Pump::Save(FILEHANDLE scn) {
 
 	sprintf (cbuf, "%s %i %i %lf", name, h_pump, loaded, fan_cap);
 	oapiWriteScenario_string (scn, "    <PUMP> ", cbuf);
+}
+
+
+//------------------------------ Diode Class -----------------------------------
+Diode::Diode(char* i_name, e_object* i_src, double NominalTemperature, double saturationCurrent)
+{
+	strcpy(name, i_name);
+	max_stage = 99;
+	SRC = i_src;
+
+	if (SRC && SRC->IsEnabled())
+	{
+		Volts = SRC->Voltage() - (kT_q*log((Amperes / Is) + 1));
+	}
+	Amperes = 0.0;
+	power_load = 0.0;
+
+	Is = saturationCurrent;
+	kT_q = (1.38064852E-23*NominalTemperature) / 1.60217662E-19;
+}
+
+double Diode::Current()
+{
+	if (SRC && SRC->IsEnabled() && power_load > 0.0)
+	{
+		Amperes = power_load / Volts;
+			return Amperes;
+	}
+
+	return 0.0;
+}
+
+double Diode::Voltage()
+{
+	if (SRC && SRC->IsEnabled())
+	{
+		Volts = SRC->Voltage() - (kT_q*log((Amperes+1) / Is));
+		return Volts;
+	}
+
+	return 0.0;
+}
+
+void Diode::Load(char *line)
+
+{
+	sscanf(line, "    <DIODE> %s", name);
+}
+
+void Diode::Save(FILEHANDLE scn)
+{
+
+	char cbuf[1000];
+
+	sprintf(cbuf, "%s", name);
+	oapiWriteScenario_string(scn, "    <DIODE> ", cbuf);
 }

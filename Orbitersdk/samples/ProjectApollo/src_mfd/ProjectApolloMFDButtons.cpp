@@ -14,11 +14,11 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ 0,0,0 },
 		{ 0,0,0 },
 		{ 0,0,0 },
-		{ "Socket info", 0, 'S' },
+		{ 0,0,0 },
 		{ "Debug String",0,'D' }
 	};
 
-	RegisterPage(mnuNone, sizeof(mnuNone) / sizeof(MFDBUTTONMENU));
+	page.None = RegisterPage(mnuNone, sizeof(mnuNone) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("GNC", OAPI_KEY_G, &ProjectApolloMFD::menuSetGNCPage);
 	RegisterFunction("ECS", OAPI_KEY_E, &ProjectApolloMFD::menuSetECSPage);
@@ -31,7 +31,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("", OAPI_KEY_C, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_F, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("SOCK", OAPI_KEY_S, &ProjectApolloMFD::menuSetSOCKPage);
+	RegisterFunction("", OAPI_KEY_S, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("DBG", OAPI_KEY_D, &ProjectApolloMFD::menuSetDebugPage);
 
 
@@ -42,7 +42,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "Virtual AGC core dump", 0, 'D' }
 	};
 
-	RegisterPage(mnuGNC, sizeof(mnuGNC) / sizeof(MFDBUTTONMENU));
+	page.GNC = RegisterPage(mnuGNC, sizeof(mnuGNC) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
 	RegisterFunction("KILR", OAPI_KEY_K, &ProjectApolloMFD::menuKillRot);
@@ -56,19 +56,19 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "CDR in suit", 0, 'D' },
 		{ "LMP in suit", 0, 'L' },
 		{ "Start EVA",0,'E' },
-		{ 0,0,0 },
+		{ "Connect CSM O2 Hose to LM",0,'H' },
 		{ "Primary coolant loop test heating", 0, 'P' },
 		{ "Secondary coolant loop test heating", 0, 'S' }
 	};
 
-	RegisterPage(mnuECS, sizeof(mnuECS) / sizeof(MFDBUTTONMENU));
+	page.ECS = RegisterPage(mnuECS, sizeof(mnuECS) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
 	RegisterFunction("CRW", OAPI_KEY_C, &ProjectApolloMFD::menuSetCrewNumber);
 	RegisterFunction("CDR", OAPI_KEY_D, &ProjectApolloMFD::menuSetCDRInSuit);
 	RegisterFunction("LMP", OAPI_KEY_L, &ProjectApolloMFD::menuSetLMPInSuit);
 	RegisterFunction("EVA", OAPI_KEY_E, &ProjectApolloMFD::menuStartEVA);
-	RegisterFunction("", OAPI_KEY_A, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("HOS", OAPI_KEY_A, &ProjectApolloMFD::menuConnectCSMO2Hose);
 
 	RegisterFunction("PRM", OAPI_KEY_P, &ProjectApolloMFD::menuSetPrimECSTestHeaterPower);
 	RegisterFunction("SEC", OAPI_KEY_S, &ProjectApolloMFD::menuSetSecECSTestHeaterPower);
@@ -90,7 +90,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "Yaw angle", 0, 'Y'}
 	};
 
-	RegisterPage(mnuIU, sizeof(mnuIU) / sizeof(MFDBUTTONMENU));
+	page.IU = RegisterPage(mnuIU, sizeof(mnuIU) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
 	RegisterFunction("REQ", OAPI_KEY_R, &ProjectApolloMFD::menuVoid);
@@ -113,38 +113,27 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ 0,0,0 },
 		{ "Change Source",0,'S' },
 		{ "Change Reference Body", 0, 'R' },
-		{ 0,0,0 },
+		{ "Ascent Engine Arming",0,'A' },
 		{ "Clock Update", 0, 'C' },
 		{ "Sunburst Suborbital Abort",0,'F' },
 		{ "Sunburst COI",0,'G' },
 		{ "State Vector Slot", 0, 'T' }
 	};
 
-	RegisterPage(mnuTELE, sizeof(mnuTELE) / sizeof(MFDBUTTONMENU));
+	page.TELE = RegisterPage(mnuTELE, sizeof(mnuTELE) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuAbortUplink);
 	RegisterFunction("SV", OAPI_KEY_U, &ProjectApolloMFD::menuStateVectorUpdate);
-	RegisterFunction("", OAPI_KEY_A, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("SRC", OAPI_KEY_S, &ProjectApolloMFD::menuSetSource);
 	RegisterFunction("REF", OAPI_KEY_R, &ProjectApolloMFD::menuSetReference);
 
-	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("AEAA", OAPI_KEY_A, &ProjectApolloMFD::menuAEAACommands);
 	RegisterFunction("CLK", OAPI_KEY_C, &ProjectApolloMFD::menuClockUpdate);
 	RegisterFunction("SAB", OAPI_KEY_F, &ProjectApolloMFD::menuSunburstSuborbitalAbort);
 	RegisterFunction("COI", OAPI_KEY_G, &ProjectApolloMFD::menuSunburstCOI);
 	RegisterFunction("SLT", OAPI_KEY_T, &ProjectApolloMFD::menuSetSVSlot);
-
-
-	//This menu set is just for the Socket program, remove before release.
-	static const MFDBUTTONMENU mnuSOCK[1] = {
-		{ "Back", 0, 'B' }
-	};
-
-	RegisterPage(mnuSOCK, sizeof(mnuSOCK) / sizeof(MFDBUTTONMENU));
-
-	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
-
 
 	static const MFDBUTTONMENU mnuDebug[12] = {
 		{ 0,0,0 },
@@ -161,7 +150,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "Back",0,'B' }
 	};
 
-	RegisterPage(mnuDebug, sizeof(mnuDebug) / sizeof(MFDBUTTONMENU));
+	page.Debug = RegisterPage(mnuDebug, sizeof(mnuDebug) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("", OAPI_KEY_A, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ProjectApolloMFD::menuVoid);
@@ -172,6 +161,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 
 	RegisterFunction("", OAPI_KEY_J, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("CLR", OAPI_KEY_C, &ProjectApolloMFD::menuClearDebugLine);
 	RegisterFunction("FRZ", OAPI_KEY_F, &ProjectApolloMFD::menuFreezeDebugLine);
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
@@ -186,7 +176,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "CSM and LM REFSMMAT types",0,'R' }
 	};
 
-	RegisterPage(mnuLGC, sizeof(mnuLGC) / sizeof(MFDBUTTONMENU));
+	page.LGC = RegisterPage(mnuLGC, sizeof(mnuLGC) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
 	RegisterFunction("V47", OAPI_KEY_D, &ProjectApolloMFD::menuPressEnterOnDSKYDEDA);
@@ -212,7 +202,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "Back",0,'B' }
 	};
 
-	RegisterPage(mnuFailures, sizeof(mnuFailures) / sizeof(MFDBUTTONMENU));
+	page.Failures = RegisterPage(mnuFailures, sizeof(mnuFailures) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("SEQ", OAPI_KEY_S, &ProjectApolloMFD::menuSetSaturnSwitchFailure);
 	RegisterFunction("PLAT", OAPI_KEY_D, &ProjectApolloMFD::menuSetIUPlatformFailure);

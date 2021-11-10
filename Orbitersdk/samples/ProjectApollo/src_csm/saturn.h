@@ -68,7 +68,7 @@
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
-
+#include "vesim.h"
 
 //
 // IMFD5 communication support
@@ -202,6 +202,7 @@ typedef struct {
 	double PrimECSTestHeating;
 	double SecECSHeating;
 	double SecECSTestHeating;
+	bool CSMO2HoseConnected;
 } ECSStatus;
 
 ///
@@ -318,6 +319,17 @@ typedef struct {
 	double OxidizerLineTempF;
 } SPSStatus;
 
+// Vesim input IDs
+#define CSM_AXIS_INPUT_RHCR    1
+#define CSM_AXIS_INPUT_RHCP    2
+#define CSM_AXIS_INPUT_RHCY    3
+#define CSM_AXIS_INPUT_THCX    4
+#define CSM_AXIS_INPUT_THCY    5
+#define CSM_AXIS_INPUT_THCZ    6
+#define CSM_BUTTON_ROT_LIN     7
+
+// Callback for Vesim events
+void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
 ///
 /// \brief Generic Saturn launch vehicle class.
 /// \ingroup Saturns
@@ -576,6 +588,9 @@ public:
 		SRF_VC_SPSMAXINDICATOR,
 		SRF_VC_SPSMININDICATOR,
 		SRF_VC_THUMBWHEEL_LARGEFONTSINV,
+		SRF_VC_CWS_GNLIGHTS,
+		SRF_VC_DIGITAL90,
+		SRF_VC_EVENT_TIMER_DIGITS90,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -742,8 +757,8 @@ public:
 			unsigned unused:1;						///< Unused bit for backwards compatibility. Can be used for other things.
 			unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
 			unsigned CMdocktgt:1;                   ///< CM docking target on
-			unsigned unused4:1;						///< Spare
-			unsigned unused5:1;						///< Spare
+			unsigned VCSeatsfolded :1;				///< VC Seats state
+			unsigned COASreticlevisible :1;		    ///< COAS reticle state
 			unsigned unused6:2;						///< Spare
 			unsigned SkylabSM:1;					///< Is this a Skylab Service Module?
 			unsigned SkylabCM:1;					///< Is this a Skylab Command Module?
@@ -876,6 +891,7 @@ public:
 	DIDEVCAPS			 dx8_jscaps[2];   ///< Joystick capabilities
 	DIJOYSTATE2			 dx8_jstate[2];   ///< Joystick state
 	HRESULT				 dx8_failure;     ///< DX failure reason
+	Vesim vesim;                          ///< Vessel Specific Input Mngr
 	int rhc_id;							  ///< Joystick # for the RHC
 	int rhc_rot_id;						  ///< ID of ROTATOR axis to use for RHC Z-axis
 	int rhc_sld_id;                       ///< ID of SLIDER axis to use for RHC Z-axis
@@ -892,6 +908,7 @@ public:
 	bool thc_auto;						  ///< THC Z-axis auto detection
 	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
 	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
+	bool enableVESIM;                     ///< Vessel Specific Input Mgmt enabled
 	bool rhc_thctoggle_pressed;			  ///< Button pressed flag				  
 	int js_current;
 
@@ -939,8 +956,6 @@ public:
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 	void clbkPostCreation();
-	void clbkVisualCreated(VISHANDLE vis, int refcount);
-	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 
 	///
 	/// This function performs all actions required to update the spacecraft state as time
@@ -1009,7 +1024,6 @@ public:
 	virtual bool GetSIInboardEngineOut() = 0;
 	virtual bool GetSIOutboardEngineOut() = 0;
 	virtual bool GetSIBLowLevelSensorsDry();
-	virtual bool GetSIIEngineOut();
 	virtual void SetSIThrusterDir(int n, double yaw, double pitch) = 0;
 	virtual void SetSIIThrusterDir(int n, double yaw, double pitch) {};
 	void SetSIVBThrusterDir(double yaw, double pitch);
@@ -1036,7 +1050,11 @@ public:
 
 	//CSM to LM interface functions
 	h_Pipe* GetCMTunnelPipe() { return CMTunnel; }
+	h_Pipe* GetCSMO2Hose();
 	void ConnectTunnelToCabinVent();
+	bool GetLMDesBatLVOn();
+	bool GetLMDesBatLVHVOffA();
+	bool GetLMDesBatLVHVOffB();
 
 	///
 	/// \brief Triggers Virtual AGC core dump
@@ -1237,12 +1255,14 @@ public:
 	///
 	void SetNosecapMesh();
 
-	void SetSIMBayPanelMesh();
+	///
+	/// \brief Set VC seats mesh
+	///
+	void SetVCSeatsMesh();
 
-	///
-	/// \brief Set probe visibility flag
-	///
-	void ProbeVis();
+	void SetCOASMesh();
+
+	void SetSIMBayPanelMesh();
 
 	///
 	/// Check whether the Launch Escape Tower is attached.
@@ -1269,7 +1289,14 @@ public:
 	// \ mass in kg, ro (distance from center of the bottom points), tdph (height of bottom points),
 	// \ height (of the top point), x_target (stiffness/damping factor, stable default is -0.5)
 	//
+	void ConfigTouchdownPoints();
 	void ConfigTouchdownPoints(double mass, double ro, double tdph, double height, double x_target = -0.5);
+	
+	void SetWaterDumpParticleStreams(VECTOR3 ofs);
+
+	// Functions to recalculate moments of inertia and center of gravity
+	void UpdateMassAndCoG();
+	void CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG);
 
 	//
 	// LUA Interface
@@ -1541,6 +1568,10 @@ protected:
 
 	bool CryoStir;
 	double TCPO;
+
+	bool VCSeatsfolded;
+
+	bool COASreticlevisible;
 
 	//
 	// Failures.
@@ -2638,7 +2669,7 @@ protected:
 	///////////////////////
 
 	SwitchRow LeftCOASPowerSwitchRow;
-	ToggleSwitch LeftCOASPowerSwitch;
+	LeftCOASPowerSwitch LeftCOASPowerSwitch;
 
 	SwitchRow LeftUtilityPowerSwitchRow;
 	ToggleSwitch LeftUtilityPowerSwitch;
@@ -3301,6 +3332,8 @@ protected:
 	SaturnASCPSwitch ASCPPitchSwitch;
 	SaturnASCPSwitch ASCPYawSwitch;
 
+	SaturnAltimeter Altimeter;
+
 
 	///
 	/// Stage is the main stage of the flight.
@@ -3443,7 +3476,8 @@ protected:
 	// And state that doesn't need to be saved.
 	//
 
-	double aHAcc;
+	boolean StageUnloadState = 0;
+	double LastVPAccelTime = -10000.0, StageUnloadTime = -1.0;
 
 	///
 	/// Mesh offset for BPC and LET.
@@ -3458,11 +3492,6 @@ protected:
 	double S4Offset;
 
 	double actualFUEL;
-
-	#define LASTVELOCITYCOUNT 50
-	VECTOR3 LastVelocity[LASTVELOCITYCOUNT];
-	double LastSimt[LASTVELOCITYCOUNT];
-	int LastVelocityFilled;
 
 	bool KEY1;
 	bool KEY2;
@@ -3536,6 +3565,7 @@ protected:
 	// Telecom equipment
 	DSE  dataRecorder;
 	PCM  pcm;
+	UDL	 udl;
 	PMP	 pmp;
 	USB  usb;
 	HGA  hga;
@@ -3685,6 +3715,10 @@ protected:
 	Battery *EntryBatteryB;
 	Battery *EntryBatteryC;
 
+	Diode *DiodeBatA;
+	Diode *DiodeBatB;
+	Diode *DiodeBatC;
+
 	Battery *PyroBatteryA;
 	Battery *PyroBatteryB;
 
@@ -3706,7 +3740,12 @@ protected:
 	PowerMerge SwitchPower;
 	PowerMerge GaugePower;
 
+	// GSE
+	Pump* GSEGlycolPump;
+	h_Radiator* GSERadiator;
+
 	// ECS
+	h_Tank *CSMCabin;
 	h_HeatExchanger *PrimCabinHeatExchanger;
 	h_HeatExchanger *PrimSuitHeatExchanger;
 	h_HeatExchanger *PrimSuitCircuitHeatExchanger;
@@ -3717,6 +3756,7 @@ protected:
 	h_HeatExchanger *PrimEcsRadiatorExchanger2;
 	h_HeatExchanger *SecEcsRadiatorExchanger1;
 	h_HeatExchanger *SecEcsRadiatorExchanger2;
+	Pump* PrimGlycolPump;
 	Boiler *CabinHeater;
 	Boiler *PrimECSTestHeater;
 	Boiler *SecECSTestHeater;
@@ -3736,6 +3776,10 @@ protected:
 	SaturnLMTunnelVent LMTunnelVent;
 	SaturnForwardHatch ForwardHatch;
 	SaturnPressureEqualizationValve PressureEqualizationValve;
+	SaturnWasteStowageVentValve WasteStowageVentValve;
+	SaturnSuitFlowValves SaturnSuitFlowValve300;
+	SaturnSuitFlowValves SaturnSuitFlowValve301;
+	SaturnSuitFlowValves SaturnSuitFlowValve302;
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;
@@ -3839,16 +3883,22 @@ protected:
 	#define SATVIEW_LEFTDOCK		3
 	#define SATVIEW_RIGHTDOCK		4
 	#define SATVIEW_GNPANEL			5
-	#define SATVIEW_ENG1			10
-	#define SATVIEW_ENG2			11
-	#define SATVIEW_ENG3			12
-	#define SATVIEW_ENG4			13
-	#define SATVIEW_ENG5			14
-	#define SATVIEW_ENG6			15
+    #define SATVIEW_LEBLEFT			6
+    #define SATVIEW_LEBRIGHT		7
+    #define SATVIEW_TUNNEL          8
+    #define SATVIEW_LOWER_CENTER    9
+    #define SATVIEW_UPPER_CENTER    10
+	#define SATVIEW_ENG1			20
+	#define SATVIEW_ENG2			21
+	#define SATVIEW_ENG3			22
+	#define SATVIEW_ENG4			23
+	#define SATVIEW_ENG5			24
+	#define SATVIEW_ENG6			25
 
 	unsigned int	viewpos;
 
 	// Mesh indexes
+	int dockringidx;
 	int probeidx;
 	int probeextidx;
 	int crewidx;
@@ -3864,8 +3914,10 @@ protected:
 	int meshLM_1;
 	int simbaypanelidx;
 	int vcidx;
-
-	DEVMESHHANDLE probe;
+	int seatsfoldedidx;
+	int seatsunfoldedidx;
+	int coascdridx;
+	int coascdrreticleidx;
 
 	bool ASTPMission;
 
@@ -3877,6 +3929,10 @@ protected:
 	bool PayloadDataTransfer;
 
 	mission::Mission* pMission;
+
+	double LastFuelWeight;
+	double CurrentFuelWeight;
+	VECTOR3 currentCoG;
 
 	//
 	// Panels
@@ -3918,11 +3974,14 @@ protected:
 	bool IsMultiThread;
 
 	//
-	// Virtual cockpit
+	// Helpers for drawing the telescope and sextant reticles.
 	//
+	int ReticleLineCnt[2], ReticleLineMaxLen;
+	int *ReticleLineLen[2]; //[SCT=0 | SXT=1]
+	double *ReticleLine[2][2]; //[SCT=0 | SXT=1][X=0 | Y=1]
+	POINT *ReticlePoint;
 
-	VECTOR3 VCCameraOffset;
-	VECTOR3 VCMeshOffset;
+	double PanelPixelHeight;
 
 	bool KranzPlayed;
 	bool PostSplashdownPlayed;
@@ -4010,6 +4069,7 @@ protected:
 
 	void AddRCSJets(double TRANZ,double MaxThrust);
 	void SetRecovery();
+	void InitReticle();
 	void InitPanel(int panel);
 	void SetSwitches(int panel);
 	void AddLeftMainPanelAreas();
@@ -4024,8 +4084,6 @@ protected:
 	void ReleaseSurfaces();
 	void KillDist(OBJHANDLE &hvessel, double kill_dist = 5000.0);
 	void KillAlt(OBJHANDLE &hvessel,double altVS);
-	void RedrawPanel_Alt (SURFHANDLE surf);
-	void RedrawPanel_Alt2 (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
 	void CryoTankHeaterSwitchToggled(TwoPositionSwitch *s, int *pump);
 	void FuelCellHeaterSwitchToggled(TwoPositionSwitch *s, int *pump);
@@ -4066,7 +4124,7 @@ protected:
 	virtual void CreateStageOne() = 0;
 
 	void StageSix(double simt);
-	void JostleViewpoint(double amount);
+	void JostleViewpoint(double noiselat, double noiselon, double noisefreq, double dt, double accoffsx, double accoffsy, double accoffsz);
 	void UpdatePayloadMass();
 	void GetPayloadName(char *s);
 	void GetApolloName(char *s);
@@ -4076,7 +4134,6 @@ protected:
 	void DefineVCAnimations();
 
 	void InitFDAI(UINT mesh);
-	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
 
 	//
 	// Systems functions.
@@ -4152,7 +4209,7 @@ protected:
 	void SetSplashStage();
 	void SetCSMStage();
 	void CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage);
-	void SetReentryStage();
+	void SetReentryStage(VECTOR3 cg_ofs);
 	void SetReentryMeshes();
 	void AddRCS_CM(double MaxThrust, double offset = 0.0, bool createThrusterGroups = true);
 	void GenericTimestepStage(double simt, double simdt);
@@ -4165,6 +4222,7 @@ protected:
 	void RCSSoundTimestep();
 	void LoadVC();
 	void UpdateVC(VECTOR3 meshdir);
+	void DefineCMAttachments();
 
 	//
 	// Sounds
@@ -4316,6 +4374,8 @@ protected:
 	SPSPropellantSource SPSPropellant;
 	Boiler *SPSPropellantLineHeaterA;
 	Boiler *SPSPropellantLineHeaterB;
+	h_HeatLoad *CMRCSHeat[12];
+	h_Radiator* CMRCSTemp[12];
 
 	//
 	// LEM data.
@@ -4330,9 +4390,9 @@ protected:
 	// Random motion.
 	//
 
-	double ViewOffsetx;
-	double ViewOffsety;
-	double ViewOffsetz;
+	double ViewOffsetx, NoiseOffsetx;
+	double ViewOffsety, NoiseOffsety;
+	double ViewOffsetz, NoiseOffsetz;
 
 	//
 	// Save the last view offset.
@@ -4479,6 +4539,7 @@ protected:
 	friend class CSMcomputer; // I want this to be able to see the GDC	
 	friend class LEMcomputer; 
 	friend class PCM;         // Otherwise reading telemetry is a pain
+	friend class UDL;
 	friend class PMP;
 	friend class USB;
 	friend class HGA;
@@ -4524,6 +4585,7 @@ protected:
 	friend class VHFRangingSystem;
 	friend class RNDZXPDRSystem;
 	friend class DockingTargetSwitch;
+	friend class LeftCOASPowerSwitch;
 	friend class SCE;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
@@ -4552,11 +4614,16 @@ extern MESHHANDLE hFHF;
 extern MESHHANDLE hCMP;
 extern MESHHANDLE hCREW;
 extern MESHHANDLE hSMhga;
+extern MESHHANDLE hdockring;
 extern MESHHANDLE hprobe;
 extern MESHHANDLE hprobeext;
 extern MESHHANDLE hsat5tower;
 extern MESHHANDLE hFHO2;
 extern MESHHANDLE hopticscover;
+extern MESHHANDLE hcmseatsfolded;
+extern MESHHANDLE hcmseatsunfolded;
+extern MESHHANDLE hcmCOAScdr;
+extern MESHHANDLE hcmCOAScdrreticle;
 
 extern void SetupgParam(HINSTANCE hModule);
 extern void DeletegParam();

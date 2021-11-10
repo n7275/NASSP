@@ -25,8 +25,9 @@
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
-#include "stdio.h"
-#include "math.h"
+#include <stdio.h>
+#include <math.h>
+#include <winsock.h> // TODO: Replace with winsock2 when yaAGC updates
 #include "lmresource.h"
 
 #include "nasspdefs.h"
@@ -66,15 +67,16 @@ double LM_VHFAntenna::getPolarGain(VECTOR3 target)
 	double theta = 0.0;
 	double gain = 0.0;
 
-	theta = acos(dotp(unit(target), unit(pointingVector)));
+	const double scaleGain = 9.0; //dBi ################# THIS THE SAME GAIN AS THE CSM AND MAY NEED TO BE CORRECTED? ################
 
-	if (theta < 90.0*RAD)
+	theta = acos(dotp(target, unit(pointingVector)));
+
+	gain = pow(sin(1.4562266550955*theta / ((75 * RAD) - exp(-(theta*theta)))), 2); //0--1 scaled polar pattern
+	gain = (gain - 1.0)*scaleGain; //scale to appropriate values. roughly approximates figures 4.7-26 -- 4.7-33 of CSM/LM SPACECRAFT Operational Data Book Volume I CSM Data Book Part I Constraints and Performance Rev 3.
+
+	if (theta > 160.0*RAD)
 	{
-		gain = pow(cos(theta / 10.0), 2.0)*maxGain; //probably a toroidal polar, but this is close enough for now
-	}
-	else
-	{
-		gain = -150.0;
+		return -scaleGain;
 	}
 
 	return gain;
@@ -91,38 +93,13 @@ LM_VHF::LM_VHF():
 	AntennaSelectorSW = NULL;
 
 	VHFHeat = 0;
-	VHFSECHeat = 0;
-	PCMHeat = 0;
-	PCMSECHeat = 0;
-	conn_state = 0;
-	uplink_state = 0; rx_offset = 0;
-	mcc_size = 0; mcc_offset = 0;
-	wsk_error = 0;
-	last_update = 0;
-	last_rx = 0;
-	pcm_rate_override = 0;
 	receiveA = false;
 	receiveB = false;
 	transmitA = false;
 	transmitB = false;
 }
 
-bool LM_VHF::registerSocket(SOCKET sock)
-{
-	HMODULE hpac = GetModuleHandle("modules\\startup\\ProjectApolloConfigurator.dll");
-	if (hpac) {
-		bool (__cdecl *regSocket1)(SOCKET);
-		regSocket1 = (bool (__cdecl *)(SOCKET)) GetProcAddress(hpac,"pacDefineSocket");
-		if (regSocket1)	{
-			if (!regSocket1(sock))
-				return false;
-		} else {
-			return false;
-		}
-	}
-	return true;
-}
-void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh){
+void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh){
 	
 	lem = vessel;
 	AntennaSelectorSW = &lem->Panel12VHFAntSelKnob;
@@ -153,66 +130,6 @@ void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad
 	xmitPower = 5; //watts
 
 	VHFHeat = vhfh;
-	VHFSECHeat = secvhfh;
-	PCMHeat = pcmh;
-	PCMSECHeat = secpcmh;
-	conn_state = 0;
-	uplink_state = 0; rx_offset = 0;
-	mcc_size = 0; mcc_offset = 0;
-	wsk_error = 0;
-	last_update = 0;
-	last_rx = MINUS_INFINITY;
-	word_addr = 0;
-	pcm_rate_override = 0;
-	int iResult = WSAStartup( MAKEWORD(2,2), &wsaData );
-	if ( iResult != NO_ERROR ){
-		sprintf(wsk_emsg,"LM-TELECOM: Error at WSAStartup()");
-		wsk_error = 1;
-		return;
-	}
-	m_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
-	if ( m_socket == INVALID_SOCKET ) {
-		sprintf(wsk_emsg,"LM-TELECOM: Error at socket(): %ld", WSAGetLastError());
-		WSACleanup();
-		wsk_error = 1;
-		return;
-	}
-	// Be nonblocking
-	int iMode = 1; // 0 = BLOCKING, 1 = NONBLOCKING
-	if(ioctlsocket(m_socket, FIONBIO, (u_long FAR*) &iMode) != 0){
-		sprintf(wsk_emsg,"LM-TELECOM: ioctlsocket() failed: %ld", WSAGetLastError());
-		wsk_error = 1;
-		closesocket(m_socket);
-		WSACleanup();
-		return;
-	}
-
-	// Set up incoming options
-	service.sin_family = AF_INET;
-	service.sin_addr.s_addr = htonl(INADDR_ANY);
-	service.sin_port = htons( 14243 ); // CM on 14242, LM on 14243
-
-	if ( ::bind( m_socket, (SOCKADDR*) &service, sizeof(service) ) == SOCKET_ERROR ) {
-		sprintf(wsk_emsg,"LM-TELECOM: bind() failed: %ld", WSAGetLastError());
-		wsk_error = 1;
-		closesocket(m_socket);
-		WSACleanup();
-		return;
-	}
-	if ( listen( m_socket, 1 ) == SOCKET_ERROR ){
-		wsk_error = 1;
-		sprintf(wsk_emsg,"LM-TELECOM: listen() failed: %ld", WSAGetLastError());
-		closesocket(m_socket);
-		WSACleanup();
-		return;
-	}
-	if(!registerSocket(m_socket))
-	{
-		sprintf(wsk_emsg,"LM-TELECOM: Failed to register socket %i for cleanup",m_socket);
-		wsk_error = 1;
-	}
-	conn_state = 1; // INITIALIZED, LISTENING
-	uplink_state = 0; rx_offset = 0;
 }
 
 void LM_VHF::SystemTimestep(double simdt) {
@@ -273,13 +190,11 @@ void LM_VHF::SystemTimestep(double simdt) {
 		// For now, we'll just draw idle.
 		if(lem->VHFAVoiceSwitch.GetState() != THREEPOSSWITCH_CENTER){
 			lem->COMM_VHF_XMTR_A_CB.DrawPower(3.5);
-			VHFHeat->GenerateHeat(1.75);  //Idle heat load is 3.5W
-			VHFSECHeat->GenerateHeat(1.75);
+			VHFHeat->GenerateHeat(3.5);  //Idle heat load is 3.5W
 		}
 		if (lem->VHFAVoiceSwitch.GetState() == THREEPOSSWITCH_UP) {
 			lem->COMM_VHF_XMTR_A_CB.DrawPower(35.0); // Range Mode
-			VHFHeat->GenerateHeat(14.8);  //Range heat load is 29.6W
-			VHFSECHeat->GenerateHeat(14.8);
+			VHFHeat->GenerateHeat(29.6);  //Range heat load is 29.6W
 		}
 	}
 	// VHF RCVR A
@@ -287,8 +202,7 @@ void LM_VHF::SystemTimestep(double simdt) {
 	if(receiveA){
 		lem->COMM_VHF_RCVR_A_CB.DrawPower(1.2);
 		//Not sure if RCVR goes to cold rails
-		VHFHeat->GenerateHeat(0.6);  //Heat load is 1.2W
-		VHFSECHeat->GenerateHeat(0.6);
+		VHFHeat->GenerateHeat(1.2);  //Heat load is 1.2W
 	}
 	// VHF XMTR B
 	// Draws 28.9 watts of DC when transmitting voice and 31.6 watts when transmitting data.
@@ -297,13 +211,11 @@ void LM_VHF::SystemTimestep(double simdt) {
 		// For now, we'll just draw idle or data.
 		if(lem->VHFBVoiceSwitch.GetState() == THREEPOSSWITCH_UP){
 			lem->COMM_VHF_XMTR_B_CB.DrawPower(3.5); // Voice Mode
-			VHFHeat->GenerateHeat(1.75);  //Idle heat load is 3.5W
-			VHFSECHeat->GenerateHeat(1.75);
+			VHFHeat->GenerateHeat(3.5);  //Idle heat load is 3.5W
 		}
 		if(lem->VHFBVoiceSwitch.GetState() == THREEPOSSWITCH_DOWN){
 			lem->COMM_VHF_XMTR_B_CB.DrawPower(31.6); // Data Mode
-			VHFHeat->GenerateHeat(15.8);  //Data heat load is 31.6W
-			VHFSECHeat->GenerateHeat(15.8);
+			VHFHeat->GenerateHeat(31.6);  //Data heat load is 31.6W
 		}
 	}
 	// VHF RCVR B
@@ -311,8 +223,7 @@ void LM_VHF::SystemTimestep(double simdt) {
 	if(receiveB){
 		lem->COMM_VHF_RCVR_B_CB.DrawPower(1.2);	
 		//Not sure if RCVR goes to cold rails
-		VHFHeat->GenerateHeat(0.6);  //Heat load is 1.2W
-		VHFSECHeat->GenerateHeat(0.6);
+		VHFHeat->GenerateHeat(1.2);  //Heat load is 1.2W
 	}
 
 	// CDR and LMP Audio Centers
@@ -321,20 +232,6 @@ void LM_VHF::SystemTimestep(double simdt) {
 	}
 	if(lem->COMM_SE_AUDIO_CB.Voltage() > 0){ 
 		lem->COMM_SE_AUDIO_CB.DrawPower(4.2); 
-	}
-	// PMP
-	if(lem->COMM_PMP_CB.Voltage() > 0){	
-		lem->COMM_PMP_CB.DrawPower(4.3); 
-	}
-	// Current drain amount for INST_SIG_SENSOR_CB
-	if (lem->INST_SIG_SENSOR_CB.Voltage() > 0) {
-		lem->INST_SIG_SENSOR_CB.DrawPower(10.5);
-	}
-	// PCMTEA
-	if(lem->INST_PCMTEA_CB.Voltage() > 0){ 
-		lem->INST_PCMTEA_CB.DrawPower(11); 
-		PCMHeat->GenerateHeat(5.15);  
-		PCMSECHeat->GenerateHeat(5.15);
 	}
 }
 
@@ -371,48 +268,200 @@ void LM_VHF::Timestep(double simt)
 		csm = NULL;
 		lem->lm_vhf_to_csm_csm_connector.Disconnect();
 	}
-	//
 
-	VECTOR3 R = _V(0,0,0);
+	VECTOR3 R;
+	VECTOR3 U_R; //unit vector from the CSM to the LEM
+	MATRIX3 Rot; //rotational matrix for transforming from local to global coordinate systems
+	VECTOR3 U_R_LOCAL; //unit vector in the local coordinate system, pointing to the other vessel
 
 	if (!csm)
 	{
-		csm = lem->agc.GetCSM(); //############################ FIXME ################################
+		csm = lem->agc.GetCSM();
 	}
 
 	if (csm)
 	{
 		oapiGetRelativePos(csm->GetHandle(), lem->GetHandle(), &R); //vector to the LM
+		U_R = unit(R); //normalize it
+		lem->GetRotationMatrix(Rot);
+		U_R_LOCAL = tmul(Rot, U_R); //rotate U_R into the global coordinate system
 	}
 
 	if (!(lem->lm_vhf_to_csm_csm_connector.connectedTo) && csm)
 	{
 		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 	}
-	
+
 	if ((lem->lm_vhf_to_csm_csm_connector.connectedTo) && csm)
 	{
 		if (receiveA)
 		{
-			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(R), RCVDfreqRCVR_A, length(R));
+			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(U_R_LOCAL), RCVDfreqRCVR_A, length(R));
 		}
 		else
 		{
-			RCVDinputPowRCVR_A = -150.0;
+			RCVDinputPowRCVR_A = RF_ZERO_POWER_DBM;
 		}
 
 		if (receiveB)
 		{
-			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(R), RCVDfreqRCVR_B, length(R));
+			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(U_R_LOCAL), RCVDfreqRCVR_B, length(R));
 		}
 		else
 		{
-			RCVDinputPowRCVR_B = -150.0;
+			RCVDinputPowRCVR_B = RF_ZERO_POWER_DBM;
 		}
 	}
 
-	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
+	if (lem->lm_vhf_to_csm_csm_connector.connectedTo)
+	{
+		if (transmitA)
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B > minimumRCVDPower)));
+		}
+		else
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, false);
+		}
 
+		if (transmitB)
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, false);
+		}
+		else
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false);
+		}
+
+		//sprintf(oapiDebugString(), "VHF ANTENNA GAIN = %lf", activeAntenna->getPolarGain(U_R_LOCAL));
+	}
+
+	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
+}
+
+void LM_VHF::LoadState(char *line)
+{
+	int one, two, three, four, five;
+
+	sscanf(line + 14, "%d %d %d %d %d", &one, &two, &three, &four, &five);
+	transmitA = (one != 0);
+	transmitB = (two != 0);
+	receiveA = (three != 0);
+	receiveB = (four != 0);
+	isRanging = (five != 0);
+}
+
+void LM_VHF::SaveState(FILEHANDLE scn)
+{
+	char buffer[256];
+
+	sprintf(buffer, "%d %d %d %d %d", transmitA, transmitB, receiveA, receiveB, isRanging);
+
+	oapiWriteScenario_string(scn, "VHFTRANSCEIVER", buffer);
+}
+
+//PCM
+LM_PCM::LM_PCM()
+{
+	lem = NULL;
+	PCMHeat = 0;
+	conn_state = 0;
+	uplink_state = 0; rx_offset = 0;
+	mcc_size = 0; mcc_offset = 0;
+	wsk_error = 0;
+	last_update = 0;
+	last_rx = 0;
+	frame_addr = 0;
+	frame_count = 0;
+	m_socket = INVALID_SOCKET;
+}
+
+LM_PCM::~LM_PCM()
+{
+	// Close telemetry socket
+	if (m_socket != INVALID_SOCKET) {
+		shutdown(m_socket, 2); // Shutdown both streams
+		closesocket(m_socket);
+	}
+}
+
+void LM_PCM::Init(LEM *vessel, h_HeatLoad *pcmh)
+{
+	lem = vessel;
+	PCMHeat = pcmh;
+	conn_state = 0;
+	uplink_state = 0; rx_offset = 0;
+	mcc_size = 0; mcc_offset = 0;
+	wsk_error = 0;
+	last_update = 0;
+	last_rx = MINUS_INFINITY;
+	word_addr = 0;
+	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (iResult != NO_ERROR) {
+		sprintf(wsk_emsg, "LM-TELECOM: Error at WSAStartup()");
+		wsk_error = 1;
+		return;
+	}
+	m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (m_socket == INVALID_SOCKET) {
+		sprintf(wsk_emsg, "LM-TELECOM: Error at socket(): %ld", WSAGetLastError());
+		WSACleanup();
+		wsk_error = 1;
+		return;
+	}
+	// Be nonblocking
+	int iMode = 1; // 0 = BLOCKING, 1 = NONBLOCKING
+	if (ioctlsocket(m_socket, FIONBIO, (u_long FAR*) &iMode) != 0) {
+		sprintf(wsk_emsg, "LM-TELECOM: ioctlsocket() failed: %ld", WSAGetLastError());
+		wsk_error = 1;
+		closesocket(m_socket);
+		WSACleanup();
+		return;
+	}
+
+	// Set up incoming options
+	service.sin_family = AF_INET;
+	service.sin_addr.s_addr = htonl(INADDR_ANY);
+	service.sin_port = htons(14243); // CM on 14242, LM on 14243
+
+	if (::bind(m_socket, (SOCKADDR*)&service, sizeof(service)) == SOCKET_ERROR) {
+		sprintf(wsk_emsg, "Failed to start LM telemetry. Please completely exit Orbiter and restart. Please file a bug report if this message persists.");
+		wsk_error = 1;
+		closesocket(m_socket);
+		WSACleanup();
+		return;
+	}
+	if (listen(m_socket, 1) == SOCKET_ERROR) {
+		wsk_error = 1;
+		sprintf(wsk_emsg, "LM-TELECOM: listen() failed: %ld", WSAGetLastError());
+		closesocket(m_socket);
+		WSACleanup();
+		return;
+	}
+	conn_state = 1; // INITIALIZED, LISTENING
+	uplink_state = 0; rx_offset = 0;
+}
+
+void LM_PCM::SystemTimestep(double simdt)
+{
+	// PMP
+	if (lem->COMM_PMP_CB.Voltage() > 0) {
+		lem->COMM_PMP_CB.DrawPower(4.3);
+	}
+	// Current drain amount for INST_SIG_SENSOR_CB
+	if (lem->INST_SIG_SENSOR_CB.Voltage() > 0) {
+		lem->INST_SIG_SENSOR_CB.DrawPower(10.5);
+	}
+	// PCMTEA
+	if (lem->INST_PCMTEA_CB.Voltage() > 0)
+	{
+		lem->INST_PCMTEA_CB.DrawPower(11);
+		PCMHeat->GenerateHeat(10.3);
+	}
+}
+
+void LM_PCM::Timestep(double simt)
+{
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
 		sprintf(oapiDebugString(),"%s",wsk_emsg);
@@ -432,7 +481,7 @@ void LM_VHF::Timestep(double simt)
 	// Otherwise we would abort here (I think)
 
 	// Generate PCM datastream
-	if(pcm_rate_override == 1 || (pcm_rate_override == 0 && lem->TLMBitrateSwitch.GetState() == TOGGLESWITCH_DOWN)){
+	if(lem->TLMBitrateSwitch.GetState() == TOGGLESWITCH_DOWN){
 		tx_size = (int)((simt - last_update) / 0.005);
 		// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
 		if(tx_size > 0){
@@ -446,9 +495,8 @@ void LM_VHF::Timestep(double simt)
 				perform_io(simt);
 			}
 		}
-		return; // Don't waste time checking for HBR
 	}
-	if(pcm_rate_override == 2 || (pcm_rate_override == 0 && lem->TLMBitrateSwitch.GetState() == TOGGLESWITCH_UP)){
+	else {
 		tx_size = (int)((simt - last_update) / 0.00015625);
 		// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
 		if(tx_size > 0){
@@ -463,45 +511,35 @@ void LM_VHF::Timestep(double simt)
 			}
 		}
 	}
-
-	if (lem->lm_vhf_to_csm_csm_connector.connectedTo)
-	{
-		if (transmitA)
-		{
-			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(R), 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B>minimumRCVDPower)));
-		}
-
-		if (transmitB)
-		{
-			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(R), 0.0, false);
-		}
-	}
 }
 
 // Scale data to 255 steps for transmission in the PCM datastream.
 // This function will be called lots of times inside a timestep, so it should go
 // as fast as possible!
 
-unsigned char LM_VHF::scale_data(double data, double low, double high){
-	double step = 0;
-	
+unsigned char LM_PCM::scale_data(double data, double low, double high)
+{
 	// First eliminate cases outside of the scales
 	if(data >= high){ return 0xFF; }
 	if(data <= low){  return 0; }
 	
 	// Now figure step value
-	step = ( ( high - low ) / 256.0);
+	double step = ( ( high - low ) / 256.0);
 	// and return result
 	return static_cast<unsigned char>( ( ( data - low ) / step ) + 0.5 );
 }
 
-unsigned char LM_VHF::scale_scea(double data)
+unsigned char LM_PCM::scale_scea(double data)
 {
+	//First eliminate cases outside of the scales
+	if (data >= 5.0) { return 0xFF; }
+	if (data <= 0.0) { return 0; }
+
 	//data is already 0 to 5V
 	return static_cast<unsigned char>(data*256.0 / 5.0 + 0.5);
 }
 
-void LM_VHF::perform_io(double simt){
+void LM_PCM::perform_io(double simt){
 	// Do TCP IO
 	switch(conn_state){
 		case 0: // UNINITIALIZED
@@ -519,7 +557,7 @@ void LM_VHF::perform_io(double simt){
 				rx_data[rx_offset] = mcc_data[mcc_offset];
 				mcc_offset++;
 				// If uplink isn't blocked
-				if (lem->Panel12UpdataLinkSwitch.GetState() == THREEPOSSWITCH_DOWN) {
+				if (lem->COMM_UP_DATA_LINK_CB.IsPowered() && lem->Panel12UpdataLinkSwitch.GetState() == THREEPOSSWITCH_DOWN) {
 					// Handle it
 					handle_uplink();
 				}
@@ -604,7 +642,7 @@ void LM_VHF::perform_io(double simt){
 					rx_data[rx_offset] = mcc_data[mcc_offset];
 					mcc_offset++;
 					// If the telemetry data-path is disconnected, discard the data
-					if (lem->Panel12UpdataLinkSwitch.GetState() == THREEPOSSWITCH_DOWN) {
+					if (lem->COMM_UP_DATA_LINK_CB.IsPowered() && lem->Panel12UpdataLinkSwitch.GetState() == THREEPOSSWITCH_DOWN) {
 						// otherwise handle it
 						handle_uplink();
 					}
@@ -617,7 +655,7 @@ void LM_VHF::perform_io(double simt){
 			}else{
 				// FIXME: Check to make sure the up-data equipment is powered
 				// Reject uplink if switch is not down.
-				if(lem->Panel12UpdataLinkSwitch.GetState() != THREEPOSSWITCH_DOWN){
+				if(lem->COMM_UP_DATA_LINK_CB.IsPowered() == false || lem->Panel12UpdataLinkSwitch.GetState() != THREEPOSSWITCH_DOWN){
 					return; // Discard the data
 				}
 				if(bytesRecv > 0){
@@ -644,29 +682,8 @@ void LM_VHF::perform_io(double simt){
 	}
 }
 
-void LM_VHF::LoadState(char *line)
-{
-	int one, two, three, four, five;
-
-	sscanf(line + 14, "%d %d %d %d %d", &one, &two, &three, &four, &five);
-	transmitA = (one != 0);
-	transmitB = (two != 0);
-	receiveA = (three != 0);
-	receiveB = (four != 0);
-	isRanging = (five != 0);
-}
-
-void LM_VHF::SaveState(FILEHANDLE scn)
-{
-	char buffer[256];
-
-	sprintf(buffer, "%d %d %d %d %d", transmitA, transmitB, receiveA, receiveB, isRanging);
-
-	oapiWriteScenario_string(scn, "VHFTRANSCEIVER", buffer);
-}
-
 // Handle data moved to buffer from either the socket or mcc buffer
-void LM_VHF::handle_uplink()
+void LM_PCM::handle_uplink()
 {
 	switch (uplink_state) {
 	case 0: // NEW COMMAND START
@@ -676,11 +693,20 @@ void LM_VHF::handle_uplink()
 		// *** VEHICLE ADDRESS HARDCODED HERE *** (NASA DID THIS TOO)
 		if (va != 03) { break; }
 		switch (sa) {
-		case 0: // TEST
-			rx_offset++; uplink_state = 10;
-			break;
 		case 1: // LGC-UPDATA
 			rx_offset++; uplink_state = 20;
+			break;
+		case 3: // RTC B
+			rx_offset++; uplink_state = 40;
+			break;
+		case 4: // RTC A
+			rx_offset++; uplink_state = 50;
+			break;
+		case 5: // TEST
+			rx_offset++; uplink_state = 10;
+			break;
+		case 6: // PRA
+			rx_offset++; uplink_state = 30;
 			break;
 		default:
 			sprintf(oapiDebugString(), "LM-UPLINK: UNKNOWN SYSTEM-ADDRESS %o", sa);
@@ -707,10 +733,42 @@ void LM_VHF::handle_uplink()
 		rx_offset = 0; uplink_state = 0;
 	}
 	break;
+	case 30: // PRA
+		rx_offset = 0; uplink_state = 0;
+		break;
+	case 40: // RTC B
+	case 50: // RTC A
+	{
+		//6 bits.
+		//Two least significants bit are:
+		//00: Set 1
+		//01: Reset 1
+		//10: Set 2
+		//11: Reset 2
+		//4 most significant bits are for select:
+		//0000: Select 1
+		//0001: Select 2
+		//0010: Select 3
+		//0011: Select 4
+		if (lem->aeaa == NULL)
+		{
+			rx_offset = 0; uplink_state = 0;
+			break;
+		}
+
+		int doreset = rx_data[rx_offset] & 01;
+		int set = (rx_data[rx_offset] & 02) >> 1;
+		int select = 1 + ((rx_data[rx_offset] & 074) >> 2);
+		
+		lem->aeaa->SetRelay(set, select, doreset);
+
+		rx_offset = 0; uplink_state = 0;
+	}
+	break;
 	}
 }
 
-void LM_VHF::generate_stream_hbr(){
+void LM_PCM::generate_stream_hbr(){
 	unsigned char data=0;
 	// 128 words per frame, 50 frames pre second
 	switch(word_addr){
@@ -1072,7 +1130,7 @@ void LM_VHF::generate_stream_hbr(){
 		    case 31: tx_data[tx_offset] = measure(01,LTLM_E,0x26); break;
 		    case 32: tx_data[tx_offset] = measure(01,LTLM_E,0x27); break;
 		    case 33: tx_data[tx_offset] = measure(01,LTLM_E,0x28); break;
-		    case 34: tx_data[tx_offset] = measure(01,LTLM_E,0x29); break;
+		    case 34: tx_data[tx_offset] = measure(01,LTLM_E,0x30); break;
 		    case 35: tx_data[tx_offset] = measure(10,LTLM_A,5); break;
 		    case 36: tx_data[tx_offset] = measure(01,LTLM_E,0x31); break;
 		    case 37: tx_data[tx_offset] = measure(01,LTLM_E,0x32); break;
@@ -1082,7 +1140,7 @@ void LM_VHF::generate_stream_hbr(){
 		    case 41: tx_data[tx_offset] = measure(01,LTLM_E,0x36); break;
 		    case 42: tx_data[tx_offset] = measure(01,LTLM_E,0x37); break;
 		    case 43: tx_data[tx_offset] = measure(01,LTLM_E,0x38); break;
-		    case 44: tx_data[tx_offset] = measure(01,LTLM_E,0x30); break;
+		    case 44: tx_data[tx_offset] = measure(01,LTLM_E,0x40); break;
 		    case 45: tx_data[tx_offset] = measure(10,LTLM_A,5); break;
 		    case 46: tx_data[tx_offset] = measure(01,LTLM_E,0x41); break;
 		    case 47: tx_data[tx_offset] = measure(01,LTLM_E,0x42); break;
@@ -1282,7 +1340,7 @@ void LM_VHF::generate_stream_hbr(){
 	}
 }
 
-void LM_VHF::generate_stream_lbr(){
+void LM_PCM::generate_stream_lbr(){
 	unsigned char data=0;
 	// 200 words per frame, 1 frame per second
 	switch(word_addr){
@@ -1503,7 +1561,7 @@ void LM_VHF::generate_stream_lbr(){
 // Fetch a telemetry data item from its channel code
 // FIXME: SCALE FACTORS NEED CHECKING AGAINST REAL DATA
 
-unsigned char LM_VHF::measure(int channel, int type, int ccode){
+unsigned char LM_PCM::measure(int channel, int type, int ccode){
 	unsigned char rdata;
 	switch(type){
 		case LTLM_A:  // ANALOG
@@ -1528,7 +1586,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					if(channel == 200){ return(scale_data(lem->DPSPropellant.GetFuelEngineInletPressurePSI(), 0.0, 300.0)); } // DPS FUEL PRESS
 					return(scale_data(lem->APSPropellant.GetAscentHelium1PressPSI(), 0.0, 4000.0)); // APS HE 1R PRESS
 				case 5: 
-					if (channel == 1) { return (scale_data(28.0, 0.0, 31.1)); } // IRIG SUSP 3.2 KC
+					if (channel == 1) { return (scale_data(lem->IMU_OPR_CB.Voltage(), 0.0, 31.1)); } // IRIG SUSP 3.2 KC
 					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(18, 2))); } // ROLL ERR CMD
 					if (channel == 50) { return(scale_data(0.0, -2.5, 2.5)); } // X PIPA OUT IN O
 					if(channel == 200){ return (scale_data(lem->DPSPropellant.GetOxidizerEngineInletPressurePSI(), 0.0, 300.0)); } // DPS OX PRESS
@@ -1539,12 +1597,12 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 7:  
 					if(channel == 200){ return(scale_data(lem->APS.GetThrustChamberPressurePSI(), 0.0, 150.0)); } // APS TCP
 					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(9, 4))); } // PITCH ATT ERR
-					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0)); } // DPS OX 2 QTY
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95)); } // DPS OX 2 QTY
 					return (scale_data(0.0, -20.25, 20.25)); // MG RSVR OUT COS
 				case 8: 
 					if (channel == 1) { return (scale_scea(lem->scera1.GetVoltage(20, 1))); } // QUAD 4 TEMP
 					if(channel == 50){ return(scale_data(lem->DPS.GetInjectorActuatorPosition(), 0.0, 1.0)); } // VAR INJ ACT POS
-					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0)); } // DPS FUEL 1 QTY
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 0.95)); } // DPS FUEL 1 QTY
 					return(scale_scea(lem->scera2.GetVoltage(17, 3))); // Y TRANS CMD
 				case 9:
 					if(channel == 100){ return(scale_data(0.0, -3.0, 3.0)); } // IG SVO ERR IN O
@@ -1554,7 +1612,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					if (channel == 1) { return (scale_data(lem->DPSPropellant.GetOxidizerEngineInletPressurePSI(), 0.0, 300.0)); } // DPS OX PRESS
 					return(scale_data(0.0, -21.5, 21.5)); // RR SHFT COS
 				case 11: 
-					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0)); } // DPS OX 1 QTY
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95)); } // DPS OX 1 QTY
 					if(channel == 1){ return (scale_scea(lem->scera2.GetVoltage(9, 2))); } // ROLL GDA POS
 					return(scale_data(0.0, -21.5, 21.5)); // RR TRUN SIN
 				case 12: 
@@ -1589,10 +1647,10 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					return(scale_scea(lem->scera1.GetVoltage(8, 1))); // ASC 1 H20 QTY
 				case 21: 
 					if (channel == 1) { return(scale_data(lem->RCSA.GetRCSOxidManifoldPressPSI(), 0.0, 350.0)); } // A OX MFLD PRESS
-					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0)); } // DPS FUEL 2 QTY
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 0.95)); } // DPS FUEL 2 QTY
 					return(scale_scea(lem->scera1.GetVoltage(15, 1))); // AUTO THRUST CMD
 				case 22: 
-					return(scale_data(lem->APSPropellant.GetAscentHelium2PressPSI(), 0.0, 4000.0)); // APS HE 2R PRESS
+					if (channel == 10) { return(scale_data(lem->APSPropellant.GetAscentHelium2PressPSI(), 0.0, 4000.0)); } // APS HE 2R PRESS
 					return(scale_scea(lem->scera2.GetVoltage(9, 1))); // PITCH GDA POS
 				case 23: 
 					if(channel == 10){ return(scale_data(0.0, -5.0, 5.0)); } // ROLL ATT ERR
@@ -1707,7 +1765,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 68: // BAT 5 CUR
 					return(scale_data(lem->Battery5->Current(),0,120));
 				case 69: // DPS FUEL 2 QTY
-					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 0.95));
 				case 70: // REG OUT MANIFOLD
 					return(scale_data(lem->APSPropellant.GetHeliumRegulator2OutletPressurePSI(), 0.0, 300.0));
 				case 71: // UNKNOWN, HBR
@@ -1723,7 +1781,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 76: // DPS TCP
 					return(scale_data(lem->DPS.GetThrustChamberPressurePSI(), 0.0, 200.0));
 				case 77: // DPS FUEL 1 QTY
-					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 0.95));
 				case 78: // UNKNOWN, HBR
 					return(0);
 				case 79: // BAT 3 VOLT
@@ -1771,13 +1829,13 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 100: // APS HE 2 PRESS
 					return(scale_scea(lem->scera1.GetVoltage(19, 1)));
 				case 101: // DPS FUEL 2 QTY
-					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 0.95));
 				case 102: // BAT 5 CUR
 					return(scale_data(lem->Battery5->Current(),0,120));
 				case 103: // O2 MANIFOLD PRESS
 					return(scale_data(lem->ecs.GetPLSSFillPressurePSI(), 0.0, 1400.0));
 				case 104: // DPS FUEL 1 QTY
-					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 0.95));
 				case 105: // APS OX PRESS
 					return(scale_scea(lem->scera1.GetVoltage(19, 4)));
 				case 106: // BAT 1 CUR
@@ -1801,7 +1859,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 115: // ROLL ATT ERR
 					return(scale_scea(lem->scera2.GetVoltage(10, 1)));
 				case 116: // DPS OX 1 QTY
-					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95));
 				case 117: // DPS FUEL 2 TEMP
 					return(scale_scea(lem->scera1.GetVoltage(9, 2)));
 				case 118: // UNKNOWN, HBR
@@ -1835,7 +1893,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 132: // MAN THRUST CMD
 					return(scale_scea(lem->scera1.GetVoltage(15, 2)));
 				case 133: // DPS OX 2 QTY
-					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95));
 				case 134: // SE BUS VOLT
 					return(scale_scea(lem->scera2.GetVoltage(8, 4)));
 				case 135: // ASC 1 H20 TEMP
@@ -1899,7 +1957,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 164: // LR ANT TEMP
 					return(scale_scea(lem->scera1.GetVoltage(21, 3)));
 				case 165: // DPS OX 1 QTY
-					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95));
 				case 166: // PIPA TEMP
 					return(scale_data(lem->imu.GetPIPATempF(), 120.0, 140.0));
 				case 167: // BAT 2 CUR
@@ -1921,7 +1979,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 175: // ROLL ERR CMD
 					return(scale_scea(lem->scera2.GetVoltage(18, 2)));
 				case 176: // DPS OX 2 QTY
-					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95));
 				case 177: // ECS SUIT TEMP
 					return(scale_scea(lem->scera1.GetVoltage(21, 1)));
 				case 178: // APS TCP
@@ -1935,7 +1993,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 182: // UNKNOWN, LBR
 					return(0);
 				case 183: // F/H RLF PRESS
-					return(scale_data(0.0, 0.0, 25.0));
+					return(scale_data(lem->ecs.GetCabinPressurePSI(), 0.0, 25.0));
 				case 184: // UNKNOWN, LBR
 					return(0);
 				case 185: // SBand ST PH ERR
@@ -1957,7 +2015,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 193: // VAR INJ ACT POS
 					return(scale_data(lem->DPS.GetInjectorActuatorPosition(), 0.0, 1.0));
 				case 194: // U/H RLF PRESS
-					return(scale_data(0.0, 0.0, 25.0));
+					return(scale_data(lem->ecs.GetCabinPressurePSI(), 0.0, 25.0));
 				case 195: // SBand XMTR PO
 					return(scale_data(0.0, 0.3, 1.75));
 				default:
@@ -2302,9 +2360,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 LM_SBAND::LM_SBAND(){
 	lem = NULL;
 	SBXHeat = 0;
-	SBXSECHeat = 0;
 	SBPHeat = 0;
-	SBPSECHeat = 0;
 	ant = NULL;
 	pa_mode_1 = 0; pa_timer_1 = 0;
 	pa_mode_2 = 0; pa_timer_2 = 0;
@@ -2313,12 +2369,10 @@ LM_SBAND::LM_SBAND(){
 	rcvr_agc_voltage = 0.0;
 }
 
-void LM_SBAND::Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *secsbxh, h_HeatLoad *sbph, h_HeatLoad *secsbph){
+void LM_SBAND::Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad* sbph){
 	lem = vessel;
 	SBXHeat = sbxh;
-	SBXSECHeat = secsbxh;
 	SBPHeat = sbph;
-	SBPSECHeat = secsbph;
 	ant = &lem->omni_aft;
 	rcvr_agc_voltage = 0.0;
 }
@@ -2334,8 +2388,7 @@ void LM_SBAND::SystemTimestep(double simdt) {
 			tc_mode_1 = 2;  // Start warming up
 		}
 		else if (tc_mode_1 == 3) {
-			SBXHeat->GenerateHeat(17.65);
-			SBXSECHeat->GenerateHeat(17.65);
+			SBXHeat->GenerateHeat(35.3);
 		}
 	}else{
 		if(tc_mode_1 > 1){ tc_mode_1 = 1; } // Start cooling off
@@ -2347,8 +2400,7 @@ void LM_SBAND::SystemTimestep(double simdt) {
 			tc_mode_2 = 2;  // Start warming up
 		}
 		else if (tc_mode_2 == 3) {
-			SBXHeat->GenerateHeat(17.65);
-			SBXSECHeat->GenerateHeat(17.65);
+			SBXHeat->GenerateHeat(35.3);
 		}
 	}else{
 		if(tc_mode_2 > 1){ tc_mode_2 = 1; } // Start cooling off
@@ -2360,8 +2412,7 @@ void LM_SBAND::SystemTimestep(double simdt) {
 			pa_mode_1 = 2; // Start warming up
 		}
 		else if (pa_mode_1 == 3) {
-			SBPHeat->GenerateHeat(28.4);
-			SBPSECHeat->GenerateHeat(28.4);
+			SBPHeat->GenerateHeat(56.8);
 		}
 	}else{
 		if(pa_mode_1 > 1){ pa_mode_1 = 1; } // Start cooling off
@@ -2373,8 +2424,7 @@ void LM_SBAND::SystemTimestep(double simdt) {
 			pa_mode_2 = 2;  // Start warming up
 		}
 		else if (pa_mode_2 == 3) {
-			SBPHeat->GenerateHeat(28.4);
-			SBPSECHeat->GenerateHeat(28.4);
+			SBPHeat->GenerateHeat(56.8);
 		}
 	}else{
 		if(pa_mode_2 > 1){ pa_mode_2 = 1; } // Start cooling off
@@ -2626,12 +2676,13 @@ LEM_SteerableAnt::LEM_SteerableAnt()
 	sband_proc_last[1] = 0.0;
 }
 
-void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
+void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad* anthtld){
 	lem = s;
 	// Set up antenna.
 	// SBand antenna 51.7 watts to stay between -40F and 0F
 	antenna = an;
 	antheater = anheat;
+	antheatload = anthtld;
 	antenna->isolation = 0.000001; 
 	antenna->Area = 10783.0112; // Surface area of reflecting dish, probably good enough
 	if(lem != NULL){
@@ -2716,8 +2767,8 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	//Auto Tracking
 	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
 	{
-		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm);
-		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm);
+		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm*exp(-simdt*10));
+		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm*exp(-simdt*10));
 	}
 	else
 	{
@@ -2852,7 +2903,8 @@ void LEM_SteerableAnt::SystemTimestep(double simdt)
 	if (IsPowered()) {
 
 		lem->SBD_ANT_AC_CB.DrawPower(4); 	
-		lem->COMM_SBAND_ANT_CB.DrawPower(0.83);  
+		lem->COMM_SBAND_ANT_CB.DrawPower(0.83);
+		antheatload->GenerateHeat(4 + 0.83);
 
 	}
 
@@ -2860,6 +2912,7 @@ void LEM_SteerableAnt::SystemTimestep(double simdt)
 	{
 		lem->SBD_ANT_AC_CB.DrawPower(27.9); 	//Need a source on this moving draw
 		lem->COMM_SBAND_ANT_CB.DrawPower(7.6);  //Need a source on this moving draw
+		//antheatload->GenerateHeat(0);		//Will add this once loads above are checked and sourced
 	}
 }
 

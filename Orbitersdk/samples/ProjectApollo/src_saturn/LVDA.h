@@ -69,7 +69,8 @@ public:
 	bool TimebaseUpdate(double dt);
 	bool LMAbort();
 	bool RestartManeuverEnable();
-	bool InhibitAttitudeManeuver();
+	bool TDEEnable();
+	bool RemoveInhibitManeuver4();
 	bool Timebase8Enable();
 	bool EvasiveManeuverEnable();
 	bool ExecuteCommManeuver();
@@ -86,7 +87,9 @@ public:
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
 	bool GetSICInboardEngineCutoff();
-	bool GetSIIEngineOut();
+	bool GetSIIInboardEngineOut();	//DIN 13
+	bool GetSIIOutboardEngineOut();	//DIN 14
+	bool GetSIIEnginesOut();		//DIN 19
 	bool GetCMCSIVBIgnitionSequenceStart();
 	bool GetCMCSIVBCutoff();
 	bool GetCMCSIVBTakeover();
@@ -94,11 +97,13 @@ public:
 	bool SCInitiationOfSIISIVBSeparation();
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool SpacecraftSeparationIndication();
-	bool GetSIVBEngineOut();
+	bool GetSIVBEngineOutA();
+	bool GetSIVBEngineOutB();
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool SIBLowLevelSensorsDry();
 	bool GetLiftoff();
 	bool GetGuidanceReferenceRelease();
+	bool GetSIVBO2H2BurnerMalfunction();
 
 	//Not real LVDA functions
 	void TLIBegun();

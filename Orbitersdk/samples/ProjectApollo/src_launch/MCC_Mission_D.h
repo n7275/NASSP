@@ -27,11 +27,12 @@ See http://nassp.sourceforge.net/license/ for more details.
 // MISSION STATES: MISSION D
 
 #define MST_D_INSERTION		10
-#define MST_D_SEPARATION	11
-#define MST_D_DAY1STATE1	12
-#define MST_D_DAY1STATE2	13
-#define MST_D_DAY1STATE3	14
-#define MST_D_DAY1STATE4	15
+#define MST_D_DAY1SVUPDATE	11
+#define MST_D_SEPARATION	12
+#define MST_D_DAY1STATE1	13
+#define MST_D_DAY1STATE2	14
+#define MST_D_DAY1STATE3	15
+#define MST_D_DAY1STATE4	16
 #define MST_D_DAY2STATE1	20
 #define MST_D_DAY2STATE2	21
 #define MST_D_DAY2STATE3	22
@@ -101,12 +102,14 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_D_DAY9STATE4	133
 #define MST_D_DAY9STATE5	134
 #define MST_D_DAY9STATE6	135
+#define MST_D_DAY9STATE7	136
 #define MST_D_DAY10STATE1	140
 #define MST_D_DAY10STATE2	141
 #define MST_D_DAY10STATE3	142
 #define MST_D_DAY10STATE4	143
 #define MST_D_DAY10STATE5	144
 #define MST_D_DAY10STATE6	145
+#define MST_D_DAY10STATE7	146
 #define MST_D_DAY11STATE1	150
 #define MST_D_DAY11STATE2	151
 #define MST_D_DAY11STATE3	152

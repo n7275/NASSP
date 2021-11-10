@@ -29,15 +29,22 @@
 /// \todo For testing
 //extern FILE *PanelsdkLogFile;
 
-therm_obj::therm_obj() {
-
+therm_obj::therm_obj()
+{
 	next_t = NULL;
+	c = 0.15;
+	mass = 1.0;
+	SetTemp(273.15);
+	external = 0;
+	isolation = 0.0;
+	Area = 0.0;
+	pos = _vector3(0, 0, 0);
 }
 
 void therm_obj::thermic(double _en) {
 
-	//if (-_en > energy)
-	//	_en = -energy / 10.0;
+	if (-_en > energy)
+		_en = -energy / 10.0;
 
 	energy += _en; //total energy, in joules to add or substract
 
@@ -185,7 +192,7 @@ void Thermal_engine::Radiative(double dt) {
 	//Flux=q*T^4*Area;
 
 	float q = (float) 5.67e-8;//Stefan-Boltzmann
-	float Q = 0, Q0 = 0, Q1 = 0, Q2 = 0, Q3 = 0;
+	float Q = 0, Q0 = 0, Q1 = 0, Q2 = 0, Q3 = 0, Q4 = 0;
 	therm_obj *runner;
 	runner=List.next_t;
 
@@ -207,11 +214,19 @@ void Thermal_engine::Radiative(double dt) {
 		if (!planetIsSun && InPlanet > 0) Q2 = (float)(300.0 * (runner->pos % myr) * InPlanet);  //300W from planet's albedo
 		if (Q2 > 0) Q += Q2;
 
-		Q3 = (float)(q * pow(runner->Temp - 3.0, 4));
+		/*Q3 = (float) (q * pow(runner->Temp - 3.0, 4));
+		Q -= Q3;*/
+
+		
+		Q3 = (float) (q * pow(runner->Temp - 2.7, 4));
 		Q -= Q3;
 
-		if (ObjToDebug && runner == ObjToDebug)
-			sprintf(oapiDebugString(), "Earth %.1f Sun %.1f Albedo %.1f Space %.1f Ges %.1f Temp %.1f", (Q0 > 0 ? Q0 : 0) * runner->Area * runner->isolation, (Q1 > 0 ? Q1 : 0) * runner->Area * runner->isolation, (Q2 > 0 ? Q2 : 0) * runner->Area * runner->isolation, -Q3 * runner->Area * runner->isolation, Q * runner->Area * runner->isolation, runner->GetTemp());
+		Q4 = (float)(100 * runner->Area * (runner->Temp - v->GetAtmTemperature()))*(v->GetAtmDensity()/1.225);
+		Q -= Q4;
+		
+
+		if (ObjToDebug && runner == ObjToDebug) 
+			sprintf(oapiDebugString(), "Earth %.1f Sun %.1f Albedo %.1f Space %.1f Ges %.1f Temp %.1f", (Q0>0?Q0:0) * runner->Area * runner->isolation, (Q1>0?Q1:0) * runner->Area * runner->isolation, (Q2>0?Q2:0) * runner->Area * runner->isolation, -Q3 * runner->Area * runner->isolation, Q * runner->Area * runner->isolation, runner->GetTemp());
 
 		if (v->GetAtmDensity() < 1.0)
 		{

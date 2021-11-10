@@ -210,6 +210,8 @@ static MESHHANDLE hLMPKD;
 static MESHHANDLE hapollo8lta;
 static MESHHANDLE hlta_2r;
 
+static SURFHANDLE hLMVCpl;
+
 static SURFHANDLE contrail_tex;
 static SURFHANDLE exhaust_tex;
 
@@ -247,6 +249,9 @@ void LoadSat5Meshes()
 	LOAD_MESH(hLMPKD, "ProjectApollo/LM_SLA");
 	LOAD_MESH(hapollo8lta, "ProjectApollo/apollo8_lta");
 	LOAD_MESH(hlta_2r, "ProjectApollo/LTA_2R");
+
+	// LM VC mesh pre-loaded to avoid long pause at CSM/LV separation
+	LOAD_MESH(hLMVCpl, "ProjectApollo/LM_VC");
 
 	contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	exhaust_tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
@@ -540,7 +545,7 @@ void SaturnV::SetFirstStageEngines ()
 	th_1st[3] = CreateThruster (MAIN3a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
 	th_1st[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
 
-	thg_1st = CreateThrusterGroup (th_1st, SI_EngineNum, THGROUP_MAIN);
+	thg_1st = CreateThrusterGroup (th_1st, SI_EngineNum, THGROUP_USER);
 	
 	EXHAUSTSPEC es_1st[5] = {
 		{ th_1st[0], NULL, NULL, NULL, 120.0, 3.5, 0, 0.1, exhaust_tex },
@@ -656,10 +661,10 @@ void SaturnV::SetSecondStageEngines(double offset)
 
 	int i;
 
-	VECTOR3 m_exhaust_pos1= {-1.8,-1.8,-33 + offset};
-	VECTOR3 m_exhaust_pos2= {1.8,1.8,-33 + offset};
-	VECTOR3 m_exhaust_pos3= {-1.8,1.8,-33 + offset};
-	VECTOR3 m_exhaust_pos4 = {1.8,-1.8,-33 + offset};
+	VECTOR3 m_exhaust_pos1 = {1.8,1.8,-33 + offset};
+	VECTOR3 m_exhaust_pos2 = {1.8,-1.8,-33 + offset};
+	VECTOR3 m_exhaust_pos3 = { -1.8,-1.8,-33 + offset };
+	VECTOR3 m_exhaust_pos4 = { -1.8,1.8,-33 + offset };
 	VECTOR3 m_exhaust_pos5 = {0,0,-33 + offset};
 	VECTOR3 s_exhaust_pos = {0, 0, -35.0 + offset};
 
@@ -715,12 +720,12 @@ void SaturnV::SetSecondStageEngines(double offset)
 	// orbiter main thrusters
 	//
 	th_2nd[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
-	th_2nd[1] = CreateThruster (m_exhaust_pos2,_V( 0,0,1),  THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
+	th_2nd[1] = CreateThruster (m_exhaust_pos2, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_2nd[2] = CreateThruster (m_exhaust_pos3, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_2nd[3] = CreateThruster (m_exhaust_pos4, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_2nd[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 
-	thg_2nd = CreateThrusterGroup (th_2nd, SII_EngineNum, THGROUP_MAIN);
+	thg_2nd = CreateThrusterGroup (th_2nd, SII_EngineNum, THGROUP_USER);
 
 	EXHAUSTSPEC es_2nd[5] = {
 	    { th_2nd[0], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex },
@@ -838,6 +843,12 @@ void SaturnV::SetThirdStageMesh (double offset)
 
 	// VC
 	UpdateVC(mesh_dir);
+	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
+	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
+	SetVCSeatsMesh();
+	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
+	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
+	SetCOASMesh();
 
 	sidehatchidx = AddMesh (hFHC, &mesh_dir);
 	sidehatchopenidx = AddMesh (hFHO, &mesh_dir);
@@ -851,6 +862,7 @@ void SaturnV::SetThirdStageMesh (double offset)
 	opticscoveridx = AddMesh (hopticscover, &mesh_dir);
 	SetOpticsCoverMesh();
 
+	dockringidx = -1;
 	probeidx = -1;
 	probeextidx = -1;
 
@@ -863,6 +875,7 @@ void SaturnV::SetThirdStageMesh (double offset)
 	}
 	else {
 		if (HasProbe) {
+			dockringidx = AddMesh(hdockring, &mesh_dir);
 			probeidx = AddMesh(hprobe, &mesh_dir);
 			probeextidx = AddMesh(hprobeext, &mesh_dir);
 			SetDockingProbeMesh();
@@ -880,7 +893,6 @@ void SaturnV::SetThirdStageMesh (double offset)
 
 void SaturnV::SetThirdStageEngines (double offset)
 {
-	DelThrusterGroup(THGROUP_MAIN, true);
 	ClearThrusterDefinitions();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
@@ -975,7 +987,7 @@ void SaturnV::SetThirdStageEngines (double offset)
 	//
 
 	th_3rd[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_THIRD_VAC, ph_3rd, ISP_THIRD_VAC);
-	thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_MAIN);
+	thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_USER);
 
 	EXHAUSTSPEC es_3rd[1] = {
 		{ th_3rd[0], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex }
@@ -1071,7 +1083,7 @@ void SaturnV::SeparateStage (int new_stage)
 
 	if (stage == CSM_LEM_STAGE)
 	{
-	 	ofs1 = OFS_SM;
+		ofs1 = OFS_SM - currentCoG;
 		vel1 = _V(0,0,-0.1);
 	}
 
@@ -1324,9 +1336,6 @@ void SaturnV::SeparateStage (int new_stage)
 	if (stage == CSM_LEM_STAGE)
 	{
 		char VName[256];
-		vs1.vrot.x = 0.0;
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
 
 		//
 		// Play appropriate sound for SM seperation.
@@ -1381,13 +1390,11 @@ void SaturnV::SeparateStage (int new_stage)
 		if (ph_rcs_cm_1) cmprop1 = GetPropellantMass(ph_rcs_cm_1);
 		if (ph_rcs_cm_2) cmprop2 = GetPropellantMass(ph_rcs_cm_2);
 
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 2.1));
 
 		// Restore CM Propellant
 		if (cmprop1 != -1) SetPropellantMass(ph_rcs_cm_1, cmprop1);
 		if (cmprop2 != -1) SetPropellantMass(ph_rcs_cm_2, cmprop2);
-
-		ShiftCentreOfMass(_V(0, 0, 2.1));
 	}
 
 	if (stage == CM_STAGE)
@@ -1439,7 +1446,7 @@ void SaturnV::SeparateStage (int new_stage)
 			{
 				vs3.vrot.x = 102.5 + 23.25;
 				DefSetStateEx(&vs3);
-				SetReentryStage();
+				SetReentryStage(_V(0, 0, 0));
 			}
 		}
 		else
@@ -1462,8 +1469,7 @@ void SaturnV::SeparateStage (int new_stage)
 			}
 			else
 			{
-				SetReentryStage();
-				ShiftCentreOfMass(_V(0, 0, STG0O + 23.25));
+				SetReentryStage(_V(0, 0, STG0O + 23.25));
 			}
 		}
 	}
@@ -1504,8 +1510,7 @@ void SaturnV::SeparateStage (int new_stage)
 		}
 		else
 		{
-			SetReentryStage();
-			ShiftCentreOfMass(_V(0, 0, -STG1O + 23.25));
+			SetReentryStage(_V(0, 0, -STG1O + 23.25));
 		}
 	}
 
@@ -1527,8 +1532,7 @@ void SaturnV::SeparateStage (int new_stage)
 		secs.SMJCB->GetState(stb);
 		stage3->SetState(LowRes, VehicleNo, MainBusAController.IsSMBusPowered(), MainBusBController.IsSMBusPowered(), &sta, &stb);
 		
-		SetReentryStage();
-		ShiftCentreOfMass(_V(0, 0, 13.15 + 2.0499));
+		SetReentryStage(_V(0, 0, 13.15 + 2.0499));
 	}
 }
 

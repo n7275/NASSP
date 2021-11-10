@@ -100,6 +100,8 @@ protected:
 	Saturn *sat;                                                             // Pointer to ship we're attached to
 	bool powered;                                                            // Data valid flag.
 	int number;																 // BMAG 1 or 2
+
+	static const double GYRO_OUTPUT_LIMIT;
 };
 
 
@@ -129,7 +131,6 @@ public: // We use these inside a timestep, so everything is public to make data 
 	double GetPitchEulerResolver();
 	double GetYawEulerResolver();
 
-	VECTOR3 rates;					// Integrated Euler rotation rates
 	Saturn *sat;
 	// FDAI error needle data from CMC
 	int fdai_err_ena;
@@ -711,6 +712,12 @@ protected:
 	bool T3QS43;
 	//Pitch Pseudo Rate Disable
 	bool T3QS44;
+
+	//Constants
+
+	//Attitude error limiter
+	static const double L4_upper;
+	static const double L4_lower;
 };
 
 class ServoAmplifierModule

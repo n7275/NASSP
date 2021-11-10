@@ -30,7 +30,7 @@ class LEM_RGA {
 	// RATE GYRO ASSEMBLY
 public:
 	LEM_RGA();
-	void Init(LEM *v, e_object *dcsource, h_HeatLoad *hl, h_HeatLoad *sechl);
+	void Init(LEM *v, e_object *dcsource, h_HeatLoad *hl);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
@@ -55,7 +55,7 @@ class ATCA {
 	// ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 public:
 	ATCA();								// Cons
-	void Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl);				// Init
+	void Init(LEM *vessel, h_HeatLoad *hl);				// Init
 	double GetPrimPowerVoltage();
 	double GetBackupPowerVoltage();
 	double GetRGAPickoffExcitationVoltage();
@@ -86,19 +86,24 @@ public:
 
 	LEM *lem;
 	h_HeatLoad *ATCAHeat;
-	h_HeatLoad *SECATCAHeat;
 	int lgc_err_x,lgc_err_y,lgc_err_z;	// LGC attitude error counters
 	int lgc_err_ena;                    // LGC error counter enabled
+	bool pgns_jet_request[16];
+	bool ags_jet_request[16];
+	bool jet_driver[16];
 	int jet_request[16];				// Jet request list
 	int jet_last_request[16];			// Jet request list at last timestep
 	double jet_start[16],jet_stop[16];  // RCS jet start/stop times
-
 protected:
 
-	double PRMDutyRatio(double volt);
-	double PRMPulseWidth(double volt);
-	bool PRMTimestep(int n, double simdt, double pp, double pw);
+	double PRMOnTime(double X);
+	double PRMOffTime(double X);
+	bool PRMTimestep(int n, double simdt, double t_on, double t_off);
 	void Limiter(double &val, double lim);
+	void Deadband(double &val, double thres);
+	double ImpulseOn(double t0, double dt);
+	double ImpulseOff(double t0, double dt);
+	bool CalculateThrustLevel(double simt, double t_start, double t_stop, double simdt, double &power);
 
 	VECTOR3 aea_attitude_error;
 	VECTOR3 aca_rates;
@@ -108,12 +113,8 @@ protected:
 	double SummingAmplifierOutput[8];
 	bool PRMPulse[8];
 	double PRMCycleTime[8];
-	double PRMOffTime[8];
 	bool hasAbortPower;
 	bool hasPrimPower;
-	VECTOR3 ACARateGain;
-	VECTOR3 RateGain;
-	VECTOR3 DeadbandGain;
 	double pitchGimbalError;
 	double rollGimbalError;
 
@@ -149,6 +150,12 @@ protected:
 	bool K20;
 	//Pulse Mode Roll
 	bool K21;
+
+	//GAINS
+	static const double atterr_limit_dsc_ry, atterr_limit_dsc_p, atterr_limit_asc_ry, atterr_limit_asc_p;
+	static const double narrowdb_thres_rp, narrowdb_thres_y, widedb_thres;
+	static const double gain_insumamp;
+	static const double atterrtransformer, attratetransformer_asc, attratetransformer_dsc, acaratetransformer_asc, acaratetransformer_dsc;
 };
 
 class DECA {
@@ -274,6 +281,7 @@ public:
 	bool GetK7() { return K7; }
 	bool GetK8() { return K8; }
 	bool GetK9() { return K9; }
+	bool GetK10() { return K10; }
 	bool GetK15() { return K15; }
 	bool GetK17() { return K17; }
 	bool GetK18() { return K18; }

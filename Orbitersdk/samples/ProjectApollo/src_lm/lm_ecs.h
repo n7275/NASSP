@@ -69,7 +69,7 @@ class LEMOverheadHatch
 {
 public:
 	LEMOverheadHatch(Sound &opensound, Sound &closesound);
-	void Init(LEM *l, ToggleSwitch *ohh);
+	void Init(LEM *l, ToggleSwitch *ohh, ToggleSwitch *orv, h_Pipe *p);
 	void DefineAnimations(UINT idx);
 	void DefineAnimationsVC(UINT idx);
 	void Timestep(double simdt);
@@ -85,12 +85,16 @@ protected:
 
 	LEM *lem;
 	ToggleSwitch *ovhdHatchHandle;
+	ToggleSwitch *ovhdReliefValve;
+	h_Pipe* pipe;
 
 	Sound &OpenSound;
 	Sound &CloseSound;
 
 	UINT anim_OvhdHatch;
 	UINT anim_OvhdHatchVC;
+	UINT anim_OvhdHatchHandle;
+	UINT anim_OvhdHatchReliefValve;
 };
 
 class LEMOVHDCabinReliefDumpValve
@@ -109,7 +113,7 @@ class LEMForwardHatch
 {
 public:
 	LEMForwardHatch(Sound &opensound, Sound &closesound);
-	void Init(LEM *l, ToggleSwitch *fhh);
+	void Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab);
 	void DefineAnimations(UINT idx);
 	void DefineAnimationsVC(UINT idx);
 	void Timestep(double simdt);
@@ -125,12 +129,16 @@ protected:
 
 	LEM *lem;
 	ToggleSwitch *ForwardHatchHandle;
+	ToggleSwitch *ForwardHatchReliefValve;
+	h_Tank *cabin;
 
 	Sound &OpenSound;
 	Sound &CloseSound;
 
 	UINT anim_Hatch;
-	UINT anim_HatchVC;
+	UINT anim_FwdHatchVC;
+	UINT anim_FwdHatchHandle;
+	UINT anim_FwdHatchReliefValve;
 };
 
 class LEMFWDCabinReliefDumpValve
@@ -349,15 +357,15 @@ class LEMSuitFanDPSensor
 {
 public:
 	LEMSuitFanDPSensor();
-	void Init(h_Tank *sfmt, h_Tank *schect, CircuitBrakerSwitch *sfdpcb);
+	void Init(h_Tank *sfmint, h_Tank *sfmoutt, CircuitBrakerSwitch *sfdpcb);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 
 	bool GetSuitFanFail() { return SuitFanFailRelay; }
 protected:
-	h_Tank *suitFanManifoldTank;
-	h_Tank *suitCircuitHeatExchangerCoolingTank;
+	h_Tank *suitFanManifoldInTank;
+	h_Tank *suitFanManifoldOutTank;
 	CircuitBrakerSwitch *suitFanDPCB;
 
 	//K12

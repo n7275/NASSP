@@ -131,9 +131,19 @@ bool LVDA::GetSIOutboardEngineOut()
 	return iu->GetSIOutboardEngineOut();
 }
 
-bool LVDA::GetSIIEngineOut()
+bool LVDA::GetSIIInboardEngineOut()
 {
-	return iu->GetSIIEngineOut();
+	return iu->GetSIIInboardEngineOut();
+}
+
+bool LVDA::GetSIIOutboardEngineOut()
+{
+	return iu->GetSIIOutboardEngineOut();
+}
+
+bool LVDA::GetSIIEnginesOut()
+{
+	return iu->GetSIIEnginesOut();
 }
 
 bool LVDA::GetCMCSIVBIgnitionSequenceStart()
@@ -183,9 +193,14 @@ bool LVDA::SpacecraftSeparationIndication()
 	return iu->GetLVCommandConnector()->CSMSeparationSensed();
 }
 
-bool LVDA::GetSIVBEngineOut()
+bool LVDA::GetSIVBEngineOutA()
 {
-	return iu->GetSIVBEngineOut();
+	return iu->GetControlDistributor()->GetSIVBEngineOutA();
+}
+
+bool LVDA::GetSIVBEngineOutB()
+{
+	return iu->GetControlDistributor()->GetSIVBEngineOutB();
 }
 
 bool LVDA::GetSIPropellantDepletionEngineCutoff()
@@ -206,6 +221,11 @@ bool LVDA::GetLiftoff()
 bool LVDA::GetGuidanceReferenceRelease()
 {
 	return iu->ESEGetGuidanceReferenceRelease();
+}
+
+bool LVDA::GetSIVBO2H2BurnerMalfunction()
+{
+	return false;
 }
 
 bool LVDA::GetSICInboardEngineCutoff()
@@ -255,10 +275,18 @@ bool LVDA::RestartManeuverEnable()
 	return false;
 }
 
-bool LVDA::InhibitAttitudeManeuver()
+bool LVDA::TDEEnable()
 {
 	if (iu->GetLVDC())
-		return iu->GetLVDC()->InhibitAttitudeManeuver();
+		return iu->GetLVDC()->TDEEnable();
+
+	return false;
+}
+
+bool LVDA::RemoveInhibitManeuver4()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->RemoveInhibitManeuver4();
 
 	return false;
 }

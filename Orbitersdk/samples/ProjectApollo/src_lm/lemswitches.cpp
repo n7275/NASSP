@@ -1070,173 +1070,6 @@ void MainOxidizerPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  240, 115-((int)(v*0.34)), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LEMBatterySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s,
-							LEM_ECAch *lem_eca, int src_no, int asc)
-{
-	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
-
-	eca = lem_eca;
-	lem = s;
-	afl = asc;
-	srcno = src_no;
-}
-
-/*bool LEMBatterySwitch::CheckMouseClick(int event, int mx, int my)
-
-{
-	// If our associated CB has no power, do nothing.
-	if (LEMThreePosSwitch::CheckMouseClick(event, mx, my)) {
-		// Check for control power
-		if (afl == 1){
-			if(lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24){ return true; }
-		}else{
-			if(lem->CDRDesECAContCB.Voltage() < 24 && lem->LMPDesECAContCB.Voltage() < 24){ return true; }
-		}
-		switch(state){
-			case THREEPOSSWITCH_UP:
-				switch(srcno){
-					case 1: // HV
-						eca->input = 1;
-						if(eca->dc_source_tb != NULL){
-							eca->dc_source_tb->SetState(1);
-						}
-						break;
-					case 2: // LV
-						eca->input = 2;
-						if(eca->dc_source_tb != NULL){
-							eca->dc_source_tb->SetState(2);
-						}
-						break;
-				}
-				break;
-			case THREEPOSSWITCH_DOWN:
-				if(eca->dc_source_tb != NULL){
-					eca->dc_source_tb->SetState(0);
-				}
-				eca->input = 0;
-				break;
-		}
-
-		return true;
-	}
-	return false;
-}*/
-
-bool LEMBatterySwitch::SwitchTo(int newState, bool dontspring)
-
-{
-	//sprintf(oapiDebugString(),"NewState %d",newState);
-	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
-		switch (state) {
-		case THREEPOSSWITCH_UP:
-			switch (srcno) {
-			case 1: // HV
-				eca->input = 1;
-				break;
-			case 2: // LV
-				eca->input = 2;
-				break;
-			}
-			break;
-		case THREEPOSSWITCH_DOWN:
-			// Check for control power
-			if (afl == 1) {
-				if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24) { return true; }
-			}
-			else {
-				if (lem->CDRDesECAContCB.Voltage() < 24 && lem->LMPDesECAContCB.Voltage() < 24) { return true; }
-			}
-			eca->input = 0;
-			break;
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-// LEM Descent Dead Face Switch
-void LEMDeadFaceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s)
-{
-	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
-}
-
-/*bool LEMDeadFaceSwitch::CheckMouseClick(int event, int mx, int my)
-
-{
-	if (LEMThreePosSwitch::CheckMouseClick(event, mx, my)) {
-		switch(state){
-			case THREEPOSSWITCH_UP:
-				// Connect descent stage
-				if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24){ return true; }
-				if(lem->stage < 2){
-					// Reconnect ECA outputs
-					lem->DES_LMPs28VBusA.WireTo(&lem->ECA_1a);
-					lem->DES_LMPs28VBusB.WireTo(&lem->ECA_1b);
-					lem->DES_CDRs28VBusA.WireTo(&lem->ECA_2a); 
-					lem->DES_CDRs28VBusB.WireTo(&lem->ECA_2b); 
-					// Reconnect EPS monitor stuff
-					lem->EPSMonitorSelectRotary.SetSource(1, lem->Battery1);
-					lem->EPSMonitorSelectRotary.SetSource(2, lem->Battery2);
-					lem->EPSMonitorSelectRotary.SetSource(3, lem->Battery3);
-					lem->EPSMonitorSelectRotary.SetSource(4, lem->Battery4);
-					lem->DSCBattFeedTB.SetState(1);
-				}
-				break;
-			case THREEPOSSWITCH_DOWN:
-				// Disconnect descent stage
-				if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24){ return true; }
-				lem->DES_LMPs28VBusA.Disconnect();
-				lem->DES_LMPs28VBusB.Disconnect();
-				lem->DES_CDRs28VBusA.Disconnect();
-				lem->DES_CDRs28VBusB.Disconnect();
-				lem->EPSMonitorSelectRotary.SetSource(1, NULL);
-				lem->EPSMonitorSelectRotary.SetSource(2, NULL);
-				lem->EPSMonitorSelectRotary.SetSource(3, NULL);
-				lem->EPSMonitorSelectRotary.SetSource(4, NULL);
-				lem->DSCBattFeedTB.SetState(0);
-				break;
-		}		
-		return true;
-	}	
-	return false;
-}*/
-
-bool LEMDeadFaceSwitch::SwitchTo(int newState, bool dontspring)
-
-{
-	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
-		switch (newState) {
-		case THREEPOSSWITCH_UP:
-			// Connect descent stage
-			if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24) { return true; }
-			if (lem->stage < 2) {
-				// Reconnect ECA outputs
-				lem->DES_LMPs28VBusA.WireTo(&lem->ECA_1a);
-				lem->DES_LMPs28VBusB.WireTo(&lem->ECA_1b);
-				lem->DES_CDRs28VBusA.WireTo(&lem->ECA_2a);
-				lem->DES_CDRs28VBusB.WireTo(&lem->ECA_2b);
-				lem->DSCBattFeedTB.SetState(1);
-			}
-			break;
-		case THREEPOSSWITCH_DOWN:
-			// Disconnect descent stage
-			if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24) { return true; }
-			lem->DES_LMPs28VBusA.Disconnect();
-			lem->DES_LMPs28VBusB.Disconnect();
-			lem->DES_CDRs28VBusA.Disconnect();
-			lem->DES_CDRs28VBusB.Disconnect();
-			lem->DSCBattFeedTB.SetState(0);
-			break;
-		}
-		return true;
-	}
-
-	return false;
-}
-
-
 // INVERTER SWITCH
 
 void LEMInverterSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s,
@@ -1539,6 +1372,30 @@ void EngineStartButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
+void EngineStartButton::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface) {
+
+	if (lem->lca.GetAnnunVoltage() > 2.25 && (lem->LampToneTestRotary.GetState() == 3 || IsUp())) {
+		if (IsUp())
+		{
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset, yOffset + height, width, height, SURF_PREDEF_CK);
+		}
+		else
+		{
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset + width, yOffset + height, width, height, SURF_PREDEF_CK);
+		}
+	}
+	else {
+		if (IsUp())
+		{
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset, yOffset, width, height, SURF_PREDEF_CK);
+		}
+		else
+		{
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset + width, yOffset, width, height, SURF_PREDEF_CK);
+		}
+	}
+}
+
 void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, SimplePushSwitch* startbutton, LEM *l) {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	lem = l;
@@ -1577,7 +1434,7 @@ bool EngineStopButton::Push()
 	int newstate = !state;
 	if (ToggleSwitch::SwitchTo(newstate)) {
 		
-		if (newstate = 1)
+		if (newstate == 1)
 		{
 			if (startbutton)
 			{
@@ -1626,16 +1483,10 @@ bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
 	if (event == PANEL_MOUSE_LBDOWN)
 	{
 		if (state == 0) {
-			SwitchTo(1, true);
-			Sclick.play();
-			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
-			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
+			SwitchTo(1);
 		}
 		else if (state == 1) {
-			SwitchTo(0, true);
-			Sclick.play();
-			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
-			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
+			SwitchTo(0);
 		}
 	}
 	return true;
@@ -1648,19 +1499,39 @@ bool LMAbortButton::CheckMouseClickVC(int event, VECTOR3 &p) {
 	if (event == PANEL_MOUSE_LBDOWN)
 	{
 		if (state == 0) {
-			SwitchTo(1, true);
-			Sclick.play();
-			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
-			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
+			SwitchTo(1);
 		}
 		else if (state == 1) {
-			SwitchTo(0, true);
-			Sclick.play();
-			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
-			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
+			SwitchTo(0);
 		}
 	}
 	return true;
+}
+
+bool LMAbortButton::SwitchTo(int newState)
+{
+	if (TwoPositionSwitch::SwitchTo(newState))
+	{
+		Sclick.play();
+		//AbortWithDescentStage gets inverted in ApolloGuidance::SetInputChannelBit
+		if (state == 0) {
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
+			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
+		}
+		else if (state == 1) {
+			//lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true); //Test abort discrete set for Apollo 14
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
+			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
+		}
+
+		return true;
+	}
+	return false;
+}
+
+void LMAbortButton::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState)
+{
+	TwoPositionSwitch::Register(scnh, n, defaultState, 0);
 }
 
 void LMAbortButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
@@ -2286,15 +2157,13 @@ void LMLiquidGarmentCoolingRotationalSwitch::CheckValve()
 
 LMForwardHatchHandle::LMForwardHatchHandle()
 {
-	cabin = NULL;
 	forwardHatch = NULL;
 }
 
-void LMForwardHatchHandle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Tank *cab, LEMForwardHatch *fh)
+void LMForwardHatchHandle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEMForwardHatch *fh)
 {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 
-	cabin = cab;
 	forwardHatch = fh;
 }
 
@@ -2302,10 +2171,7 @@ bool LMForwardHatchHandle::SwitchTo(int newState, bool dontspring)
 {
 	if (!forwardHatch->IsOpen())
 	{
-		if (state == 1 || cabin->space.Press < 0.08 / PSI)
-		{
-			return ToggleSwitch::SwitchTo(newState, dontspring);
-		}
+		return ToggleSwitch::SwitchTo(newState, dontspring);
 	}
 
 	return false;
@@ -2313,15 +2179,13 @@ bool LMForwardHatchHandle::SwitchTo(int newState, bool dontspring)
 
 LMOverheadHatchHandle::LMOverheadHatchHandle()
 {
-	pipe = NULL;
 	ovhdHatch = NULL;
 }
 
-void LMOverheadHatchHandle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p, LEMOverheadHatch *oh)
+void LMOverheadHatchHandle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEMOverheadHatch *oh)
 {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 
-	pipe = p;
 	ovhdHatch = oh;
 }
 
@@ -2329,11 +2193,29 @@ bool LMOverheadHatchHandle::SwitchTo(int newState, bool dontspring)
 {
 	if (!ovhdHatch->IsOpen())
 	{
-		if (state == 1 || pipe->in->parent->space.Press - pipe->out->parent->space.Press < 0.08 / PSI)
-		{
-			return ToggleSwitch::SwitchTo(newState, dontspring);
-		}
+		return ToggleSwitch::SwitchTo(newState, dontspring);
 	}
 
+	return false;
+}
+
+bool CDRCOASPowerSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
+
+		if (lem->COAS_DC_CB.IsPowered()) {
+			if (state == THREEPOSSWITCH_UP) {
+				lem->COASreticlevisible = 2; // OVHD COAS
+			} else if (state == THREEPOSSWITCH_CENTER) {
+				lem->COASreticlevisible = 0; // OFF
+			} else {
+				lem->COASreticlevisible = 1; // FWD COAS
+			}
+		} else {
+			lem->COASreticlevisible = 0; // OFF
+		}
+		lem->SetCOAS();
+		return true;
+	}
 	return false;
 }

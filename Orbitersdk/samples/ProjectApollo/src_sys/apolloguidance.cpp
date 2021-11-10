@@ -29,6 +29,8 @@
 #include "inttypes.h"
 #include <stdio.h>
 #include <math.h>
+#include <thread>
+#include <mutex>
 #include "soundlib.h"
 
 #include "yaAGC/agc_engine.h"
@@ -44,7 +46,7 @@
 
 #include "tracer.h"
 
-ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p), scdu(sc), tcdu(tc)
+ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p), scdu(sc), tcdu(tc), agcCycleMutex()
 
 {
 	Reset = false;
@@ -227,7 +229,7 @@ void ApolloGuidance::SystemTimestep(double simdt)
 	}
 	else {
 		//DCPower.DrawPower(106.0);
-		DCPower.DrawPower(70.0); //From 1970 AGC Improvement Study
+		DCPower.DrawPower(70.0); //From 1970 AGC Improvement Study, LM-8 Handbook has 80W
 		if (AGCHeat)
 		{
 			AGCHeat->GenerateHeat(110.0);  //From LM 8 systems handbook, for LGC/DSKY cb
@@ -239,6 +241,12 @@ void ApolloGuidance::SetMissionInfo(std::string ProgramName, char *OtherName)
 {
 	this->ProgramName = ProgramName; 
 
+	if (OtherName != 0)
+		strncpy(OtherVesselName, OtherName, 64);
+}
+
+void ApolloGuidance::SetOtherVesselName(char *OtherName)
+{
 	if (OtherName != 0)
 		strncpy(OtherVesselName, OtherName, 64);
 }
@@ -282,7 +290,7 @@ void ApolloGuidance::PulsePIPA(int RegPIPA, int pulses)
 	if (pulses == 0 ) 
 		return;
 
-	Lock lock(agcCycleMutex);
+	std::lock_guard<std::mutex> guard(agcCycleMutex);
 
 
 	if (pulses >= 0) {
