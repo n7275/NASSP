@@ -252,7 +252,7 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	max_stage = 99;
 	pos = i_pos;
 	Area = 0.35; //size of fuel cell
-	mass = 4000; 
+	mass = 100000; 
 	c = 0.5;
 	isolation = 0.0; 
 

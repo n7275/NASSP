@@ -3639,6 +3639,7 @@ protected:
 	//EPS Cooling System
 	double *FuelCellCoolantInletTemp[3];
 	double *FuelCellCoolantOutletTemp[3];
+	double *FuelCellConsenserTemp[3];
 	Pump *EPScoolantPump[3];
 	h_Pipe *CoolantReturn[3];
 	h_Pipe *CoolantPipeRad_5_6[3];
