@@ -1195,7 +1195,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		KelvinToFahrenheit(*YAWJET16), (KelvinToFahrenheit(*YAWJET16) + 50.0) / 20.0,
 		KelvinToFahrenheit(*ROLLJET21), (KelvinToFahrenheit(*ROLLJET21) + 50.0) / 20.0);
 */
-#ifdef _DEBUG
+//#ifdef _DEBUG
 
 		/*sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; R1 %0.1fK, R2 %0.1fK, R3 %0.1fK, R4 %0.1fK, R5 %0.1fK, R6 %0.1fK, R7 %0.1fK, R8 %0.1fK",
 		FuelCells[0]->Temp, FuelCells[1]->Temp, FuelCells[2]->Temp,
@@ -1629,7 +1629,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	fflush(PanelsdkLogFile);
 */
 
-#endif
+//#endif
 }
 
 void Saturn::SystemsInternalTimestep(double simdt) 
