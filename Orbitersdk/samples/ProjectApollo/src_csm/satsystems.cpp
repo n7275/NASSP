@@ -148,21 +148,29 @@ void Saturn::SystemsInit() {
 	FuelCellCoolantInletTemp[1] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE2:TEMP");
 	FuelCellCoolantInletTemp[2] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE3:TEMP");
 
-	FuelCellConsenserTemp[0] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL1CONDENSER:TEMP");
-	FuelCellConsenserTemp[1] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL2CONDENSER:TEMP");
-	FuelCellConsenserTemp[2] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL3CONDENSER:TEMP");
+	FuelCellCondensorTemp[0] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1CONDENSOR:TEMP");
+	FuelCellCondensorTemp[1] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2CONDENSOR:TEMP");
+	FuelCellCondensorTemp[2] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CONDENSOR:TEMP");
 
 	EPScoolantPump[0] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1GLYCOLPUMP");
 	EPScoolantPump[1] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2GLYCOLPUMP");
 	EPScoolantPump[2] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3GLYCOLPUMP");
 
+	EPShydrogenPumps[0] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1HYDROGENPUMP");
+	EPShydrogenPumps[1] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2HYDROGENPUMP");
+	EPShydrogenPumps[2] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3HYDROGENPUMP");
+
 	EPScoolantPump[0]->WireTo(&FuelCell1PumpsACCB);
 	EPScoolantPump[1]->WireTo(&FuelCell2PumpsACCB);
 	EPScoolantPump[2]->WireTo(&FuelCell3PumpsACCB);
 
-	CoolantReturn[0] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSER1");
-	CoolantReturn[1] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSER2");
-	CoolantReturn[2] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSER3");
+	EPShydrogenPumps[0]->WireTo(&FuelCell1PumpsACCB);
+	EPShydrogenPumps[1]->WireTo(&FuelCell2PumpsACCB);
+	EPShydrogenPumps[2]->WireTo(&FuelCell3PumpsACCB);
+
+	CoolantReturn[0] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSOR1");
+	CoolantReturn[1] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSOR2");
+	CoolantReturn[2] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8-CONDENSOR3");
 
 	CoolantPipeRad_5_6[0] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5-6TUBE1");
 	CoolantPipeRad_5_6[1] = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5-6TUBE2");
@@ -1042,6 +1050,15 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		}
 	}
 
+	//Fuel Cell Reactant Chamber Temps
+	//sprintf(oapiDebugString(), "FC1 O2 TEMP %0.2fF, FC2 O2 TEMP %0.2fF, FC3 O2 TEMP %0.2fF, FC1 H2 TEMP %0.2fF, FC2 H2 TEMP %0.2fF, FC3 H2 TEMP %0.2fF",
+	//	KelvinToFahrenheit(*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1CHAMBER:TEMP")),
+	//	KelvinToFahrenheit(*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2CHAMBER:TEMP")),
+	//	KelvinToFahrenheit(*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3CHAMBER:TEMP")),
+	//	KelvinToFahrenheit(*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1CHAMBER:TEMP")),
+	//	KelvinToFahrenheit(*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2CHAMBER:TEMP")),
+	//	KelvinToFahrenheit(*(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CHAMBER:TEMP")));
+
 	//Fuel Cell Reactant Chamber Pressures
 	//sprintf(oapiDebugString(), "FC1 O2 PRESS %0.2f, FC2 O2 PRESS %0.2f, FC3 O2 PRESS %0.2f, FC1 H2 PRESS %0.2f, FC2 H2 PRESS %0.2f, FC3 H2 PRESS %0.2f",
 	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1CHAMBER:PRESS"),
@@ -1097,7 +1114,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 	//FUELCELL1 GLYCOL LOOP
 	/*sprintf(oapiDebugString(), "FC1 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1 %0.3fK RAD2 %0.3fK RAD3 %0.3fK RAD4 %0.3fK RAD5 %0.3fK RAD6 %0.3fK RAD7 %0.3fK RAD8 %0.3fK",
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL1CONDENSER:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL1CONDENSOR:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL1O2PREHEATGLYCOL:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL1H2PREHEATGLYCOL:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE1:TEMP"),
@@ -1110,22 +1127,22 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE1:TEMP"));*/
 
 	//FUELCELL2 GLYCOL LOOP
-	sprintf(oapiDebugString(), "FC2 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1 %0.3fK RAD2 %0.3fK RAD3 %0.3fK RAD4 %0.3fK RAD5 %0.3fK RAD6 %0.3fK RAD7 %0.3fK RAD8 %0.3fK",
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL2CONDENSER:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL2O2PREHEATGLYCOL:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL2H2PREHEATGLYCOL:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR2TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR3TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR4TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR7TUBE2:TEMP"),
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE2:TEMP"));
+	//sprintf(oapiDebugString(), "FC2 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1 %0.3fK RAD2 %0.3fK RAD3 %0.3fK RAD4 %0.3fK RAD5 %0.3fK RAD6 %0.3fK RAD7 %0.3fK RAD8 %0.3fK",
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL2CONDENSOR:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL2O2PREHEATGLYCOL:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL2H2PREHEATGLYCOL:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR2TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR3TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR4TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR5TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR6TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR7TUBE2:TEMP"),
+	//	*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR8TUBE2:TEMP"));
 
 	//FUELCELL3 GLYCOL LOOP
 	/*sprintf(oapiDebugString(), "FC3 LOOP: COND:%0.3fK O2_PRE:%0.3fK H2_PRE:%0.3fK RAD1 %0.3fK RAD2 %0.3fK RAD3 %0.3fK RAD4 %0.3fK RAD5 %0.3fK RAD6 %0.3fK RAD7 %0.3fK RAD8 %0.3fK",
-		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL3CONDENSER:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUECELL3CONDENSOR:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL3O2PREHEATGLYCOL:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELL3H2PREHEATGLYCOL:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE3:TEMP"),
@@ -3482,7 +3499,7 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 		fc.O2PressurePSI = f->O2_SRC->GetPress() * PSI;
 	}
 	fc.TempF = KelvinToFahrenheit(f->Temp);
-	fc.CondenserTempF = KelvinToFahrenheit(*FuelCellConsenserTemp[index-1]);
+	fc.CondenserTempF = KelvinToFahrenheit(*FuelCellCondensorTemp[index-1]);
 
 	fc.RadiatorTempInF = KelvinToFahrenheit(*FuelCellCoolantInletTemp[index - 1]);
 	fc.RadiatorTempOutF = KelvinToFahrenheit(*FuelCellCoolantOutletTemp[index - 1]);
