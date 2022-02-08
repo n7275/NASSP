@@ -148,9 +148,9 @@ void Saturn::SystemsInit() {
 	FuelCellCoolantInletTemp[1] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE2:TEMP");
 	FuelCellCoolantInletTemp[2] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EPSRADIATOR1TUBE3:TEMP");
 
-	FuelCellCondensorTemp[0] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1CONDENSOR:TEMP");
-	FuelCellCondensorTemp[1] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2CONDENSOR:TEMP");
-	FuelCellCondensorTemp[2] = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3CONDENSOR:TEMP");
+	FuelCellCondensorTemp[0] = &(FuelCells[0]->condenserTemp);
+	FuelCellCondensorTemp[1] = &(FuelCells[1]->condenserTemp);
+	FuelCellCondensorTemp[2] = &(FuelCells[2]->condenserTemp);
 
 	EPScoolantPump[0] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1GLYCOLPUMP");
 	EPScoolantPump[1] = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2GLYCOLPUMP");
@@ -1212,7 +1212,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		KelvinToFahrenheit(*YAWJET16), (KelvinToFahrenheit(*YAWJET16) + 50.0) / 20.0,
 		KelvinToFahrenheit(*ROLLJET21), (KelvinToFahrenheit(*ROLLJET21) + 50.0) / 20.0);
 */
-//#ifdef _DEBUG
+#ifdef _DEBUG
 
 		/*sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; R1 %0.1fK, R2 %0.1fK, R3 %0.1fK, R4 %0.1fK, R5 %0.1fK, R6 %0.1fK, R7 %0.1fK, R8 %0.1fK",
 		FuelCells[0]->Temp, FuelCells[1]->Temp, FuelCells[2]->Temp,
@@ -1646,7 +1646,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	fflush(PanelsdkLogFile);
 */
 
-//#endif
+#endif
 }
 
 void Saturn::SystemsInternalTimestep(double simdt) 
@@ -1719,17 +1719,6 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		tFactor = __min(mintFactor, simdt);
 		TRACE("Internal timestep done");
 	}
-
-	//Fuel Cell Reactant Heating  TBD heaters and regulators to feed reactant
-
-	//FuelCellO2Manifold[0]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
-	//FuelCellO2Manifold[1]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
-	//FuelCellO2Manifold[2]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
-	
-	//FuelCellH2Manifold[0]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
-	//FuelCellH2Manifold[1]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
-	//FuelCellH2Manifold[2]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
-
 }
 
 void Saturn::JoystickTimestep()

@@ -330,13 +330,8 @@ void FCell::Reaction(double dt)
 	double H2O_flow = O2_flow + H2_flow;
 
 	//efficiency and heat generation
-	//efficiency model calculated from APOLLO TRAINING | ELECTRICAL POWER SYSTEMSTUDY GUIDE COURSE NO.A212, and referenced documents
-	double heat = 1.2*(power_load / (0.9063642805859956 +
-		-0.00040191337758397755 * power_load +
-		0.0000003368939782880486 * power_load * power_load +
-		-1.5580350625528442e-10 * power_load * power_load * power_load +
-		3.2902028095999155e-14 * power_load * power_load * power_load * power_load +
-		-2.581100488488906e-18 * power_load * power_load * power_load * power_load * power_load) - power_load)*dt; //I think this executes faster than calling pow()
+	double heat = (Amperes * Amperes / 0.32) * dt;
+	
 	
 	/*if (!strcmp(name, "FUELCELL1"))
 	{
@@ -399,14 +394,14 @@ void FCell::Reaction(double dt)
 	H2_SRC->Flow(h2o_volume);
 
 	double condensorLiquidMass = condensor->space.composition[SUBSTANCE_H2O].mass - condensor->space.composition[SUBSTANCE_H2O].vapor_mass;
-	double condensorTemp = condensor->space.Temp;
+	condenserTemp = condensor->space.Temp;
 	condensor->space.composition[SUBSTANCE_H2O].mass -= condensorLiquidMass;
-	condensor->space.composition[SUBSTANCE_H2O].Q -= condensorLiquidMass * SPECIFICC_LIQ[SUBSTANCE_H2O] * condensorTemp;
+	condensor->space.composition[SUBSTANCE_H2O].Q -= condensorLiquidMass * SPECIFICC_LIQ[SUBSTANCE_H2O] * condenserTemp;
 
 	h_volume condensorOutFlow;
 	condensorOutFlow.Void();
 	condensorOutFlow.composition[SUBSTANCE_H2O].mass += condensorLiquidMass;
-	condensorOutFlow.composition[SUBSTANCE_H2O].SetTemp(condensorTemp);
+	condensorOutFlow.composition[SUBSTANCE_H2O].SetTemp(condenserTemp);
 	condensorOutFlow.GetQ();
 	H20_waste->Flow(condensorOutFlow);
 
