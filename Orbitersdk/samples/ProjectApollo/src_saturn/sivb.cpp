@@ -367,8 +367,6 @@ void SIVB::InitS4b()
 	}
 
 	MainBattery = static_cast<Battery *> (Panelsdk.GetPointerByString("ELECTRIC:POWER_BATTERY"));
-	FuelTank = static_cast<h_Tank *> (Panelsdk.GetPointerByString("HYDRAULIC:SIVB_HYDROGEN_TANK"));
-	OxidizerTank = static_cast<h_Tank*>(Panelsdk.GetPointerByString("HYDRAULIC:SIVB_OXYGEN_TANK"));
 }
 
 void SIVB::Boiloff()
@@ -910,9 +908,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// thrust it out of the way of the CSM.
 	//
 
-	sprintf(oapiDebugString(), "H2 Press %lf PSI H2 Temp %lf K O2 Press %lf PSI O2 Temp %lf K", FuelTank->space.Press* 0.000145038, FuelTank->space.Temp, OxidizerTank->space.Press* 0.000145038, OxidizerTank->space.Temp);
-
-	sivbsys->Timestep(simdt);
+	sivbsys->Timestep(simdt,MissionTime);
 	iu->Timestep(MissionTime, simt, simdt, mjd);
 	Panelsdk.Timestep(MissionTime);
 }

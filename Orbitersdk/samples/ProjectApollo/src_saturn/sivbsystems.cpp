@@ -91,6 +91,12 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	IgnitionDetector = CC1Signal1 = IgnitionDetectionLockup = false;
 	CC2Signal1 = CC2Signal2 = CC2Signal3 = CutoffLockup = false;
 	EngineState = 0;
+
+	Panelsdk.RegisterVessel(v);
+	Panelsdk.InitFromFile("ProjectApollo\\SIVBSystems");
+
+	FuelTank = static_cast<h_Tank*> (Panelsdk.GetPointerByString("HYDRAULIC:SIVB_HYDROGEN_TANK"));
+	OxidizerTank = static_cast<h_Tank*>(Panelsdk.GetPointerByString("HYDRAULIC:SIVB_OXYGEN_TANK"));
 }
 
 SIVBSystems::~SIVBSystems()
@@ -193,7 +199,7 @@ void SIVBSystems::LoadState(FILEHANDLE scn) {
 	}
 }
 
-void SIVBSystems::Timestep(double simdt)
+void SIVBSystems::Timestep(double simdt, double MissionTime)
 {
 	if (j2engine == NULL) return;
 
@@ -436,6 +442,9 @@ void SIVBSystems::Timestep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "Ready %d Start %d FuelInjTempOKBypass %d Stop %d Cut Inhibit %d Level %f Timer %f", EngineReady, EngineStart, FuelInjTempOKBypass, EngineStop, ThrustOKCutoffInhibit, ThrustLevel, ThrustTimer);
+
+	Panelsdk.Timestep(MissionTime);
+	sprintf(oapiDebugString(), "H2 Press %lf PSI H2 Temp %lf K O2 Press %lf PSI O2 Temp %lf K", FuelTank->space.Press * 0.000145038, FuelTank->space.Temp, OxidizerTank->space.Press * 0.000145038, OxidizerTank->space.Temp);
 }
 
 bool SIVBSystems::EngineOnLogic()

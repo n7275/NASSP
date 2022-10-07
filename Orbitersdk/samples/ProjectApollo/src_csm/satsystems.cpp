@@ -682,7 +682,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		}
 		if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
 		{
-			sivb->Timestep(simdt);
+			sivb->Timestep(simdt, MissionTime);
 		}
 
 		bmag1.Timestep(simdt);

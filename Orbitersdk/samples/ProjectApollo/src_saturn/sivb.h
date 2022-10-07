@@ -495,8 +495,6 @@ protected:
 	DOCKHANDLE hDock, hDockSI, hDockCSM;
 
 	Battery *MainBattery;
-	h_Tank* FuelTank;
-	h_Tank* OxidizerTank;
 
 	THRUSTER_HANDLE th_aps_rot[6], th_main[1], th_aps_ull[2];                 // handles for APS engines
 	THRUSTER_HANDLE th_lox_vent;

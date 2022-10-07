@@ -24,6 +24,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "PanelSDK/PanelSDK.h"
 #include "DelayTimer.h"
 
 #define PUVALVE_CLOSED 0
@@ -39,7 +40,7 @@ public:
 	virtual void RecalculateEngineParameters() = 0;
 	virtual void SetSIVBMixtureRatio(double ratio) = 0;
 	virtual void SwitchSelector(int channel) = 0;
-	void Timestep(double simdt);
+	void Timestep(double simdt, double MissionTime);
 	bool PropellantLowLevel();
 	void SetPUValve(int state);
 	void SIVBBoiloff();
@@ -81,6 +82,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 protected:
+	PanelSDK Panelsdk;
 
 	bool EngineOnLogic();
 
@@ -160,6 +162,10 @@ protected:
 	DelayTimer StartTankDischargeDelayTimer;
 	DelayTimer IgnitionPhaseTimer;
 	DelayTimer SparksDeenergizedTimer;
+
+	//Panel SDK
+	h_Tank* FuelTank;
+	h_Tank* OxidizerTank;
 };
 
 class SIVB200Systems : public SIVBSystems
