@@ -199,14 +199,17 @@ void SIVB_Airfoil_Coeff(VESSEL *v, double aoa, double M, double Re, void *contex
 }
 
 SIVB::SIVB(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
-CSMLVSeparationInitiator("CSM-LV-Separation-Initiator", Panelsdk),
-LMSLASeparationInitiators("LM-SLA-Separation-Initiators", Panelsdk),
-SLAPanelDeployInitiator("SLA-Panel-Deploy-Initiator", Panelsdk),
 inertialData(this)
 {
 	PanelSDKInitalised = false;
-
+	Panelsdk = sivbsys->GetPanelSDK();
 	InitS4b();
+
+
+	CSMLVSeparationInitiator = new Pyro("CSM-LV-Separation-Initiator", *Panelsdk);
+	LMSLASeparationInitiators = new Pyro("LM-SLA-Separation-Initiators", *Panelsdk);
+	SLAPanelDeployInitiator = new Pyro("SLA-Panel-Deploy-Initiator", *Panelsdk);
+
 }
 
 SIVB::~SIVB()
@@ -235,6 +238,10 @@ SIVB::~SIVB()
 		delete[] AEAPad;
 		AEAPad = 0;
 	}
+
+	delete CSMLVSeparationInitiator;
+	delete LMSLASeparationInitiators;
+	delete SLAPanelDeployInitiator;
 }
 
 void SIVB::InitS4b()
@@ -361,12 +368,12 @@ void SIVB::InitS4b()
 
 	if (!PanelSDKInitalised)
 	{
-		Panelsdk.RegisterVessel(this);
-		Panelsdk.InitFromFile("ProjectApollo\\SIVBSystems");
+		Panelsdk->RegisterVessel(this);
+		Panelsdk->InitFromFile("ProjectApollo\\SIVBSystems");
 		PanelSDKInitalised = true;
 	}
 
-	MainBattery = static_cast<Battery *> (Panelsdk.GetPointerByString("ELECTRIC:POWER_BATTERY"));
+	MainBattery = static_cast<Battery *> (Panelsdk->GetPointerByString("ELECTRIC:POWER_BATTERY"));
 }
 
 void SIVB::Boiloff()
@@ -649,7 +656,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// Seperate or open the SLA panels.
 	//
 
-	if (SLAPanelDeployInitiator.Blown())
+	if (SLAPanelDeployInitiator->Blown())
 	{
 		if (panelTimestepCount < 2) {
 			panelTimestepCount++;
@@ -910,7 +917,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 
 	sivbsys->Timestep(simdt,MissionTime);
 	iu->Timestep(MissionTime, simt, simdt, mjd);
-	Panelsdk.Timestep(MissionTime);
+	Panelsdk->Timestep(MissionTime);
 }
 
 void SIVB::clbkPostStep(double simt, double simdt, double mjd)
@@ -986,7 +993,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	sivbsys->SaveState(scn);
 	iu->SaveState(scn);
 	iu->SaveLVDC(scn);
-	Panelsdk.Save(scn);
+	Panelsdk->Save(scn);
 }
 
 int SIVB::GetMainState()
@@ -1408,7 +1415,7 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			iu->LoadLVDC(scn);
 		}
 		else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
-			Panelsdk.Load(scn);			//send the loading to the Panelsdk
+			Panelsdk->Load(scn);			//send the loading to the Panelsdk
 		}
 		else
 		{
@@ -1545,12 +1552,12 @@ void SIVB::clbkPostCreation()
 		DelDock(hDockSI);
 		hDockSI = NULL;
 	}
-	if (hDockCSM && CSMLVSeparationInitiator.Blown())
+	if (hDockCSM && CSMLVSeparationInitiator->Blown())
 	{
 		DelDock(hDockCSM);
 		hDockCSM = NULL;
 	}
-	if (LMSLASeparationInitiators.Blown())
+	if (LMSLASeparationInitiators->Blown())
 	{
 		if (hDock)
 		{
@@ -1677,8 +1684,8 @@ void SIVB::SetState(SIVBSettings &state)
 
 	State = SIVB_STATE_WAITING;
 	//Set these pyros as blown, otherwise the S-IVB wouldn't have been created by the Saturn class anyway
-	CSMLVSeparationInitiator.SetBlown(true);
-	SLAPanelDeployInitiator.SetBlown(true);
+	CSMLVSeparationInitiator->SetBlown(true);
+	SLAPanelDeployInitiator->SetBlown(true);
 	//Set S-IVB here, including docking ports
 	SetS4b();
 	//docking port to CSM and S-IB/S-II got created in SetS4b, so now delete it again
@@ -1867,7 +1874,7 @@ void SIVB::StartSeparationPyros()
 	}
 
 	if (PayloadCreated) {
-		LMSLASeparationInitiators.SetBlown(true);
+		LMSLASeparationInitiators->SetBlown(true);
 		UINT i;
 		if (GetDockingPortFromHandle(hDock, i))
 		{
@@ -1888,13 +1895,13 @@ void SIVB::StopSeparationPyros()
 
 void SIVB::StartSLASeparationPyros()
 {
-	SLAPanelDeployInitiator.SetBlown(true);
+	SLAPanelDeployInitiator->SetBlown(true);
 }
 
 void SIVB::SeparateCSM()
 {
 	if (hDockCSM) {
-		CSMLVSeparationInitiator.SetBlown(true);
+		CSMLVSeparationInitiator->SetBlown(true);
 		UINT i;
 		if (GetDockingPortFromHandle(hDockCSM, i))
 		{

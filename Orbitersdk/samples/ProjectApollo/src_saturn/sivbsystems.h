@@ -75,6 +75,8 @@ public:
 
 	void GetJ2ISP(double ratio, double &isp, double &ThrustAdjust);
 
+	inline PanelSDK* GetPanelSDK() { return &Panelsdk; }
+
 	//To IU
 	double GetLH2TankUllagePressurePSI() { return LH2TankUllagePressurePSI; }
 	double GetLOXTankUllagePressurePSI() { return LOXTankUllagePressurePSI; }

@@ -362,7 +362,7 @@ protected:
 	///
 	/// \brief Panel SDK library.
 	///
-    PanelSDK Panelsdk;
+    PanelSDK* Panelsdk;
 
 	bool PanelSDKInitalised;
 
@@ -515,9 +515,9 @@ protected:
 
 	void HideAllMeshes();
 
-	Pyro CSMLVSeparationInitiator;
-	Pyro LMSLASeparationInitiators;
-	Pyro SLAPanelDeployInitiator;
+	Pyro* CSMLVSeparationInitiator;
+	Pyro* LMSLASeparationInitiators;
+	Pyro* SLAPanelDeployInitiator;
 };
 
 ///
