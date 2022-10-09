@@ -43,7 +43,6 @@ public:
 	void Timestep(double simdt, double MissionTime);
 	bool PropellantLowLevel();
 	void SetPUValve(int state);
-	void SIVBBoiloff();
 
 	void LVDCEngineCutoff() { LVDCEngineStopRelay = true; }
 	void LVDCEngineCutoffOff() { LVDCEngineStopRelay = false; }
@@ -145,6 +144,8 @@ protected:
 	THGROUP_HANDLE &vernier;
 
 	PROPELLANT_HANDLE &main_propellant;
+	double PropellantFlowRate = 0.0;
+	double MixtureRatio = 0.0;
 
 	//Logic
 	bool CutoffSignalA, CutoffSignalX;

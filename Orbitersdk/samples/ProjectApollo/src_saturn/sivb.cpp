@@ -201,15 +201,7 @@ void SIVB_Airfoil_Coeff(VESSEL *v, double aoa, double M, double Re, void *contex
 SIVB::SIVB(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
 inertialData(this)
 {
-	PanelSDKInitalised = false;
-	Panelsdk = sivbsys->GetPanelSDK();
 	InitS4b();
-
-
-	CSMLVSeparationInitiator = new Pyro("CSM-LV-Separation-Initiator", *Panelsdk);
-	LMSLASeparationInitiators = new Pyro("LM-SLA-Separation-Initiators", *Panelsdk);
-	SLAPanelDeployInitiator = new Pyro("SLA-Panel-Deploy-Initiator", *Panelsdk);
-
 }
 
 SIVB::~SIVB()
@@ -365,15 +357,6 @@ void SIVB::InitS4b()
 	IUCommandConnector.SetSIVb(this);
 	payloadSeparationConnector.SetSIVb(this);
 	sivbSIConnector.SetSIVb(this);
-
-	if (!PanelSDKInitalised)
-	{
-		Panelsdk->RegisterVessel(this);
-		Panelsdk->InitFromFile("ProjectApollo\\SIVBSystems");
-		PanelSDKInitalised = true;
-	}
-
-	MainBattery = static_cast<Battery *> (Panelsdk->GetPointerByString("ELECTRIC:POWER_BATTERY"));
 }
 
 void SIVB::Boiloff()
@@ -1259,6 +1242,7 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 				sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
 				iu = new IU1B;
 			}
+			GetSystemsPointers();
 		}
 		else if (!strnicmp (line, "VECHNO", 6))
 		{

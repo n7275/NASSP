@@ -29,6 +29,7 @@
 #include "payload.h"
 #include "pyro.h"
 #include "inertial.h"
+#include "sivbsystems.h"
 
 //
 // Data structure passed from main vessel to SIVB to configure stage.
@@ -364,8 +365,6 @@ protected:
 	///
     PanelSDK* Panelsdk;
 
-	bool PanelSDKInitalised;
-
 	///
 	/// \brief Set SIVb state.
 	///
@@ -495,6 +494,17 @@ protected:
 	DOCKHANDLE hDock, hDockSI, hDockCSM;
 
 	Battery *MainBattery;
+	Pyro* CSMLVSeparationInitiator;
+	Pyro* LMSLASeparationInitiators;
+	Pyro* SLAPanelDeployInitiator;
+
+	inline void GetSystemsPointers() {
+		Panelsdk = sivbsys->GetPanelSDK();
+		MainBattery = static_cast<Battery*> (Panelsdk->GetPointerByString("ELECTRIC:POWER_BATTERY"));
+		CSMLVSeparationInitiator = new Pyro("CSM-LV-Separation-Initiator", *Panelsdk);
+		LMSLASeparationInitiators = new Pyro("LM-SLA-Separation-Initiators", *Panelsdk);
+		SLAPanelDeployInitiator = new Pyro("SLA-Panel-Deploy-Initiator", *Panelsdk);
+	}
 
 	THRUSTER_HANDLE th_aps_rot[6], th_main[1], th_aps_ull[2];                 // handles for APS engines
 	THRUSTER_HANDLE th_lox_vent;
@@ -514,10 +524,6 @@ protected:
 	int meshApollo8LTA, meshLTA_2r;
 
 	void HideAllMeshes();
-
-	Pyro* CSMLVSeparationInitiator;
-	Pyro* LMSLASeparationInitiators;
-	Pyro* SLAPanelDeployInitiator;
 };
 
 ///

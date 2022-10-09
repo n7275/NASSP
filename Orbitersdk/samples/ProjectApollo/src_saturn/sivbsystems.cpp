@@ -78,6 +78,8 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	BoiloffTime = 0.0;
 	LH2TankUllagePressurePSI = 50.0;
 	LOXTankUllagePressurePSI = 50.0;
+	double PropellantMass = 0.0;
+	double PropellantMassLastTimeStep = 0.0;
 
 	CutoffSignalA = CutoffSignalX = false;
 	HeliumControlOn = false;
@@ -245,8 +247,13 @@ void SIVBSystems::Timestep(double simdt, double MissionTime)
 	//Propellant Systems
 	if (main_propellant)
 	{
-		LOXTankUllagePressurePSI = vessel->GetPropellantMass(main_propellant) / vessel->GetPropellantMaxMass(main_propellant)*50.0;
-		LH2TankUllagePressurePSI = LOXTankUllagePressurePSI * 0.9362 + 3.19;
+		PropellantFlowRate = vessel->GetPropellantFlowrate(main_propellant);
+		
+		
+		
+		
+		LOXTankUllagePressurePSI = OxidizerTank->space.Press;
+		LH2TankUllagePressurePSI = FuelTank->space.Press;
 	}
 
 	bool K101 = true; //TBD: Power
@@ -427,7 +434,6 @@ void SIVBSystems::Timestep(double simdt, double MissionTime)
 		BoiloffTime += simdt;
 
 		if (BoiloffTime > 10.0) {
-			SIVBBoiloff();
 			BoiloffTime -= 10.0;
 		}
 	}
@@ -442,7 +448,7 @@ void SIVBSystems::Timestep(double simdt, double MissionTime)
 	}
 
 	//sprintf(oapiDebugString(), "Ready %d Start %d FuelInjTempOKBypass %d Stop %d Cut Inhibit %d Level %f Timer %f", EngineReady, EngineStart, FuelInjTempOKBypass, EngineStop, ThrustOKCutoffInhibit, ThrustLevel, ThrustTimer);
-
+	
 	Panelsdk.Timestep(MissionTime);
 	sprintf(oapiDebugString(), "H2 Press %lf PSI H2 Temp %lf K O2 Press %lf PSI O2 Temp %lf K", FuelTank->space.Press * 0.000145038, FuelTank->space.Temp, OxidizerTank->space.Press * 0.000145038, OxidizerTank->space.Temp);
 }
@@ -452,11 +458,6 @@ bool SIVBSystems::EngineOnLogic()
 	return HeliumControlOn && (StartTankDischargeControlOn || MainstageOn);
 }
 
-void SIVBSystems::SIVBBoiloff()
-{
-	double FuelMass = vessel->GetPropellantMass(main_propellant) * 0.99998193;
-	vessel->SetPropellantMass(main_propellant, FuelMass);
-}
 
 void SIVBSystems::SetThrusterDir(double beta_y, double beta_p)
 {
@@ -628,6 +629,7 @@ void SIVB200Systems::SetSIVBMixtureRatio(double ratio)
 
 {
 	double isp, thrust;
+	SIVB200Systems::MixtureRatio = ratio;
 
 	// Hardcoded ISP and thrust according to the the Apollo 7 Saturn IB Report, NTRS ID 19900067467
 	if (ratio >= 5.25) {
@@ -776,7 +778,7 @@ void SIVB500Systems::SetSIVBMixtureRatio(double ratio)
 
 	GetJ2ISP(ratio, isp, ThrustAdjust);
 	thrust = J2DefaultThrust * ThrustAdjust;
-
+	SIVB500Systems::MixtureRatio = ratio;
 	//
 	// For simplicity assume no ISP change at sea-level: SIVb stage should always
 	// be in near-vacuum anyway.
