@@ -476,6 +476,43 @@ double h_volume::GetQ() {
 	return q;
 }
 
+double h_volume::RemoveLiquidMass(double grams)
+{
+	double LiquidMass = 0.0; //scratch variable for summing up total liquid mass
+	double TempTemperature = Temp;
+
+	//Total up how much liquid we have
+	for (int i = 0; i < MAX_SUB; i++) {
+		LiquidMass += (composition[i].mass - composition[i].vapor_mass);
+	}
+
+	//remove the liquid in proportion to the total, but don't take out more than we have (always leave the vapor)
+	for (int i = 0; i < MAX_SUB; i++) {
+		double LiquidFraction = (composition[i].mass - composition[i].vapor_mass) / LiquidMass;
+
+		if (LiquidMass > grams) { //if we have more than we're taking out
+			composition[i].Q -= SPECIFICC_LIQ[i] * LiquidFraction * grams * composition[i].Temp; //take out energy
+			composition[i].mass -= LiquidFraction * grams; //take out mass
+		}
+		else { //if we have less than we're taking out
+			composition[i].Q -= SPECIFICC_LIQ[i] * (composition[i].mass - composition[i].vapor_mass) * composition[i].Temp; //take out energy (all of the energy in the liquid)
+			composition[i].mass = composition[i].mass - composition[i].vapor_mass; //take out mass (all of the liquid in this case)
+		}
+	}
+
+	GetMass();
+	GetQ();
+
+	//return the quantity we actually removed
+	if (LiquidMass > grams) {
+		return LiquidMass;
+	}
+	else {
+		return grams;
+	}
+}
+
+
 void h_volume::ThermalComps(double dt) {
 	//1. averaging temperature, based on Q
 	//2. computing vapor pressure based on new temp, for each subst present
