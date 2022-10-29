@@ -145,7 +145,7 @@ protected:
 
 	PROPELLANT_HANDLE &main_propellant;
 	double PropellantFlowRate = 0.0;
-	double MixtureRatio = 0.0;
+	double PropellantMixtureRatio = 0.0;
 
 	//Logic
 	bool CutoffSignalA, CutoffSignalX;

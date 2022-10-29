@@ -247,13 +247,18 @@ void SIVBSystems::Timestep(double simdt, double MissionTime)
 	//Propellant Systems
 	if (main_propellant)
 	{
-		PropellantFlowRate = vessel->GetPropellantFlowrate(main_propellant);
-		
-		
-		
-		
-		LOXTankUllagePressurePSI = OxidizerTank->space.Press;
-		LH2TankUllagePressurePSI = FuelTank->space.Press;
+		LOXTankUllagePressurePSI = OxidizerTank->space.Press * PSI;
+		LH2TankUllagePressurePSI = FuelTank->space.Press * PSI;
+
+		//Handle Propellant flow to engines. Maybe this should be done by the J2 class when we have full systems and docked stages for the SII as well.
+		PropellantFlowRate = vessel->GetPropellantFlowrate(main_propellant) * 1000.0 * simdt;
+		double O2Flow = PropellantFlowRate - (PropellantFlowRate / (PropellantMixtureRatio + 1));
+		double H2Flow = PropellantFlowRate / (PropellantMixtureRatio + 1);
+
+		OxidizerTank->space.RemoveLiquidMass(O2Flow);
+		FuelTank->space.RemoveLiquidMass(H2Flow);
+
+		/*sprintf(oapiDebugString(), "H2 %10.2f LBH, O2 %10.2f LBH, Ratio %10.2f", O2Flow, H2Flow, PropellantMixtureRatio);*/
 	}
 
 	bool K101 = true; //TBD: Power
@@ -450,7 +455,7 @@ void SIVBSystems::Timestep(double simdt, double MissionTime)
 	//sprintf(oapiDebugString(), "Ready %d Start %d FuelInjTempOKBypass %d Stop %d Cut Inhibit %d Level %f Timer %f", EngineReady, EngineStart, FuelInjTempOKBypass, EngineStop, ThrustOKCutoffInhibit, ThrustLevel, ThrustTimer);
 	
 	Panelsdk.Timestep(MissionTime);
-	sprintf(oapiDebugString(), "H2 Press %lf PSI H2 Temp %lf K O2 Press %lf PSI O2 Temp %lf K", FuelTank->space.Press * 0.000145038, FuelTank->space.Temp, OxidizerTank->space.Press * 0.000145038, OxidizerTank->space.Temp);
+	sprintf(oapiDebugString(), "H2 Press %lf PSI H2 Temp %lf K O2 Press %lf PSI O2 Temp %lf K  Q%lfJ", FuelTank->space.Press * 0.000145038, FuelTank->space.Temp, OxidizerTank->space.Press * 0.000145038, OxidizerTank->space.Temp, OxidizerTank->space.Q);
 }
 
 bool SIVBSystems::EngineOnLogic()
@@ -629,7 +634,7 @@ void SIVB200Systems::SetSIVBMixtureRatio(double ratio)
 
 {
 	double isp, thrust;
-	SIVB200Systems::MixtureRatio = ratio;
+	PropellantMixtureRatio = ratio;
 
 	// Hardcoded ISP and thrust according to the the Apollo 7 Saturn IB Report, NTRS ID 19900067467
 	if (ratio >= 5.25) {
@@ -778,7 +783,7 @@ void SIVB500Systems::SetSIVBMixtureRatio(double ratio)
 
 	GetJ2ISP(ratio, isp, ThrustAdjust);
 	thrust = J2DefaultThrust * ThrustAdjust;
-	SIVB500Systems::MixtureRatio = ratio;
+	PropellantMixtureRatio = ratio;
 	//
 	// For simplicity assume no ISP change at sea-level: SIVb stage should always
 	// be in near-vacuum anyway.
