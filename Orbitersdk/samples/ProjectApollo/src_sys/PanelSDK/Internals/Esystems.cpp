@@ -1519,7 +1519,7 @@ Boiler::Boiler(char *i_name, int i_pump, e_object *i_src, double heat_watts, dou
 		Amperes = 0;
 	}
 
-	boiler_power = heat_watts;
+	max_boiler_power = heat_watts;
 	boiler_electrical_power = electric_watts;
 	type = i_type;
 	target = i_target;
@@ -1528,6 +1528,10 @@ Boiler::Boiler(char *i_name, int i_pump, e_object *i_src, double heat_watts, dou
 	valueMax = i_valueMax;
 	handleMin = 0;
 	handleMax = 0;
+
+	ramp = false;
+	rampRate = 10.0;
+	boiler_output_power = 0.0;
 }
 
 double Boiler::Current()
@@ -1536,7 +1540,7 @@ double Boiler::Current()
 	if (pumping && SRC) {
 		double v = SRC->Voltage();
 		if (v) {
-			return boiler_power / v;
+			return max_boiler_power / v;
 		}
 	}
 
@@ -1544,7 +1548,6 @@ double Boiler::Current()
 }
 
 void Boiler::refresh(double dt) 
-
 {
 	if (h_pump > 0) { //on auto
 		if (type == 0) { // TEMP
@@ -1571,6 +1574,25 @@ void Boiler::refresh(double dt)
 	else
 		pumping = 0;
 
+	if (ramp) {
+		double rampFactor = 1 - exp(-dt / rampRate);
+
+		if (boiler_output_power < max_boiler_power && pumping) {
+			boiler_output_power += (max_boiler_power - boiler_output_power) * rampFactor;
+		}
+		else {
+			boiler_output_power -= boiler_output_power * rampFactor;
+		}
+	}
+	else {
+		boiler_output_power = max_boiler_power;
+	}
+
+	//Testing
+	//if (!strcmp(name, "O2TANK1HEATER")) {
+	//	sprintf(oapiDebugString(),"%lf", boiler_output_power);
+	//}
+
 	if (pumping && SRC) {
 		if (SRC->Voltage() < SP_MIN_DCVOLTAGE) { //or unload if no power.
 			pumping = 0;
@@ -1578,10 +1600,10 @@ void Boiler::refresh(double dt)
 		}
 		SRC->DrawPower(boiler_electrical_power);
 		if (type == 2) {
-			target->thermic(-boiler_power * dt); //cooling (1 joule = 1 watt * dt)
+			target->thermic(-boiler_output_power * dt); //cooling (1 joule = 1 watt * dt)
 		}
 		else
-			target->thermic(boiler_power * dt); //heating (1 joule = 1 watt * dt)
+			target->thermic(boiler_output_power * dt); //heating (1 joule = 1 watt * dt)
 	} else {
 		pumping = 0;
 	}
@@ -1595,14 +1617,14 @@ void Boiler::refresh(double dt)
 void Boiler::Load(char *line) 
 
 {
-	sscanf(line,"    <BOILER> %s %i %i %lf %lf %lf %lf %lf", name, &h_pump, &loaded, &pumping, &valueMin, &valueMax, &boiler_power, &boiler_electrical_power);
+	sscanf(line,"    <BOILER> %s %i %i %lf %lf %lf %lf %lf %lf", name, &h_pump, &loaded, &pumping, &valueMin, &valueMax, &max_boiler_power, &boiler_electrical_power, &boiler_output_power);
 }
 
 void Boiler::Save(FILEHANDLE scn) 
 
 {
     char cbuf[1000];
-	sprintf (cbuf, "%s %i %i %lf %lf %lf %lf %lf", name, h_pump, loaded, pumping, valueMin, valueMax, boiler_power, boiler_electrical_power);
+	sprintf (cbuf, "%s %i %i %lf %lf %lf %lf %lf %lf", name, h_pump, loaded, pumping, valueMin, valueMax, max_boiler_power, boiler_electrical_power, boiler_output_power);
 	oapiWriteScenario_string (scn, "    <BOILER> ", cbuf);
 }
 
