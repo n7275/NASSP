@@ -125,8 +125,6 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	RCVDpow = 0.0;
 	RCVDgain = 0.0;
 	RCVDPhase = 0.0;
-
-	sin_shaft = cos_shaft = sin_trunnion = cos_trunnion = 0.0;
 }
 
 bool LEM_RR::IsDCPowered()
@@ -245,6 +243,8 @@ void LEM_RR::Timestep(double simdt) {
 	val30 = lem->agc.GetInputChannel(030);
 	val33 = lem->agc.GetInputChannel(033);
 
+	double ShaftRate = 0;
+	double TrunRate = 0;
 	trunnionVel = 0;
 	shaftVel = 0;
 
@@ -278,7 +278,6 @@ void LEM_RR::Timestep(double simdt) {
 		RangeLock = false;
 		range = 0.0;
 		rate = 0.0;
-		sin_shaft = cos_shaft = sin_trunnion = cos_trunnion = 0.0;
 		if (val13[RadarActivity] == 1) {
 			int radarBits = 0;
 			if (val13[RadarA] == 1) { radarBits |= 1; }
@@ -296,10 +295,20 @@ void LEM_RR::Timestep(double simdt) {
 		return;
 	}
 
+	// Determine slew rate
+	switch (lem->SlewRateSwitch.GetState()) {
+	case TOGGLESWITCH_UP:       // HI
+		ShaftRate = 7.0*RAD;
+		TrunRate = 7.0*RAD;
+		break;
+	case TOGGLESWITCH_DOWN:     // LOW
+		ShaftRate = 1.33*RAD;
+		TrunRate = 1.33*RAD;
+		break;
+	}
+
 	//Gyro rates
 	lem->GetAngularVel(GyroRates);
-	//Convert to LM body axes
-	GyroRates = _V(GyroRates.y, GyroRates.x, GyroRates.z);
 
 	// If we are in test mode...
 	if (lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_UP) {
@@ -489,10 +498,10 @@ void LEM_RR::Timestep(double simdt) {
 		ShaftErrorSignal = (SignalStrengthQuadrant[0] - SignalStrengthQuadrant[1])*0.25;
 		TrunnionErrorSignal = (SignalStrengthQuadrant[2] - SignalStrengthQuadrant[3])*0.25;
 
-		shaftAngle += ShaftErrorSignal * simdt;
+		shaftAngle += (ShaftErrorSignal - GyroRates.x)*simdt;
 		shaftVel = ShaftErrorSignal;
 
-		trunnionAngle += TrunnionErrorSignal * simdt;
+		trunnionAngle += (TrunnionErrorSignal - GyroRates.y)*simdt;
 		trunnionVel = TrunnionErrorSignal;
 
 		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, ShaftErrorSignal %f TrunnionErrorSignal %f", shaftAngle*DEG, trunnionAngle*DEG, ShaftErrorSignal, TrunnionErrorSignal);
@@ -511,32 +520,22 @@ void LEM_RR::Timestep(double simdt) {
 			break;
 
 		case 1: // SLEW
-			//Determine slew rate
-			if (lem->SlewRateSwitch.IsUp())
-			{
-				SlewRate = SLEW_RATE_FAST;
-			}
-			else
-			{
-				SlewRate = SLEW_RATE_SLOW;
-			}
-
-			// Watch the SLEW switch. 
+				// Watch the SLEW switch. 
 			if (lem->RadarSlewSwitch.GetState() == 4) {	// Can we move up?
-				trunnionAngle -= SlewRate * simdt;						// Move the trunnion
-				trunnionVel = -SlewRate;
+				trunnionAngle -= TrunRate * simdt;						// Move the trunnion
+				trunnionVel = -TrunRate;
 			}
 			if (lem->RadarSlewSwitch.GetState() == 3) {	// Can we move down?
-				trunnionAngle += SlewRate * simdt;						// Move the trunnion
-				trunnionVel = SlewRate;
+				trunnionAngle += TrunRate * simdt;						// Move the trunnion
+				trunnionVel = TrunRate;
 			}
 			if (lem->RadarSlewSwitch.GetState() == 2) {
-				shaftAngle += SlewRate * simdt;
-				shaftVel = SlewRate;
+				shaftAngle += ShaftRate * simdt;
+				shaftVel = ShaftRate;
 			}
 			if (lem->RadarSlewSwitch.GetState() == 0) {
-				shaftAngle -= SlewRate * simdt;
-				shaftVel = -SlewRate;
+				shaftAngle -= ShaftRate * simdt;
+				shaftVel = -ShaftRate;
 			}
 
 			//sprintf(oapiDebugString(), "Ang %f Vel %f", shaftAngle*DEG, shaftVel);
@@ -635,18 +634,12 @@ void LEM_RR::Timestep(double simdt) {
 		shaftVel = 0.0;
 	}
 
-	//For display and telemetry
-	sin_shaft = sin(shaftAngle);
-	cos_shaft = cos(shaftAngle);
-	sin_trunnion = sin(trunnionAngle);
-	cos_trunnion = cos(trunnionAngle);
-
 	//Mode I or II determination
-	if (cos_trunnion > 0.0 && mode == 2)
+	if (cos(trunnionAngle) > 0.0 && mode == 2)
 	{
 		mode = 1;
 	}
-	else if (cos_trunnion < 0.0 && mode == 1)
+	else if (cos(trunnionAngle) < 0.0 && mode == 1)
 	{
 		mode = 2;
 	}
@@ -656,6 +649,7 @@ void LEM_RR::Timestep(double simdt) {
 
 	if (lem->RendezvousRadarRotary.GetState() == 2)
 	{
+
 		//sprintf(oapiDebugString(),"RR MOVEMENT: SHAFT %f TRUNNION %f RANGE %f RANGE-RATE %f",shaftAngle*DEG,trunnionAngle*DEG,range,rate);
 
 		// Maintain RADAR GOOD state
