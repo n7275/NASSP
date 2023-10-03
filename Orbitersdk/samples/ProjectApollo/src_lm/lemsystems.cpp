@@ -1372,7 +1372,7 @@ void LEM::JoystickTimestep(double simdt)
 
 void LEM::SystemsInternalTimestep(double simdt)
 {
-	double mintFactor = __max(simdt / 20.0, 0.02);
+	double mintFactor = 0.005;
 	double tFactor = __min(mintFactor, simdt);
 	while (simdt > 0) {
 
@@ -2109,8 +2109,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "HXH %lf CS %lf LS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf WSM %lf CO2F %lf CO2REM %lf WS1F %lf H2OREM %lf", *hxheatingPress*PSI, *cdrsuitpress*PSI, *lmpsuitpress*PSI, *SuitCircuitPress*PSI, *SGDPress*PSI, *CO2ManifoldPress*PSI, *primCO2CanisterPress*PSI, *suitfanmanifoldoutPress*PSI, *hxcoolingPress*PSI, *WSMPress*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, *WS1H2ORemoval);
 	//sprintf(oapiDebugString(), "CAB %lf SUIT %lf OVHDFLOW %lf OVHDFLOWMAX %lf OVHDSIZE %f TUNNELPRESS %lf TUNNELFLOW %lf", ecs.GetCabinPressurePSI(), (*SuitCircuitPress)*PSI, *ovhdHatchFlow*LBH, *ovhdHatchFlowmax*LBH, *ovhdHatchSize, *lmtunnelpress*PSI, *lmtunnelflow*LBH);
 
-	//sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFI %lf SFO %lf HXC %lf WSI %lf WSO %lf", *hxheatingPress* PSI, *cdrsuitpress* PSI, *lmpsuitpress* PSI, *SuitCircuitPress* PSI, *SGDPress* PSI, *CO2ManifoldPress* PSI, *primCO2CanisterPress* PSI, *suitfanmanifoldinPress* PSI, *suitfanmanifoldoutPress* PSI, *hxcoolingPress* PSI, *WSMinPress* PSI, *WSMoutPress* PSI);
-	sprintf(oapiDebugString(), "%lf %lf", *SuitFan1FlowRate * LBH, *SuitFan2FlowRate * LBH);
+	sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFI %lf SFO %lf HXC %lf WSI %lf WSO %lf", *hxheatingPress* PSI, *cdrsuitpress* PSI, *lmpsuitpress* PSI, *SuitCircuitPress* PSI, *SGDPress* PSI, *CO2ManifoldPress* PSI, *primCO2CanisterPress* PSI, *suitfanmanifoldinPress* PSI, *suitfanmanifoldoutPress* PSI, *hxcoolingPress* PSI, *WSMinPress* PSI, *WSMoutPress* PSI);
+	//sprintf(oapiDebugString(), "%lf %lf", *SuitFan1FlowRate * LBH, *SuitFan2FlowRate * LBH);
 	//sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf CO2F %lf CO2REM %lf GRV %d", *hxheatingPress*PSI, *cdrsuitpress*PSI, *lmpsuitpress*PSI, *SuitCircuitPress*PSI, *SGDPress*PSI, *CO2ManifoldPress*PSI, *primCO2CanisterPress*PSI, *suitfanmanifoldoutPress*PSI, *hxcoolingPress*PSI, *primCO2Flow, *primCO2Removal, *gasreturnvlv);
 	//sprintf(oapiDebugString(), "CAB %lf RVF %lf RVFM %lf HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf", *CabinMass, *suitReliefflow, *suitReliefflowmax, *hxheatingMass, *cdrsuitmass, *lmpsuitmass, *SuitCircuitMass, *SGDMass, *CO2ManifoldMass, *primCO2Mass, *suitfanmanifoldoutMass, *hxcoolingMass);
 	
