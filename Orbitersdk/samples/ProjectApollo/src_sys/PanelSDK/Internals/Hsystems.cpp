@@ -380,31 +380,34 @@ double h_substance::Condense(double dt) {
 
 	double vapenth_temporary = VAPENTH();
 
-	if (vapor_mass < dt)
-		dt = vapor_mass;
+	//if (vapor_mass < dt)
+	//	dt = vapor_mass;
 
-	vapor_mass -= dt;
-	Q += vapenth_temporary * dt;
+	double CondenseMass = dt * mass * 0.000001;
 
-	return vapenth_temporary * dt;
+	vapor_mass -= CondenseMass;
+	Q += vapenth_temporary * CondenseMass;
+	return CondenseMass;
 }
 
 double h_substance::Boil(double dt) {
 
 	double vapenth_temporary = VAPENTH();
 
-	if (vapor_mass + dt > mass - 1.0)
-		dt = mass - 1.0 - vapor_mass;
+	//if (vapor_mass + dt > mass - 1.0)
+	//	dt = mass - 1.0 - vapor_mass;
 
-	if (dt < 0)
-		return 0;
+	//if (dt < 0)
+	//	return 0;
 
-	if (Q < vapenth_temporary * dt)
-		dt = Q / vapenth_temporary;
+	//if (Q < vapenth_temporary * dt)
+	//	dt = Q / vapenth_temporary;
 
-	vapor_mass += dt;
-	Q -= vapenth_temporary * dt;
-	return -vapenth_temporary * dt;
+	double BoilMass = dt * mass * 0.000001;
+
+	vapor_mass += BoilMass;
+	Q -= vapenth_temporary * BoilMass;
+	return vapenth_temporary * BoilMass;
 }
 
 double h_substance::BoilAll() {

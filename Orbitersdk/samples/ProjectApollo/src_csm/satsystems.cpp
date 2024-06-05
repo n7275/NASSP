@@ -1300,7 +1300,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*co2removalrate,
 		*voltageA, *amperageA); 
 */
-
+#endif
 	double *massO2Tank1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:MASS");
 	double *tempO2Tank1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:TEMP");
 	double *pressO2Tank1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:PRESS");
@@ -1316,7 +1316,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *energyO2Tank2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:ENERGY");
 	double *isonO2Tank2Heater = (double*)Panelsdk.GetPointerByString("ELECTRIC:O2TANK2HEATER:ISON");
 	double *isonO2Tank2Fan = (double*)Panelsdk.GetPointerByString("ELECTRIC:O2TANK2FAN:ISON");
-
+#ifdef _DEBUG
 	double *massO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:MASS");
 	double *tempO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:TEMP");
 	double *pressO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS");
@@ -1530,19 +1530,22 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*massO2MainReg / 1000.0, *tempO2MainReg, *pressO2MainReg * 0.000145038,
 		*massCabin, *tempCabin, *pressCabin * 0.000145038, *pressCabinCO2 * 0.00750064);
 */
-	int *o2fc1reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN:ISOPEN");
-	int *h2fc1reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:IN:ISOPEN");
-	int *o2fc2reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:IN:ISOPEN");
-	int *h2fc2reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:IN:ISOPEN");
-	int *o2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN:ISOPEN");
-	int *h2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:IN:ISOPEN");
+	//int *o2fc1reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN:ISOPEN");
+	//int *h2fc1reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:IN:ISOPEN");
+	//int *o2fc2reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:IN:ISOPEN");
+	//int *h2fc2reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:IN:ISOPEN");
+	//int *o2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN:ISOPEN");
+	//int *h2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:IN:ISOPEN");
 
-/*
+#endif
 	//O2 Tanks & Fans/Heaters
 	sprintf(oapiDebugString(), "O2T1-m %.1f T %.1f Q %.1f p %.1f Fan %lf Heater %lf O2T2-m %.1f T %.1f Q %.1f p %.1f Fan %lf, Heater %lf",
 		*massO2Tank1*LBS, KelvinToFahrenheit(*tempO2Tank1), *energyO2Tank1, *pressO2Tank1*PSI, *isonO2Tank1Fan, *isonO2Tank1Heater,
 		*massO2Tank2*LBS, KelvinToFahrenheit(*tempO2Tank2), *energyO2Tank2, *pressO2Tank2*PSI, *isonO2Tank2Fan, *isonO2Tank2Heater);
-*/
+#ifdef DEBUG
+
+// DEBUG
+
 
 	// Fuel Cell H2
 /*	
